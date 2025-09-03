@@ -1,0 +1,30 @@
+
+🔐 GitHub Secrets (Sensitive Data)
+
+Name	Description
+AWS_ACCESS_KEY_ID	AWS IAM user access key with permissions for deployment. Required for AWS authentication
+AWS_SECRET_ACCESS_KEY	Corresponding secret key for the AWS IAM user. Required for AWS authentication
+AUTOMATION_ROLE_ARN	ARN of the IAM role used for SSM automation.Format: arn:aws:iam::<account-id>:role/<stack-name>-AutomationRole-<id>
+
+
+
+⸻
+
+⚙️ GitHub Variables (Configuration)
+
+Name	             Required	Description
+STACK_NAME	            ✅	The name of your CloudFormation stack
+AWS_REGION	            ✅	AWS region where your resources are deployed (e.g., ap-south-1)
+S3_BUCKET_NAME	        ✅	Name of the S3 bucket to store application artifacts
+NODE_VERSION	        ❌	Node.js version for build environment (default: 22)
+SECRETS_MANAGER_NAME	❌	AWS Secrets Manager name for app env vars (default: dev/mindef/api)
+SSM_ACTIVE_ENV_PARAM	❌	SSM Parameter name for tracking active environment (default: /deployment/active-environment)
+BLUE_TARGET_GROUP	    ❌	Name of the Blue target group (default: blue-tg)
+GREEN_TARGET_GROUP	    ❌	Name of the Green target group (default: green-tg)
+ALB_NAME	            ❌	Application Load Balancer name (default: node-alb)
+ASG_MIN_SIZE	        ❌	Min size of Auto Scaling Group (default: 1)
+ASG_MAX_SIZE	        ❌	Max size of Auto Scaling Group (default: 2)
+ASG_DESIRED_CAPACITY	❌	Desired capacity for Auto Scaling Group (default: 1)
+ASG_HEALTH_TIMEOUT	    ❌	Timeout in seconds for ASG health check (default: 120)
+
+⸻

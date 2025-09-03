@@ -1,0 +1,127 @@
+name: Deploy Nest.js to EC2 with Migrations
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      # Step 3: Configure AWS credentials for Secrets Manager
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.SECRET_ACCESS_KEY }}
+          aws-region: ${{ vars.AWS_REGION || secrets.AWS_REGION }}
+
+      # Step 4: Retrieve secrets from AWS Secrets Manager
+      - name: Get Secrets from AWS Secrets Manager
+        id: get-secrets
+        uses: abhilash1in/aws-secrets-manager-action@v1.1.0
+        with:
+          secret-ids: ${{ secrets.ENV_PARAM }}
+          parse-json: true
+
+      # Step 5: Create .env file from secrets
+      - name: Create Environment File
+        run: |
+          # Retrieve the secret value using the static key
+          echo "${{ steps.get-secrets.outputs[secrets.ENV_PARAM] }}" > .env
+          echo "NODE_ENV=production" >> .env
+          echo "DEPLOYMENT_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> .env
+          # Add any other non-secret environment variables needed for migrations
+          echo "TYPEORM_MIGRATIONS_RUN=true" >> .env
+
+      # Step 6: Install dependencies and build the app
+      - name: Install Dependencies
+        run:  npm install --legacy-peer-deps
+
+      - name: Build Application
+        run: npm run build
+
+      # Step 7: Run migrations locally (optional, can run on EC2 instead)
+      - name: Run Local Migrations (Optional)
+        run: |
+          npm run migration:run
+        continue-on-error: true  # In case you prefer to run migrations on EC2
+
+      # Step 8: Create deployment package
+      - name: Create Clean Deployment Package
+        run: |
+          mkdir -p deploy
+          cp -r dist node_modules package.json package-lock.json .env ecosystem.config.js ormconfig.js deploy/
+          # Include migration files
+          cp -r src/migrations deploy/dist/migrations || echo "No migrations found"
+          # Include any other necessary files
+
+      - name: Compress Files
+        run: |
+          tar -czf app.tar.gz -C deploy .
+
+      # Step 9: Configure SSH and Deploy to EC2
+      - name: Deploy to EC2 with Migrations
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          EC2_USER: ec2-user
+          EC2_HOST: ${{ secrets.EC2_HOST }}
+        run: |
+          # Configure SSH
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H $EC2_HOST >> ~/.ssh/known_hosts
+
+          # Create the target directory on the EC2 instance
+          ssh $EC2_USER@$EC2_HOST << 'EOF'
+            sudo mkdir -p /var/www/nestjs-app
+            sudo chown -R ec2-user:ec2-user /var/www/nestjs-app
+            mkdir -p /var/www/nestjs-app/logs
+          EOF
+
+          # Transfer the compressed file to the EC2 instance
+          scp app.tar.gz $EC2_USER@$EC2_HOST:/var/www/nestjs-app/app.tar.gz
+
+          # Decompress and deploy on EC2 instance
+          ssh $EC2_USER@$EC2_HOST << 'EOF'
+            cd /var/www/nestjs-app
+            
+            # Stop existing application (if running)
+            pm2 stop nest-app || echo "App not running"
+            
+            # Backup current deployment (optional)
+            tar -czf backup_$(date +%Y%m%d_%H%M%S).tar.gz . --exclude='*.tar.gz'
+            
+            # Extract new deployment
+            tar -xzf app.tar.gz --overwrite
+            rm -f app.tar.gz
+            
+            # Install production dependencies
+            npm install --production
+            
+            # Run database migrations
+            npm run typeorm migration:run
+            
+            # Start application
+            pm2 restart ecosystem.config.js || pm2 start ecosystem.config.js
+            
+            # Save PM2 process list
+            pm2 save
+            
+            # Optional: Set PM2 to start on system reboot
+            pm2 startup | tail -n 1 | bash
+          EOF
