@@ -6,10 +6,13 @@ import {
   JoinColumn,
   OneToMany,
 } from 'typeorm';
-import { stateEntity } from './state.entity';
-import { retailTariffsEntity } from './retail-tariffs.entity';
+
 import { TABLES } from '@src/common/constants';
 import { networkTariffEntity } from '@src/network-tarrifs/infrastructure/persistence/relational/entities/network-tarrif.entity';
+import { PlanEntity } from '@src/plans/infrastructure/persistence/relational/entities/plan.entity';
+
+import { retailTariffsEntity } from './retail-tariffs.entity';
+import { stateEntity } from './state.entity';
 
 @Entity({ name: TABLES.distributor })
 export class distributorEntity {
@@ -43,4 +46,7 @@ export class distributorEntity {
     (networkTariffs) => networkTariffs.distributor,
   )
   networkTariffs: networkTariffEntity[];
+
+  @OneToMany(() => PlanEntity, (plan) => plan.distributor)
+  plans: PlanEntity[];
 }

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 
+import { PlanMapping } from '@src/plans/domain/plan-mapping';
 import { NullableType } from '@src/utils/types/nullable.type';
 import { PaginationResponse } from '@src/utils/types/pagination-options';
 
@@ -32,6 +33,10 @@ export class PlansService {
 
   async findMany(query: QueryPlanDto): Promise<PaginationResponse<Plan>> {
     return this.plansRepository.findMany(query);
+  }
+
+  async getPlanMapping(): Promise<PlanMapping[]> {
+    return this.plansRepository.getPlanMapping();
   }
 
   async findOne(id: number): Promise<NullableType<Plan>> {
@@ -90,6 +95,13 @@ export class PlansService {
     expired: number;
   }> {
     return this.plansRepository.getPlanStatusCounts();
+  }
+
+  getPlanMappingStatusCounts(): Promise<{
+    active: number;
+    expired: number;
+  }> {
+    return this.plansRepository.getPlanMappingStatusCounts();
   }
 
   // Additional service methods for UI functionality

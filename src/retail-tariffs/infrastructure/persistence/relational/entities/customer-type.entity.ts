@@ -1,6 +1,7 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
 
 import { TABLES } from '@src/common/constants';
+import { PlanEntity } from '@src/plans/infrastructure/persistence/relational/entities/plan.entity';
 
 import { retailTariffsEntity } from './retail-tariffs.entity';
 
@@ -20,4 +21,7 @@ export class customerTypeEntity {
     (retailTariff) => retailTariff.customer_type,
   )
   retailTariffs: retailTariffsEntity[];
+
+  @OneToMany(() => PlanEntity, (plan) => plan.customerType)
+  plans: PlanEntity[];
 }

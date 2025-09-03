@@ -6,11 +6,17 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 
+import { BillingCodeEntity } from '@src/plans/infrastructure/persistence/relational/entities/billing-code.entity';
+import { ChargeEntity } from '@src/plans/infrastructure/persistence/relational/entities/charge.entity';
 import { PlanTypeEntity } from '@src/plans/infrastructure/persistence/relational/entities/plan-type.entity';
-import { RateCardEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-card.entity';
 import { ZoneEntity } from '@src/plans/infrastructure/persistence/relational/entities/zone.entity';
+import { RateCardEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-card.entity';
+import { customerTypeEntity } from '@src/retail-tariffs/infrastructure/persistence/relational/entities/customer-type.entity';
+import { distributorEntity } from '@src/retail-tariffs/infrastructure/persistence/relational/entities/distributor.entity';
+import { retailTariffsEntity } from '@src/retail-tariffs/infrastructure/persistence/relational/entities/retail-tariffs.entity';
 
 @Entity({ name: 'plans' })
 export class PlanEntity {
@@ -88,6 +94,9 @@ export class PlanEntity {
   distributor_id: number;
 
   @Column({ type: 'int' })
+  retail_tariff_id: number;
+
+  @Column({ type: 'int' })
   rate_card_id: number;
 
   @ManyToOne(() => RateCardEntity, { lazy: true })
@@ -118,4 +127,31 @@ export class PlanEntity {
   })
   @JoinColumn({ name: 'zone_id' })
   zone: ZoneEntity;
+
+  @OneToMany(() => BillingCodeEntity, (billingCode) => billingCode.plan)
+  billingCodes: BillingCodeEntity[];
+
+  @OneToMany(() => ChargeEntity, (charge) => charge.plan)
+  charges: ChargeEntity[];
+
+  @ManyToOne(() => distributorEntity, (distributor) => distributor.plans, {
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
+  @JoinColumn({ name: 'distributor_id' })
+  distributor: distributorEntity;
+
+  @ManyToOne(() => customerTypeEntity, (customerType) => customerType.plans, {
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
+  @JoinColumn({ name: 'customer_type_id' })
+  customerType: customerTypeEntity;
+
+  @ManyToOne(() => retailTariffsEntity, (retailTariff) => retailTariff.plans, {
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
+  @JoinColumn({ name: 'retail_tariff_id' })
+  retailTariff: retailTariffsEntity;
 }
