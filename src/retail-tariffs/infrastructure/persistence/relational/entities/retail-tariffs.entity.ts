@@ -10,10 +10,12 @@ import {
 } from 'typeorm';
 
 import { TABLES } from '@src/common/constants';
-import { EntityRelationalHelper } from '@src/utils/relational-entity-helper';
-import { distributorEntity } from './distributor.entity';
-import { customerTypeEntity } from './customer-type.entity';
+import { PlanEntity } from '@src/plans/infrastructure/persistence/relational/entities/plan.entity';
 import { retailNtcKeyRelnEntity } from '@src/retail-tariffs/infrastructure/persistence/relational/entities/retail-ntc-key-reln.entity';
+import { EntityRelationalHelper } from '@src/utils/relational-entity-helper';
+
+import { customerTypeEntity } from './customer-type.entity';
+import { distributorEntity } from './distributor.entity';
 
 @Entity({
   name: TABLES.retailTariff,
@@ -65,4 +67,7 @@ export class retailTariffsEntity extends EntityRelationalHelper {
     (retailNtcKeyReln) => retailNtcKeyReln.retail_tariff,
   )
   retailNtcKeyRelations: retailNtcKeyRelnEntity[];
+
+  @OneToMany(() => PlanEntity, (plan) => plan.retailTariff)
+  plans: PlanEntity[];
 }

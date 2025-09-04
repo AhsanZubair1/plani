@@ -42,6 +42,18 @@ async function runSeeds() {
     console.log('📊 Seeding Zones...');
     await seedZones(dataSource);
 
+    // Seed Contract Terms
+    console.log('📊 Seeding Contract Terms...');
+    // await seedContractTerms(dataSource);
+
+    // Seed Billing Frequencies
+    console.log('📊 Seeding Billing Frequencies...');
+    // await seedBillingFrequencies(dataSource);
+
+    // Seed Retail Tariffs
+    console.log('📊 Seeding Retail Tariffs...');
+    await seedRetailTariffs(dataSource);
+
     // Seed Plans
     console.log('📊 Seeding Plans...');
     await seedPlans(dataSource);
@@ -523,6 +535,114 @@ async function seedZones(dataSource: DataSource) {
   }
 }
 
+// async function seedBillingFrequencies(dataSource: DataSource) {
+//   const billingFrequencies = [
+//     { frequency_code: 'MONTHLY', frequency_name: 'Monthly Billing' },
+//     { frequency_code: 'QUARTERLY', frequency_name: 'Quarterly Billing' },
+//     { frequency_code: 'ANNUAL', frequency_name: 'Annual Billing' },
+//     { frequency_code: 'BI_MONTHLY', frequency_name: 'Bi-Monthly Billing' },
+//   ];
+
+//   // for (const freq of billingFrequencies) {
+//   //   const existing = await dataSource.query(
+//   //     'SELECT * FROM billing_frequencies WHERE frequency_code = $1',
+//   //     [freq.frequency_code],
+//   //   );
+
+//   //   if (existing.length === 0) {
+//   //     await dataSource.query(
+//   //       'INSERT INTO billing_frequencies (frequency_code, frequency_name) VALUES ($1, $2)',
+//   //       [freq.frequency_code, freq.frequency_name],
+//   //     );
+//   //     console.log(`  ✓ Created billing frequency: ${freq.frequency_name}`);
+//   //   } else {
+//   //     console.log(
+//   //       `  - Billing frequency already exists: ${freq.frequency_name}`,
+//   //     );
+//   //   }
+//   // }
+// }
+
+async function seedRetailTariffs(dataSource: DataSource) {
+  const retailTariffs = [
+    {
+      tariff_name: 'Standard Residential Tariff',
+      rate_card_id: 1,
+      distributor_id: 1,
+      effective_from: '2024-01-01',
+      effective_to: '2024-12-31',
+      is_active: true,
+    },
+    {
+      tariff_name: 'Time of Use Tariff',
+      rate_card_id: 2,
+      distributor_id: 1,
+      effective_from: '2024-01-01',
+      effective_to: '2024-12-31',
+      is_active: true,
+    },
+    {
+      tariff_name: 'Solar Feed-in Tariff',
+      rate_card_id: 3,
+      distributor_id: 1,
+      effective_from: '2024-01-01',
+      effective_to: '2024-12-31',
+      is_active: true,
+    },
+    {
+      tariff_name: 'Commercial Standard Tariff',
+      rate_card_id: 4,
+      distributor_id: 1,
+      effective_from: '2024-01-01',
+      effective_to: '2024-12-31',
+      is_active: true,
+    },
+    {
+      tariff_name: 'Industrial Peak Tariff',
+      rate_card_id: 6,
+      distributor_id: 1,
+      effective_from: '2024-01-01',
+      effective_to: '2024-12-31',
+      is_active: true,
+    },
+    {
+      tariff_name: 'EV Charging Tariff',
+      rate_card_id: 2,
+      distributor_id: 1,
+      effective_from: '2024-01-01',
+      effective_to: '2024-12-31',
+      is_active: true,
+    },
+  ];
+
+  for (const tariff of retailTariffs) {
+    const existing = await dataSource.query(
+      'SELECT * FROM retail_tariffs WHERE tariff_code = $1',
+      [tariff],
+    );
+
+    if (existing.length === 0) {
+      await dataSource.query(
+        `INSERT INTO retail_tariffs (
+          tariff_name, rate_card_id, distributor_id, 
+          effective_from, effective_to, is_active, created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())`,
+        [
+          tariff.tariff_name,
+          tariff.rate_card_id,
+          tariff.distributor_id,
+          tariff.effective_from,
+          tariff.effective_to,
+          tariff.is_active,
+        ],
+      );
+      console.log(`  ✓ Created retail tariff: ${tariff.tariff_name}`);
+    } else {
+      console.log(`  - Retail tariff already exists: ${tariff.tariff_name}`);
+    }
+  }
+}
+
 async function seedPlans(dataSource: DataSource) {
   const plans = [
     {
@@ -552,6 +672,7 @@ async function seedPlans(dataSource: DataSource) {
       rate_card_id: 1,
       contract_term_id: 1,
       bill_freq_id: 1,
+      retail_tariff_id: 1,
     },
     {
       int_plan_code: 'RES002',
@@ -582,6 +703,7 @@ async function seedPlans(dataSource: DataSource) {
       rate_card_id: 2,
       contract_term_id: 2,
       bill_freq_id: 1,
+      retail_tariff_id: 2,
     },
     {
       int_plan_code: 'SOLAR001',
@@ -610,6 +732,7 @@ async function seedPlans(dataSource: DataSource) {
       rate_card_id: 3,
       contract_term_id: 1,
       bill_freq_id: 1,
+      retail_tariff_id: 3,
     },
     {
       int_plan_code: 'COM001',
@@ -638,6 +761,7 @@ async function seedPlans(dataSource: DataSource) {
       rate_card_id: 4,
       contract_term_id: 1,
       bill_freq_id: 1,
+      retail_tariff_id: 4,
     },
     {
       int_plan_code: 'IND001',
@@ -666,6 +790,7 @@ async function seedPlans(dataSource: DataSource) {
       rate_card_id: 6,
       contract_term_id: 2,
       bill_freq_id: 1,
+      retail_tariff_id: 5,
     },
     {
       int_plan_code: 'EV001',
@@ -694,6 +819,7 @@ async function seedPlans(dataSource: DataSource) {
       rate_card_id: 2,
       contract_term_id: 1,
       bill_freq_id: 1,
+      retail_tariff_id: 6,
     },
   ];
 
@@ -712,9 +838,9 @@ async function seedPlans(dataSource: DataSource) {
           price_variation_details, terms_and_conditions, contract_expiry_details, 
           fixed_rates, lowest_rps, zone_id, plan_type_id, customer_type_id, 
           distributor_id, rate_card_id, contract_term_id, bill_freq_id, 
-          created_at, updated_at
+          retail_tariff_id, created_at, updated_at
         ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, NOW(), NOW()
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, NOW(), NOW()
         )`,
         [
           plan.int_plan_code,
@@ -743,6 +869,7 @@ async function seedPlans(dataSource: DataSource) {
           plan.rate_card_id,
           plan.contract_term_id,
           plan.bill_freq_id,
+          plan.retail_tariff_id,
         ],
       );
       console.log(`  ✓ Created plan: ${plan.plan_name}`);

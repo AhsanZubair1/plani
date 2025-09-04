@@ -13,6 +13,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
+import { PlanMapping } from '@src/plans/domain/plan-mapping';
+import { PlanMappingStatusCountsDto } from '@src/plans/dto/plan-mapping-status-counts.dto';
 import { PaginationResponse } from '@src/utils/types/pagination-options';
 
 import { Plan } from './domain/plan';
@@ -77,17 +79,17 @@ export class PlansController {
     return this.plansService.findByRateCard(rateCardId);
   }
 
-  @Get(':id')
-  @ApiOperation({ summary: 'Get a plan by ID' })
-  @ApiResponse({
-    status: 200,
-    description: 'Plan retrieved successfully',
-    type: PlanDto,
-  })
-  @ApiResponse({ status: 404, description: 'Plan not found' })
-  async findOne(@Param('id', ParseIntPipe) id: number): Promise<Plan | null> {
-    return this.plansService.findOne(id);
-  }
+  // @Get(':id')
+  // @ApiOperation({ summary: 'Get a plan by ID' })
+  // @ApiResponse({
+  //   status: 200,
+  //   description: 'Plan retrieved successfully',
+  //   type: PlanDto,
+  // })
+  // @ApiResponse({ status: 404, description: 'Plan not found' })
+  // async findOne(@Param('id', ParseIntPipe) id: number): Promise<Plan | null> {
+  //   return this.plansService.findOne(id);
+  // }
 
   @Patch(':id')
   @ApiOperation({ summary: 'Update a plan' })
@@ -146,6 +148,37 @@ export class PlansController {
     expired: number;
   }> {
     return this.plansService.getPlanStatusCounts();
+  }
+
+  // NEW_API'S
+  @Get('mapping/status/counts')
+  @ApiOperation({
+    summary: 'Get plan mapping status counts (active, expired)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Plan mapping status counts retrieved successfully',
+    type: PlanMappingStatusCountsDto,
+  })
+  async getPlanMappingStatusCounts(): Promise<{
+    active: number;
+    expired: number;
+  }> {
+    return this.plansService.getPlanMappingStatusCounts();
+  }
+
+  // NEW_API'S
+  @Get('mapping')
+  @ApiOperation({
+    summary: 'Get all plan mapping with pagination and filters',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Plan mappings retrieved successfully',
+    type: PlanMapping,
+  })
+  async getPlanMapping(): Promise<PlanMapping[]> {
+    return this.plansService.getPlanMapping();
   }
 
   @Get('status/ready/count')

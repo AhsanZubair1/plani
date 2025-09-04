@@ -1,4 +1,5 @@
 import { Plan } from '@src/plans/domain/plan';
+import { PlanMapping } from '@src/plans/domain/plan-mapping';
 import { QueryPlanDto } from '@src/plans/dto/query-plan.dto';
 import { UpdatePlanDto } from '@src/plans/dto/update-plan.dto';
 import { NullableType } from '@src/utils/types/nullable.type';
@@ -23,6 +24,14 @@ export abstract class PlanAbstractRepository {
     incomplete: number;
     expired: number;
   }>;
+
+  // plan mapping
+  abstract getPlanMappingStatusCounts(): Promise<{
+    active: number;
+    expired: number;
+  }>;
+
+  abstract getPlanMapping(): Promise<PlanMapping[]>;
 
   // Additional methods for UI functionality
   abstract getFilterOptions(): Promise<{

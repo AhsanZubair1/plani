@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
 
 import { Plan } from '@src/plans/domain/plan';
+import { PlanMapping } from '@src/plans/domain/plan-mapping';
 import { QueryPlanDto } from '@src/plans/dto/query-plan.dto';
 import { UpdatePlanDto } from '@src/plans/dto/update-plan.dto';
 import { PlanAbstractRepository } from '@src/plans/infrastructure/persistence/plan.abstract.repository';
@@ -53,6 +54,39 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       pagination: { page, limit },
       total,
     };
+  }
+
+  async getPlanMapping(): Promise<PlanMapping[]> {
+    const plans = await this.plansRepository
+      .createQueryBuilder('plan')
+      .leftJoinAndSelect('plan.distributor', 'distributor')
+      .leftJoinAndSelect('plan.customerType', 'customerType')
+      .leftJoinAndSelect('plan.retailTariff', 'retailTariff') // Direct relationship
+      .leftJoinAndSelect('plan.charges', 'charges')
+      .leftJoinAndSelect('plan.billingCodes', 'billingCodes')
+      .orderBy('plan.created_at', 'DESC')
+      .getMany();
+
+    return plans.map((plan) => {
+      const totalChargeAmount =
+        plan.charges?.reduce((total, charge) => {
+          return total + (Number(charge.charge_amount) || 0);
+        }, 0) || 0;
+
+      const billingCodesList =
+        plan.billingCodes
+          ?.map((bc) => bc.billing_code)
+          .filter((code) => code) || [];
+
+      return {
+        planId: plan.int_plan_code || '',
+        distributer: plan.distributor?.distributor_name || '',
+        retailTariffName: plan.retailTariff?.retail_tariff_name || '', // Direct from retailTariff
+        customerType: plan.customerType?.customer_type_code || '',
+        chargeAmount: totalChargeAmount.toFixed(2),
+        billingCodes: billingCodesList,
+      };
+    });
   }
 
   async findByRateCard(rateCardId: number): Promise<Plan[]> {
@@ -136,6 +170,19 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
     ]);
 
     return { ready, incomplete, expired };
+  }
+
+  async getPlanMappingStatusCounts(): Promise<{
+    active: number;
+    expired: number;
+  }> {
+    const [active, expired] = await Promise.all([
+      this.getReadyPlansCount(),
+      this.getIncompletePlansCount(),
+      this.getExpiredPlansCount(),
+    ]);
+
+    return { active, expired };
   }
 
   private applyFilters(
