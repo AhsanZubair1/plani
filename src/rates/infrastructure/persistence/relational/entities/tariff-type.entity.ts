@@ -6,7 +6,10 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+
+import { RateCardEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-card.entity';
 
 import { FuelTypeEntity } from './fuel-type.entity';
 
@@ -36,4 +39,7 @@ export class TariffTypeEntity {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updated_at: Date;
+
+  @OneToMany(() => RateCardEntity, (rateCard) => rateCard.tariffType)
+  rateCards: RateCardEntity[];
 }

@@ -4,12 +4,12 @@ import { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
 
 import { Plan } from '@src/plans/domain/plan';
 import { QueryPlanDto } from '@src/plans/dto/query-plan.dto';
+import { UpdatePlanDto } from '@src/plans/dto/update-plan.dto';
 import { PlanAbstractRepository } from '@src/plans/infrastructure/persistence/plan.abstract.repository';
 import { PlanEntity } from '@src/plans/infrastructure/persistence/relational/entities/plan.entity';
 import { PlanMapper } from '@src/plans/infrastructure/persistence/relational/mappers/plan.mapper';
 import { NullableType } from '@src/utils/types/nullable.type';
 import { PaginationResponse } from '@src/utils/types/pagination-options';
-import { UpdatePlanDto } from '@src/plans/dto/update-plan.dto';
 
 @Injectable()
 export class PlansRelationalRepository implements PlanAbstractRepository {
@@ -567,6 +567,42 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
     return entities.map((entity) => entity.planName).filter(Boolean);
   }
 
+  async getPlanList(): Promise<
+    {
+      planName: string;
+      planId: string;
+      tariff: string;
+      planType: string;
+      customer: string;
+      state: string;
+      distributor: string;
+      effectiveTill: string;
+    }[]
+  > {
+    const plans = await this.plansRepository
+      .createQueryBuilder('plan')
+      .leftJoinAndSelect('plan.rateCard', 'rateCard')
+      .leftJoinAndSelect('rateCard.tariffType', 'tariffType')
+      .leftJoinAndSelect('plan.planType', 'planType')
+      .leftJoinAndSelect('plan.zone', 'zone')
+      .leftJoinAndSelect('plan.distributor', 'distributor')
+      .leftJoinAndSelect('plan.customerType', 'customerType')
+      .orderBy('plan.created_at', 'DESC')
+      .getMany();
+
+    return plans.map((plan) => ({
+      planName: plan.plan_name || '',
+      planId: plan.int_plan_code || '',
+      tariff: plan.rateCard?.tariffType?.tariff_type_code || '',
+      planType: plan.planType?.plan_type_name || '',
+      customer: plan.customerType?.customer_type_code || '', // Now accessible
+      state: plan.zone?.zone_code || '',
+      distributor: plan.distributor?.distributor_name || '', // Now accessible
+      effectiveTill: plan.effective_to
+        ? new Date(plan.effective_to).toLocaleDateString('en-GB')
+        : '',
+    }));
+  }
   private getPlanStatus(plan: Plan): string {
     const now = new Date();
 

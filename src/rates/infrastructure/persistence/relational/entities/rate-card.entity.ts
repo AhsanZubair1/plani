@@ -24,7 +24,7 @@ export class RateCardEntity {
   @Column({ type: 'int' })
   tariff_type_id: number;
 
-  @ManyToOne(() => TariffTypeEntity)
+  @ManyToOne(() => TariffTypeEntity, { eager: true })
   @JoinColumn({ name: 'tariff_type_id' })
   tariffType: TariffTypeEntity;
 

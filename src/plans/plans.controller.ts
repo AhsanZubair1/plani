@@ -17,6 +17,7 @@ import { PaginationResponse } from '@src/utils/types/pagination-options';
 
 import { Plan } from './domain/plan';
 import { CreatePlanDto } from './dto/create-plan.dto';
+import { PlanListDto } from './dto/plan-list.dto';
 import { PlanStatusCountsDto } from './dto/plan-status-counts.dto';
 import { PlanDto } from './dto/plan.dto';
 import { QueryPlanDto } from './dto/query-plan.dto';
@@ -50,6 +51,17 @@ export class PlansController {
     @Query() query: QueryPlanDto,
   ): Promise<PaginationResponse<Plan>> {
     return this.plansService.findMany(query);
+  }
+
+  @Get('list')
+  @ApiOperation({ summary: 'Get plans list with related data' })
+  @ApiResponse({
+    status: 200,
+    description: 'Plans list retrieved successfully',
+    type: [PlanListDto],
+  })
+  getPlanList(): Promise<PlanListDto[]> {
+    return this.plansService.getPlanList();
   }
 
   @Get('rate-card/:rateCardId')

@@ -55,5 +55,22 @@ export abstract class PlanAbstractRepository {
 
   abstract getRecentUploads(): Promise<Plan[]>;
 
-  abstract getSearchSuggestions(query: string, limit: number): Promise<string[]>;
+  abstract getSearchSuggestions(
+    query: string,
+    limit: number,
+  ): Promise<string[]>;
+
+  // Plan list with related data
+  abstract getPlanList(): Promise<
+    {
+      planName: string;
+      planId: string;
+      tariff: string;
+      planType: string;
+      customer: string;
+      state: string;
+      distributor: string;
+      effectiveTill: string;
+    }[]
+  >;
 }

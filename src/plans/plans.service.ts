@@ -140,4 +140,19 @@ export class PlansService {
   getSearchSuggestions(query: string, limit: number = 10): Promise<string[]> {
     return this.plansRepository.getSearchSuggestions(query, limit);
   }
+
+  getPlanList(): Promise<
+    {
+      planName: string;
+      planId: string;
+      tariff: string;
+      planType: string;
+      customer: string;
+      state: string;
+      distributor: string;
+      effectiveTill: string;
+    }[]
+  > {
+    return this.plansRepository.getPlanList();
+  }
 }

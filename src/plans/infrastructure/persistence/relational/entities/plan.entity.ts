@@ -9,8 +9,10 @@ import {
 } from 'typeorm';
 
 import { PlanTypeEntity } from '@src/plans/infrastructure/persistence/relational/entities/plan-type.entity';
-import { RateCardEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-card.entity';
 import { ZoneEntity } from '@src/plans/infrastructure/persistence/relational/entities/zone.entity';
+import { RateCardEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-card.entity';
+import { customerTypeEntity } from '@src/retail-tariffs/infrastructure/persistence/relational/entities/customer-type.entity';
+import { distributorEntity } from '@src/retail-tariffs/infrastructure/persistence/relational/entities/distributor.entity';
 
 @Entity({ name: 'plans' })
 export class PlanEntity {
@@ -87,10 +89,18 @@ export class PlanEntity {
   @Column({ type: 'int' })
   distributor_id: number;
 
+  @ManyToOne(() => distributorEntity, (distributor) => distributor.plans)
+  @JoinColumn({ name: 'distributor_id' })
+  distributor: distributorEntity;
+
+  @ManyToOne(() => customerTypeEntity, (customerType) => customerType.plans)
+  @JoinColumn({ name: 'customer_type_id' })
+  customerType: customerTypeEntity;
+
   @Column({ type: 'int' })
   rate_card_id: number;
 
-  @ManyToOne(() => RateCardEntity, { lazy: true })
+  @ManyToOne(() => RateCardEntity, { eager: true })
   @JoinColumn({ name: 'rate_card_id' })
   rateCard: RateCardEntity;
 
