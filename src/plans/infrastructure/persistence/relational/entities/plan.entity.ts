@@ -105,9 +105,6 @@ export class PlanEntity {
   retail_tariff_id: number;
 
   @Column({ type: 'int' })
-  retail_tariff_id: number;
-
-  @Column({ type: 'int' })
   rate_card_id: number;
 
   @ManyToOne(() => RateCardEntity, { eager: true })

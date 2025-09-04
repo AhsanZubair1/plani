@@ -566,79 +566,67 @@ async function seedZones(dataSource: DataSource) {
 async function seedRetailTariffs(dataSource: DataSource) {
   const retailTariffs = [
     {
-      tariff_name: 'Standard Residential Tariff',
-      rate_card_id: 1,
+      retail_tariff_code: 'RES_STD',
+      retail_tariff_name: 'Standard Residential Tariff',
       distributor_id: 1,
-      effective_from: '2024-01-01',
-      effective_to: '2024-12-31',
-      is_active: true,
+      customer_type_id: 1,
     },
     {
-      tariff_name: 'Time of Use Tariff',
-      rate_card_id: 2,
+      retail_tariff_code: 'RES_TOU',
+      retail_tariff_name: 'Time of Use Tariff',
       distributor_id: 1,
-      effective_from: '2024-01-01',
-      effective_to: '2024-12-31',
-      is_active: true,
+      customer_type_id: 1,
     },
     {
-      tariff_name: 'Solar Feed-in Tariff',
-      rate_card_id: 3,
+      retail_tariff_code: 'SOLAR_FIT',
+      retail_tariff_name: 'Solar Feed-in Tariff',
       distributor_id: 1,
-      effective_from: '2024-01-01',
-      effective_to: '2024-12-31',
-      is_active: true,
+      customer_type_id: 1,
     },
     {
-      tariff_name: 'Commercial Standard Tariff',
-      rate_card_id: 4,
+      retail_tariff_code: 'COM_STD',
+      retail_tariff_name: 'Commercial Standard Tariff',
       distributor_id: 1,
-      effective_from: '2024-01-01',
-      effective_to: '2024-12-31',
-      is_active: true,
+      customer_type_id: 2,
     },
     {
-      tariff_name: 'Industrial Peak Tariff',
-      rate_card_id: 6,
+      retail_tariff_code: 'IND_PEAK',
+      retail_tariff_name: 'Industrial Peak Tariff',
       distributor_id: 1,
-      effective_from: '2024-01-01',
-      effective_to: '2024-12-31',
-      is_active: true,
+      customer_type_id: 4,
     },
     {
-      tariff_name: 'EV Charging Tariff',
-      rate_card_id: 2,
+      retail_tariff_code: 'EV_CHARGE',
+      retail_tariff_name: 'EV Charging Tariff',
       distributor_id: 1,
-      effective_from: '2024-01-01',
-      effective_to: '2024-12-31',
-      is_active: true,
+      customer_type_id: 1,
     },
   ];
 
   for (const tariff of retailTariffs) {
     const existing = await dataSource.query(
-      'SELECT * FROM retail_tariffs WHERE tariff_code = $1',
-      [tariff],
+      'SELECT * FROM retail_tariffs WHERE retail_tariff_name = $1',
+      [tariff.retail_tariff_name],
     );
 
     if (existing.length === 0) {
       await dataSource.query(
         `INSERT INTO retail_tariffs (
-          tariff_name, rate_card_id, distributor_id, 
-          effective_from, effective_to, is_active, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())`,
+          retail_tariff_code, retail_tariff_name, distributor_id, 
+          customer_type_id, created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, NOW(), NOW())`,
         [
-          tariff.tariff_name,
-          tariff.rate_card_id,
+          tariff.retail_tariff_code,
+          tariff.retail_tariff_name,
           tariff.distributor_id,
-          tariff.effective_from,
-          tariff.effective_to,
-          tariff.is_active,
+          tariff.customer_type_id,
         ],
       );
-      console.log(`  ✓ Created retail tariff: ${tariff.tariff_name}`);
+      console.log(`  ✓ Created retail tariff: ${tariff.retail_tariff_name}`);
     } else {
-      console.log(`  - Retail tariff already exists: ${tariff.tariff_name}`);
+      console.log(
+        `  - Retail tariff already exists: ${tariff.retail_tariff_name}`,
+      );
     }
   }
 }
