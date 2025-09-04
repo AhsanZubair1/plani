@@ -58,6 +58,34 @@ async function runSeeds() {
     console.log('📊 Seeding Plans...');
     await seedPlans(dataSource);
 
+    // Seed Billing Code Types
+    console.log('📊 Seeding Billing Code Types...');
+    await seedBillingCodeTypes(dataSource);
+
+    // Seed Charge Classes
+    console.log('📊 Seeding Charge Classes...');
+    await seedChargeClasses(dataSource);
+
+    // Seed Charge Types
+    console.log('📊 Seeding Charge Types...');
+    await seedChargeTypes(dataSource);
+
+    // Seed Charge Categories
+    console.log('📊 Seeding Charge Categories...');
+    await seedChargeCategories(dataSource);
+
+    // Seed Charge Terms
+    console.log('📊 Seeding Charge Terms...');
+    await seedChargeTerms(dataSource);
+
+    // Seed Billing Codes
+    console.log('📊 Seeding Billing Codes...');
+    await seedBillingCodes(dataSource);
+
+    // Seed Charges
+    console.log('📊 Seeding Charges...');
+    await seedCharges(dataSource);
+
     console.log('✅ Database seeding completed successfully!');
   } catch (error) {
     console.error('❌ Error during seeding:', error);
@@ -863,6 +891,578 @@ async function seedPlans(dataSource: DataSource) {
       console.log(`  ✓ Created plan: ${plan.plan_name}`);
     } else {
       console.log(`  - Plan already exists: ${plan.plan_name}`);
+    }
+  }
+}
+
+async function seedBillingCodeTypes(dataSource: DataSource) {
+  const billingCodeTypes = [
+    {
+      billing_code_type: 'ENERGY',
+      billing_code_type_name: 'Energy Consumption',
+    },
+    {
+      billing_code_type: 'SERVICE',
+      billing_code_type_name: 'Service Charges',
+    },
+    {
+      billing_code_type: 'GREEN',
+      billing_code_type_name: 'Green Energy',
+    },
+    {
+      billing_code_type: 'NETWORK',
+      billing_code_type_name: 'Network Charges',
+    },
+    {
+      billing_code_type: 'RETAIL',
+      billing_code_type_name: 'Retail Charges',
+    },
+  ];
+
+  for (const codeType of billingCodeTypes) {
+    const existing = await dataSource.query(
+      'SELECT * FROM billing_code_types WHERE billing_code_type = $1',
+      [codeType.billing_code_type],
+    );
+
+    if (existing.length === 0) {
+      await dataSource.query(
+        `INSERT INTO billing_code_types (
+          billing_code_type, billing_code_type_name, created_at, updated_at
+        ) VALUES ($1, $2, NOW(), NOW())`,
+        [codeType.billing_code_type, codeType.billing_code_type_name],
+      );
+      console.log(
+        `  ✓ Created billing code type: ${codeType.billing_code_type_name}`,
+      );
+    } else {
+      console.log(
+        `  - Billing code type already exists: ${codeType.billing_code_type_name}`,
+      );
+    }
+  }
+}
+
+async function seedChargeClasses(dataSource: DataSource) {
+  const chargeClasses = [
+    {
+      charge_class_code: 'ENERGY',
+      charge_class_name: 'Energy Charges',
+      multiplier: 1,
+    },
+    {
+      charge_class_code: 'SERVICE',
+      charge_class_name: 'Service Charges',
+      multiplier: 1,
+    },
+    {
+      charge_class_code: 'NETWORK',
+      charge_class_name: 'Network Charges',
+      multiplier: 1,
+    },
+    {
+      charge_class_code: 'RETAIL',
+      charge_class_name: 'Retail Charges',
+      multiplier: 1,
+    },
+    {
+      charge_class_code: 'GREEN',
+      charge_class_name: 'Green Energy Charges',
+      multiplier: 1,
+    },
+  ];
+
+  for (const chargeClass of chargeClasses) {
+    const existing = await dataSource.query(
+      'SELECT * FROM charge_classes WHERE charge_class_code = $1',
+      [chargeClass.charge_class_code],
+    );
+
+    if (existing.length === 0) {
+      await dataSource.query(
+        `INSERT INTO charge_classes (
+          charge_class_code, charge_class_name, multiplier, created_at, updated_at
+        ) VALUES ($1, $2, $3, NOW(), NOW())`,
+        [
+          chargeClass.charge_class_code,
+          chargeClass.charge_class_name,
+          chargeClass.multiplier,
+        ],
+      );
+      console.log(`  ✓ Created charge class: ${chargeClass.charge_class_name}`);
+    } else {
+      console.log(
+        `  - Charge class already exists: ${chargeClass.charge_class_name}`,
+      );
+    }
+  }
+}
+
+async function seedChargeTypes(dataSource: DataSource) {
+  const chargeTypes = [
+    {
+      charge_type_code: 'ENERGY_PEAK',
+      charge_type_name: 'Peak Energy Rate',
+      charge_class_id: 1,
+    },
+    {
+      charge_type_code: 'ENERGY_OFF_PEAK',
+      charge_type_name: 'Off-Peak Energy Rate',
+      charge_class_id: 1,
+    },
+    {
+      charge_type_code: 'ENERGY_SHOULDER',
+      charge_type_name: 'Shoulder Energy Rate',
+      charge_class_id: 1,
+    },
+    {
+      charge_type_code: 'SERVICE_FIXED',
+      charge_type_name: 'Fixed Service Charge',
+      charge_class_id: 2,
+    },
+    {
+      charge_type_code: 'SERVICE_DAILY',
+      charge_type_name: 'Daily Service Charge',
+      charge_class_id: 2,
+    },
+    {
+      charge_type_code: 'NETWORK_DISTRIBUTION',
+      charge_type_name: 'Distribution Network Charge',
+      charge_class_id: 3,
+    },
+    {
+      charge_type_code: 'NETWORK_TRANSMISSION',
+      charge_type_name: 'Transmission Network Charge',
+      charge_class_id: 3,
+    },
+    {
+      charge_type_code: 'RETAIL_MARKETING',
+      charge_type_name: 'Retail Marketing Charge',
+      charge_class_id: 4,
+    },
+    {
+      charge_type_code: 'GREEN_FEED_IN',
+      charge_type_name: 'Green Energy Feed-in Tariff',
+      charge_class_id: 5,
+    },
+  ];
+
+  for (const chargeType of chargeTypes) {
+    const existing = await dataSource.query(
+      'SELECT * FROM charge_types WHERE charge_type_code = $1',
+      [chargeType.charge_type_code],
+    );
+
+    if (existing.length === 0) {
+      await dataSource.query(
+        `INSERT INTO charge_types (
+          charge_type_code, charge_type_name, charge_class_id, created_at, updated_at
+        ) VALUES ($1, $2, $3, NOW(), NOW())`,
+        [
+          chargeType.charge_type_code,
+          chargeType.charge_type_name,
+          chargeType.charge_class_id,
+        ],
+      );
+      console.log(`  ✓ Created charge type: ${chargeType.charge_type_name}`);
+    } else {
+      console.log(
+        `  - Charge type already exists: ${chargeType.charge_type_name}`,
+      );
+    }
+  }
+}
+
+async function seedChargeCategories(dataSource: DataSource) {
+  const chargeCategories = [
+    {
+      charge_category_code: 'ENERGY_CONSUMPTION',
+      charge_category_name: 'Energy Consumption',
+      charge_class_id: 1,
+    },
+    {
+      charge_category_code: 'SERVICE_DELIVERY',
+      charge_category_name: 'Service Delivery',
+      charge_class_id: 2,
+    },
+    {
+      charge_category_code: 'NETWORK_ACCESS',
+      charge_category_name: 'Network Access',
+      charge_class_id: 3,
+    },
+    {
+      charge_category_code: 'RETAIL_OPERATIONS',
+      charge_category_name: 'Retail Operations',
+      charge_class_id: 4,
+    },
+    {
+      charge_category_code: 'GREEN_ENERGY',
+      charge_category_name: 'Green Energy',
+      charge_class_id: 5,
+    },
+  ];
+
+  for (const chargeCategory of chargeCategories) {
+    const existing = await dataSource.query(
+      'SELECT * FROM charge_categories WHERE charge_category_code = $1',
+      [chargeCategory.charge_category_code],
+    );
+
+    if (existing.length === 0) {
+      await dataSource.query(
+        `INSERT INTO charge_categories (
+          charge_category_code, charge_category_name, charge_class_id, created_at, updated_at
+        ) VALUES ($1, $2, $3, NOW(), NOW())`,
+        [
+          chargeCategory.charge_category_code,
+          chargeCategory.charge_category_name,
+          chargeCategory.charge_class_id,
+        ],
+      );
+      console.log(
+        `  ✓ Created charge category: ${chargeCategory.charge_category_name}`,
+      );
+    } else {
+      console.log(
+        `  - Charge category already exists: ${chargeCategory.charge_category_name}`,
+      );
+    }
+  }
+}
+
+async function seedChargeTerms(dataSource: DataSource) {
+  const chargeTerms = [
+    {
+      charge_term_code: 'DAILY',
+    },
+    {
+      charge_term_code: 'MONTHLY',
+    },
+    {
+      charge_term_code: 'QUARTERLY',
+    },
+    {
+      charge_term_code: 'ANNUAL',
+    },
+    {
+      charge_term_code: 'PER_KWH',
+    },
+    {
+      charge_term_code: 'PER_KVA',
+    },
+  ];
+
+  for (const chargeTerm of chargeTerms) {
+    const existing = await dataSource.query(
+      'SELECT * FROM charge_terms WHERE charge_term_code = $1',
+      [chargeTerm.charge_term_code],
+    );
+
+    if (existing.length === 0) {
+      await dataSource.query(
+        `INSERT INTO charge_terms (
+          charge_term_code, created_at, updated_at
+        ) VALUES ($1, NOW(), NOW())`,
+        [chargeTerm.charge_term_code],
+      );
+      console.log(`  ✓ Created charge term: ${chargeTerm.charge_term_code}`);
+    } else {
+      console.log(
+        `  - Charge term already exists: ${chargeTerm.charge_term_code}`,
+      );
+    }
+  }
+}
+
+async function seedBillingCodes(dataSource: DataSource) {
+  // Get actual plan IDs from the database
+  const plans = await dataSource.query(
+    'SELECT plan_id, int_plan_code FROM plans ORDER BY plan_id',
+  );
+
+  const billingCodes = [
+    {
+      billing_code: 'ENERGY_001',
+      billing_code_type_id: 1,
+      plan_code: 'RES001',
+    },
+    {
+      billing_code: 'SERVICE_001',
+      billing_code_type_id: 2,
+      plan_code: 'RES001',
+    },
+    {
+      billing_code: 'ENERGY_002',
+      billing_code_type_id: 1,
+      plan_code: 'RES002',
+    },
+    {
+      billing_code: 'GREEN_001',
+      billing_code_type_id: 3,
+      plan_code: 'RES002',
+    },
+    {
+      billing_code: 'ENERGY_003',
+      billing_code_type_id: 1,
+      plan_code: 'SOLAR001',
+    },
+    {
+      billing_code: 'GREEN_002',
+      billing_code_type_id: 3,
+      plan_code: 'SOLAR001',
+    },
+    {
+      billing_code: 'ENERGY_004',
+      billing_code_type_id: 1,
+      plan_code: 'COM001',
+    },
+    {
+      billing_code: 'SERVICE_002',
+      billing_code_type_id: 2,
+      plan_code: 'COM001',
+    },
+    {
+      billing_code: 'ENERGY_005',
+      billing_code_type_id: 1,
+      plan_code: 'IND001',
+    },
+    {
+      billing_code: 'NETWORK_001',
+      billing_code_type_id: 4,
+      plan_code: 'IND001',
+    },
+    {
+      billing_code: 'ENERGY_006',
+      billing_code_type_id: 1,
+      plan_code: 'EV001',
+    },
+    {
+      billing_code: 'GREEN_003',
+      billing_code_type_id: 3,
+      plan_code: 'EV001',
+    },
+  ];
+
+  for (const billingCode of billingCodes) {
+    // Find the plan ID by plan code
+    const plan = plans.find((p) => p.int_plan_code === billingCode.plan_code);
+    if (!plan) {
+      console.log(
+        `  - Plan not found: ${billingCode.plan_code}, skipping billing code: ${billingCode.billing_code}`,
+      );
+      continue;
+    }
+
+    const existing = await dataSource.query(
+      'SELECT * FROM billing_codes WHERE billing_code = $1 AND plan_id = $2',
+      [billingCode.billing_code, plan.plan_id],
+    );
+
+    if (existing.length === 0) {
+      await dataSource.query(
+        `INSERT INTO billing_codes (
+          billing_code, billing_code_type_id, plan_id, created_at, updated_at
+        ) VALUES ($1, $2, $3, NOW(), NOW())`,
+        [
+          billingCode.billing_code,
+          billingCode.billing_code_type_id,
+          plan.plan_id,
+        ],
+      );
+      console.log(
+        `  ✓ Created billing code: ${billingCode.billing_code} for plan ${billingCode.plan_code} (ID: ${plan.plan_id})`,
+      );
+    } else {
+      console.log(
+        `  - Billing code already exists: ${billingCode.billing_code} for plan ${billingCode.plan_code}`,
+      );
+    }
+  }
+}
+
+async function seedCharges(dataSource: DataSource) {
+  // Get actual plan IDs from the database
+  const plans = await dataSource.query(
+    'SELECT plan_id, int_plan_code FROM plans ORDER BY plan_id',
+  );
+
+  const charges = [
+    {
+      charge_code: 'CHG_001',
+      charge_description: 'Peak Energy Rate',
+      charge_amount: 0.25,
+      charge_perc: 0.0,
+      greenpower_perc: 0.0,
+      reference_01: 'PEAK_RATE',
+      plan_code: 'RES001',
+      charge_type_id: 1,
+      charge_category_id: 1,
+      charge_term_id: 5,
+    },
+    {
+      charge_code: 'CHG_002',
+      charge_description: 'Daily Service Charge',
+      charge_amount: 1.2,
+      charge_perc: 0.0,
+      greenpower_perc: 0.0,
+      reference_01: 'DAILY_SERVICE',
+      plan_code: 'RES001',
+      charge_type_id: 5,
+      charge_category_id: 2,
+      charge_term_id: 1,
+    },
+    {
+      charge_code: 'CHG_003',
+      charge_description: 'Off-Peak Energy Rate',
+      charge_amount: 0.15,
+      charge_perc: 0.0,
+      greenpower_perc: 0.0,
+      reference_01: 'OFF_PEAK_RATE',
+      plan_code: 'RES002',
+      charge_type_id: 2,
+      charge_category_id: 1,
+      charge_term_id: 5,
+    },
+    {
+      charge_code: 'CHG_004',
+      charge_description: 'Green Energy Premium',
+      charge_amount: 0.05,
+      charge_perc: 0.0,
+      greenpower_perc: 100.0,
+      reference_01: 'GREEN_PREMIUM',
+      plan_code: 'RES002',
+      charge_type_id: 9,
+      charge_category_id: 5,
+      charge_term_id: 5,
+    },
+    {
+      charge_code: 'CHG_005',
+      charge_description: 'Solar Feed-in Rate',
+      charge_amount: 0.12,
+      charge_perc: 0.0,
+      greenpower_perc: 100.0,
+      reference_01: 'SOLAR_FIT',
+      plan_code: 'SOLAR001',
+      charge_type_id: 9,
+      charge_category_id: 5,
+      charge_term_id: 5,
+    },
+    {
+      charge_code: 'CHG_006',
+      charge_description: 'Commercial Energy Rate',
+      charge_amount: 0.2,
+      charge_perc: 0.0,
+      greenpower_perc: 0.0,
+      reference_01: 'COM_RATE',
+      plan_code: 'COM001',
+      charge_type_id: 1,
+      charge_category_id: 1,
+      charge_term_id: 5,
+    },
+    {
+      charge_code: 'CHG_007',
+      charge_description: 'Commercial Service Charge',
+      charge_amount: 2.5,
+      charge_perc: 0.0,
+      greenpower_perc: 0.0,
+      reference_01: 'COM_SERVICE',
+      plan_code: 'COM001',
+      charge_type_id: 4,
+      charge_category_id: 2,
+      charge_term_id: 1,
+    },
+    {
+      charge_code: 'CHG_008',
+      charge_description: 'Industrial Peak Rate',
+      charge_amount: 0.18,
+      charge_perc: 0.0,
+      greenpower_perc: 0.0,
+      reference_01: 'IND_PEAK',
+      plan_code: 'IND001',
+      charge_type_id: 1,
+      charge_category_id: 1,
+      charge_term_id: 5,
+    },
+    {
+      charge_code: 'CHG_009',
+      charge_description: 'Network Distribution Charge',
+      charge_amount: 0.08,
+      charge_perc: 0.0,
+      greenpower_perc: 0.0,
+      reference_01: 'NET_DIST',
+      plan_code: 'IND001',
+      charge_type_id: 6,
+      charge_category_id: 3,
+      charge_term_id: 5,
+    },
+    {
+      charge_code: 'CHG_010',
+      charge_description: 'EV Charging Rate',
+      charge_amount: 0.12,
+      charge_perc: 0.0,
+      greenpower_perc: 50.0,
+      reference_01: 'EV_CHARGE',
+      plan_code: 'EV001',
+      charge_type_id: 1,
+      charge_category_id: 1,
+      charge_term_id: 5,
+    },
+    {
+      charge_code: 'CHG_011',
+      charge_description: 'Green Energy Component',
+      charge_amount: 0.03,
+      charge_perc: 0.0,
+      greenpower_perc: 100.0,
+      reference_01: 'GREEN_COMP',
+      plan_code: 'EV001',
+      charge_type_id: 9,
+      charge_category_id: 5,
+      charge_term_id: 5,
+    },
+  ];
+
+  for (const charge of charges) {
+    // Find the plan ID by plan code
+    const plan = plans.find((p) => p.int_plan_code === charge.plan_code);
+    if (!plan) {
+      console.log(
+        `  - Plan not found: ${charge.plan_code}, skipping charge: ${charge.charge_code}`,
+      );
+      continue;
+    }
+
+    const existing = await dataSource.query(
+      'SELECT * FROM charges WHERE charge_code = $1 AND plan_id = $2',
+      [charge.charge_code, plan.plan_id],
+    );
+
+    if (existing.length === 0) {
+      await dataSource.query(
+        `INSERT INTO charges (
+          charge_code, charge_description, charge_amount, charge_perc, greenpower_perc,
+          reference_01, plan_id, charge_type_id, charge_category_id, charge_term_id,
+          created_at, updated_at
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW(), NOW())`,
+        [
+          charge.charge_code,
+          charge.charge_description,
+          charge.charge_amount,
+          charge.charge_perc,
+          charge.greenpower_perc,
+          charge.reference_01,
+          plan.plan_id,
+          charge.charge_type_id,
+          charge.charge_category_id,
+          charge.charge_term_id,
+        ],
+      );
+      console.log(
+        `  ✓ Created charge: ${charge.charge_description} for plan ${charge.plan_code} (ID: ${plan.plan_id})`,
+      );
+    } else {
+      console.log(
+        `  - Charge already exists: ${charge.charge_description} for plan ${charge.plan_code}`,
+      );
     }
   }
 }

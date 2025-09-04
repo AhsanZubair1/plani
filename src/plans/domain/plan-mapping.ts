@@ -29,7 +29,7 @@ export class PlanMapping {
     type: String, // Changed from Number to String (since you're using toFixed(2))
     description: 'Total charge amount as string with 2 decimal places',
   })
-  chargeAmount: string; // Changed from Number to string
+  minimumChargeAmount: string; // Changed from Number to string
 
   @ApiProperty({
     type: [String], // Changed from Array to [String] and Date to String[]

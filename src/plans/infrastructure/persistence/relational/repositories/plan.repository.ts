@@ -61,17 +61,16 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       .createQueryBuilder('plan')
       .leftJoinAndSelect('plan.distributor', 'distributor')
       .leftJoinAndSelect('plan.customerType', 'customerType')
-      .leftJoinAndSelect('plan.retailTariff', 'retailTariff') // Direct relationship
+      .leftJoinAndSelect('plan.retailTariff', 'retailTariff')
       .leftJoinAndSelect('plan.charges', 'charges')
       .leftJoinAndSelect('plan.billingCodes', 'billingCodes')
       .orderBy('plan.created_at', 'DESC')
       .getMany();
 
     return plans.map((plan) => {
-      const totalChargeAmount =
-        plan.charges?.reduce((total, charge) => {
-          return total + (Number(charge.charge_amount) || 0);
-        }, 0) || 0;
+      const minChargeAmount = Math.min(
+        ...plan.charges.map((charge: any) => Number(charge.charge_amount)),
+      );
 
       const billingCodesList =
         plan.billingCodes
@@ -81,9 +80,9 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       return {
         planId: plan.int_plan_code || '',
         distributer: plan.distributor?.distributor_name || '',
-        retailTariffName: plan.retailTariff?.retail_tariff_name || '', // Direct from retailTariff
+        retailTariffName: plan.retailTariff?.retail_tariff_name || '',
         customerType: plan.customerType?.customer_type_code || '',
-        chargeAmount: totalChargeAmount.toFixed(2),
+        minimumChargeAmount: minChargeAmount.toString(), // Convert number to string
         billingCodes: billingCodesList,
       };
     });
