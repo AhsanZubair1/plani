@@ -7,9 +7,9 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { ChargeCategoryEntity } from '@src/plans/infrastructure/persistence/relational/entities/charge-category.entity';
-import { ChargeTermNameEntity } from '@src/plans/infrastructure/persistence/relational/entities/charge-term-name.entity';
-import { ChargeTypeEntity } from '@src/plans/infrastructure/persistence/relational/entities/charge-type.entity';
+import { ChargeCategoryEntity } from './charge-category.entity';
+import { ChargeTermNameEntity } from './charge-term-name.entity';
+import { ChargeTypeEntity } from './charge-type.entity';
 
 @Entity({ name: 'charge_classes' })
 export class ChargeClassEntity {

@@ -9,7 +9,7 @@ import {
 } from 'typeorm';
 
 import { BillingCodeTypeEntity } from './billing-code-type.entity';
-import { PlanEntity } from './plan.entity';
+import { PlanEntity } from '@src/plans/infrastructure/persistence/relational/entities/plan.entity';
 
 @Entity({ name: 'billing_codes' })
 export class BillingCodeEntity {

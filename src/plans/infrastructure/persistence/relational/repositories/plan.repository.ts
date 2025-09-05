@@ -35,59 +35,6 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
     return entity ? PlanMapper.toDomain(entity) : null;
   }
 
-  async findMany(query: QueryPlanDto): Promise<PaginationResponse<Plan>> {
-    const queryBuilder = this.plansRepository.createQueryBuilder('plan');
-
-    this.applyFilters(queryBuilder, query);
-    this.applySorting(queryBuilder, query);
-
-    const page = query.page ?? 1;
-    const limit = query.limit ?? 10;
-    const skip = (page - 1) * limit;
-
-    queryBuilder.skip(skip).take(limit);
-
-    const [entities, total] = await queryBuilder.getManyAndCount();
-
-    return {
-      data: entities.map((entity) => PlanMapper.toDomain(entity)),
-      pagination: { page, limit },
-      total,
-    };
-  }
-
-  async getPlanMapping(): Promise<PlanMapping[]> {
-    const plans = await this.plansRepository
-      .createQueryBuilder('plan')
-      .leftJoinAndSelect('plan.distributor', 'distributor')
-      .leftJoinAndSelect('plan.customerType', 'customerType')
-      .leftJoinAndSelect('plan.retailTariff', 'retailTariff')
-      .leftJoinAndSelect('plan.charges', 'charges')
-      .leftJoinAndSelect('plan.billingCodes', 'billingCodes')
-      .orderBy('plan.created_at', 'DESC')
-      .getMany();
-
-    return plans.map((plan) => {
-      const minChargeAmount = Math.min(
-        ...plan.charges.map((charge: any) => Number(charge.charge_amount)),
-      );
-
-      const billingCodesList =
-        plan.billingCodes
-          ?.map((bc) => bc.billing_code)
-          .filter((code) => code) || [];
-
-      return {
-        planId: plan.int_plan_code || '',
-        distributer: plan.distributor?.distributor_name || '',
-        retailTariffName: plan.retailTariff?.retail_tariff_name || '',
-        customerType: plan.customerType?.customer_type_code || '',
-        minimumChargeAmount: minChargeAmount.toString(), // Convert number to string
-        billingCodes: billingCodesList,
-      };
-    });
-  }
-
   async findByRateCard(rateCardId: number): Promise<Plan[]> {
     const entities = await this.plansRepository.find({
       where: { rate_card_id: rateCardId },
@@ -130,6 +77,142 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
     await this.plansRepository.delete(id);
   }
 
+  async bulkDelete(planIds: number[]): Promise<void> {
+    await this.plansRepository.delete(planIds);
+  }
+
+  async bulkUpdate(
+    planIds: number[],
+    updates: Partial<UpdatePlanDto>,
+  ): Promise<{ updated: number; failed: number }> {
+    let updated = 0;
+    let failed = 0;
+
+    for (const planId of planIds) {
+      try {
+        const plan = new Plan();
+        Object.assign(plan, updates);
+        await this.update(planId, plan);
+        updated++;
+      } catch (error) {
+        failed++;
+      }
+    }
+
+    return { updated, failed };
+  }
+
+  async getDashboardSummary(): Promise<{
+    totalPlans: number;
+    readyPlans: number;
+    incompletePlans: number;
+    expiredPlans: number;
+    expiringSoon: number;
+    recentUploads: number;
+  }> {
+    const now = new Date();
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    const [
+      totalPlans,
+      readyPlans,
+      incompletePlans,
+      expiredPlans,
+      expiringSoon,
+      recentUploads,
+    ] = await Promise.all([
+      this.plansRepository.count(),
+      this.getReadyPlansCount(),
+      this.getIncompletePlansCount(),
+      this.getExpiredPlansCount(),
+      this.plansRepository
+        .createQueryBuilder('plan')
+        .where('plan.effective_to BETWEEN :now AND :sevenDaysFromNow', {
+          now,
+          sevenDaysFromNow,
+        })
+        .getCount(),
+      this.plansRepository
+        .createQueryBuilder('plan')
+        .where('plan.created_at >= :sevenDaysAgo', { sevenDaysAgo })
+        .getCount(),
+    ]);
+
+    return {
+      totalPlans,
+      readyPlans,
+      incompletePlans,
+      expiredPlans,
+      expiringSoon,
+      recentUploads,
+    };
+  }
+
+  async getExpiringSoon(): Promise<Plan[]> {
+    const now = new Date();
+    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+
+    const entities = await this.plansRepository
+      .createQueryBuilder('plan')
+      .where('plan.effective_to BETWEEN :now AND :sevenDaysFromNow', {
+        now,
+        sevenDaysFromNow,
+      })
+      .orderBy('plan.effective_to', 'ASC')
+      .getMany();
+
+    return entities.map((entity) => PlanMapper.toDomain(entity));
+  }
+
+  async getRecentUploads(): Promise<Plan[]> {
+    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+    const entities = await this.plansRepository
+      .createQueryBuilder('plan')
+      .where('plan.created_at >= :sevenDaysAgo', { sevenDaysAgo })
+      .orderBy('plan.created_at', 'DESC')
+      .getMany();
+
+    return entities.map((entity) => PlanMapper.toDomain(entity));
+  }
+
+  async getSearchSuggestions(
+    query: string,
+    limit: number = 10,
+  ): Promise<string[]> {
+    const entities = await this.plansRepository
+      .createQueryBuilder('plan')
+      .select('DISTINCT plan.plan_name', 'planName')
+      .where('plan.plan_name ILIKE :query', { query: `%${query}%` })
+      .limit(limit)
+      .getRawMany();
+
+    return entities.map((entity) => entity.planName).filter(Boolean);
+  }
+
+  private getPlanStatus(plan: Plan): string {
+    const now = new Date();
+
+    if (plan.effectiveTo < now) {
+      return 'Expired';
+    }
+
+    if (
+      plan.effectiveFrom <= now &&
+      plan.effectiveTo >= now &&
+      !plan.restricted
+    ) {
+      return 'Ready';
+    }
+
+    if (!plan.planName || !plan.eligibilityCriteria) {
+      return 'Incomplete';
+    }
+
+    return 'Unknown';
+  }
+
   async getReadyPlansCount(): Promise<number> {
     const now = new Date();
     return this.plansRepository
@@ -169,19 +252,6 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
     ]);
 
     return { ready, incomplete, expired };
-  }
-
-  async getPlanMappingStatusCounts(): Promise<{
-    active: number;
-    expired: number;
-  }> {
-    const [active, expired] = await Promise.all([
-      this.getReadyPlansCount(),
-      this.getIncompletePlansCount(),
-      this.getExpiredPlansCount(),
-    ]);
-
-    return { active, expired };
   }
 
   private applyFilters(
@@ -454,6 +524,109 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
     };
   }
 
+  async getPlanList(): Promise<
+    {
+      planName: string;
+      planId: string;
+      tariff: string;
+      planType: string;
+      customer: string;
+      state: string;
+      distributor: string;
+      effectiveTill: string;
+    }[]
+  > {
+    const plans = await this.plansRepository
+      .createQueryBuilder('plan')
+      .leftJoinAndSelect('plan.rateCard', 'rateCard')
+      .leftJoinAndSelect('rateCard.tariffType', 'tariffType')
+      .leftJoinAndSelect('plan.planType', 'planType')
+      .leftJoinAndSelect('plan.zone', 'zone')
+      .leftJoinAndSelect('plan.distributor', 'distributor')
+      .leftJoinAndSelect('plan.customerType', 'customerType')
+      .orderBy('plan.created_at', 'DESC')
+      .getMany();
+
+    return plans.map((plan) => ({
+      planName: plan.plan_name || '',
+      planId: plan.int_plan_code || '',
+      tariff: plan.rateCard?.tariffType?.tariff_type_code || '',
+      planType: plan.planType?.plan_type_name || '',
+      customer: plan.customerType?.customer_type_code || '', // Now accessible
+      state: plan.zone?.zone_code || '',
+      distributor: plan.distributor?.distributor_name || '', // Now accessible
+      effectiveTill: plan.effective_to
+        ? new Date(plan.effective_to).toLocaleDateString('en-GB')
+        : '',
+    }));
+  }
+
+  async getPlanMapping(): Promise<PlanMapping[]> {
+    const plans = await this.plansRepository
+      .createQueryBuilder('plan')
+      .leftJoinAndSelect('plan.distributor', 'distributor')
+      .leftJoinAndSelect('plan.customerType', 'customerType')
+      .leftJoinAndSelect('plan.retailTariff', 'retailTariff')
+      .leftJoinAndSelect('plan.charges', 'charges')
+      .leftJoinAndSelect('plan.billingCodes', 'billingCodes')
+      .orderBy('plan.created_at', 'DESC')
+      .getMany();
+
+    return plans.map((plan) => {
+      const minChargeAmount = Math.min(
+        ...plan.charges.map((charge: any) => Number(charge.charge_amount)),
+      );
+
+      const billingCodesList =
+        plan.billingCodes
+          ?.map((bc) => bc.billing_code)
+          .filter((code) => code) || [];
+
+      return {
+        planId: plan.int_plan_code || '',
+        distributer: plan.distributor?.distributor_name || '',
+        retailTariffName: plan.retailTariff?.retail_tariff_name || '',
+        customerType: plan.customerType?.customer_type_code || '',
+        minimumChargeAmount: minChargeAmount.toString(), // Convert number to string
+        billingCodes: billingCodesList,
+      };
+    });
+  }
+
+  async getPlanMappingStatusCounts(): Promise<{
+    active: number;
+    expired: number;
+  }> {
+    const [active, expired] = await Promise.all([
+      this.getReadyPlansCount(),
+      this.getIncompletePlansCount(),
+      this.getExpiredPlansCount(),
+    ]);
+
+    return { active, expired };
+  }
+
+  async findMany(query: QueryPlanDto): Promise<PaginationResponse<Plan>> {
+    const queryBuilder = this.plansRepository.createQueryBuilder('plan');
+
+    this.applyFilters(queryBuilder, query);
+    this.applySorting(queryBuilder, query);
+
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+    const skip = (page - 1) * limit;
+
+    queryBuilder.skip(skip).take(limit);
+
+    const [entities, total] = await queryBuilder.getManyAndCount();
+
+    return {
+      data: entities.map((entity) => PlanMapper.toDomain(entity)),
+      pagination: { page, limit },
+      total,
+    };
+  }
+
   async exportPlans(query: QueryPlanDto): Promise<Buffer> {
     const plans = await this.findMany(query);
 
@@ -497,177 +670,5 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       .join('\n');
 
     return Buffer.from(csvContent, 'utf-8');
-  }
-
-  async bulkDelete(planIds: number[]): Promise<void> {
-    await this.plansRepository.delete(planIds);
-  }
-
-  async bulkUpdate(
-    planIds: number[],
-    updates: Partial<UpdatePlanDto>,
-  ): Promise<{ updated: number; failed: number }> {
-    let updated = 0;
-    let failed = 0;
-
-    for (const planId of planIds) {
-      try {
-        const plan = new Plan();
-        Object.assign(plan, updates);
-        await this.update(planId, plan);
-        updated++;
-      } catch (error) {
-        failed++;
-      }
-    }
-
-    return { updated, failed };
-  }
-
-  async getDashboardSummary(): Promise<{
-    totalPlans: number;
-    readyPlans: number;
-    incompletePlans: number;
-    expiredPlans: number;
-    expiringSoon: number;
-    recentUploads: number;
-  }> {
-    const now = new Date();
-    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-    const [
-      totalPlans,
-      readyPlans,
-      incompletePlans,
-      expiredPlans,
-      expiringSoon,
-      recentUploads,
-    ] = await Promise.all([
-      this.plansRepository.count(),
-      this.getReadyPlansCount(),
-      this.getIncompletePlansCount(),
-      this.getExpiredPlansCount(),
-      this.plansRepository
-        .createQueryBuilder('plan')
-        .where('plan.effective_to BETWEEN :now AND :sevenDaysFromNow', {
-          now,
-          sevenDaysFromNow,
-        })
-        .getCount(),
-      this.plansRepository
-        .createQueryBuilder('plan')
-        .where('plan.created_at >= :sevenDaysAgo', { sevenDaysAgo })
-        .getCount(),
-    ]);
-
-    return {
-      totalPlans,
-      readyPlans,
-      incompletePlans,
-      expiredPlans,
-      expiringSoon,
-      recentUploads,
-    };
-  }
-
-  async getExpiringSoon(): Promise<Plan[]> {
-    const now = new Date();
-    const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
-
-    const entities = await this.plansRepository
-      .createQueryBuilder('plan')
-      .where('plan.effective_to BETWEEN :now AND :sevenDaysFromNow', {
-        now,
-        sevenDaysFromNow,
-      })
-      .orderBy('plan.effective_to', 'ASC')
-      .getMany();
-
-    return entities.map((entity) => PlanMapper.toDomain(entity));
-  }
-
-  async getRecentUploads(): Promise<Plan[]> {
-    const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
-    const entities = await this.plansRepository
-      .createQueryBuilder('plan')
-      .where('plan.created_at >= :sevenDaysAgo', { sevenDaysAgo })
-      .orderBy('plan.created_at', 'DESC')
-      .getMany();
-
-    return entities.map((entity) => PlanMapper.toDomain(entity));
-  }
-
-  async getSearchSuggestions(
-    query: string,
-    limit: number = 10,
-  ): Promise<string[]> {
-    const entities = await this.plansRepository
-      .createQueryBuilder('plan')
-      .select('DISTINCT plan.plan_name', 'planName')
-      .where('plan.plan_name ILIKE :query', { query: `%${query}%` })
-      .limit(limit)
-      .getRawMany();
-
-    return entities.map((entity) => entity.planName).filter(Boolean);
-  }
-
-  async getPlanList(): Promise<
-    {
-      planName: string;
-      planId: string;
-      tariff: string;
-      planType: string;
-      customer: string;
-      state: string;
-      distributor: string;
-      effectiveTill: string;
-    }[]
-  > {
-    const plans = await this.plansRepository
-      .createQueryBuilder('plan')
-      .leftJoinAndSelect('plan.rateCard', 'rateCard')
-      .leftJoinAndSelect('rateCard.tariffType', 'tariffType')
-      .leftJoinAndSelect('plan.planType', 'planType')
-      .leftJoinAndSelect('plan.zone', 'zone')
-      .leftJoinAndSelect('plan.distributor', 'distributor')
-      .leftJoinAndSelect('plan.customerType', 'customerType')
-      .orderBy('plan.created_at', 'DESC')
-      .getMany();
-
-    return plans.map((plan) => ({
-      planName: plan.plan_name || '',
-      planId: plan.int_plan_code || '',
-      tariff: plan.rateCard?.tariffType?.tariff_type_code || '',
-      planType: plan.planType?.plan_type_name || '',
-      customer: plan.customerType?.customer_type_code || '', // Now accessible
-      state: plan.zone?.zone_code || '',
-      distributor: plan.distributor?.distributor_name || '', // Now accessible
-      effectiveTill: plan.effective_to
-        ? new Date(plan.effective_to).toLocaleDateString('en-GB')
-        : '',
-    }));
-  }
-  private getPlanStatus(plan: Plan): string {
-    const now = new Date();
-
-    if (plan.effectiveTo < now) {
-      return 'Expired';
-    }
-
-    if (
-      plan.effectiveFrom <= now &&
-      plan.effectiveTo >= now &&
-      !plan.restricted
-    ) {
-      return 'Ready';
-    }
-
-    if (!plan.planName || !plan.eligibilityCriteria) {
-      return 'Incomplete';
-    }
-
-    return 'Unknown';
   }
 }

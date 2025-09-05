@@ -7,7 +7,7 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { ChargeTermNameEntity } from '@src/plans/infrastructure/persistence/relational/entities/charge-term-name.entity';
+import { ChargeTermNameEntity } from './charge-term-name.entity';
 
 import { ChargeEntity } from './charge.entity';
 

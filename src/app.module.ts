@@ -23,6 +23,8 @@ import { PlansModule } from './plans/plans.module';
 import { RatesModule } from './rates/rates.module';
 import { SessionModule } from './session/session.module';
 import { UsersModule } from './users/users.module';
+import { ChargesModule } from './charges/charges.module';
+import { BillingModule } from './billing/billing.module';
 
 const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
   useClass: TypeOrmConfigService,
@@ -95,6 +97,8 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
     RatesModule,
     networkTarrifsModule,
     retailTariffsModule,
+    ChargesModule,
+    BillingModule,
   ],
 })
 export class AppModule {}

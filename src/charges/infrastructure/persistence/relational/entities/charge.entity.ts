@@ -11,7 +11,7 @@ import {
 import { ChargeCategoryEntity } from './charge-category.entity';
 import { ChargeTermEntity } from './charge-term.entity';
 import { ChargeTypeEntity } from './charge-type.entity';
-import { PlanEntity } from './plan.entity';
+import { PlanEntity } from '@src/plans/infrastructure/persistence/relational/entities/plan.entity';
 
 @Entity({ name: 'charges' })
 export class ChargeEntity {

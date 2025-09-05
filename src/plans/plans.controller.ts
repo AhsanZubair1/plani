@@ -46,26 +46,6 @@ export class PlansController {
     return this.plansService.create(createPlanDto);
   }
 
-  @Get()
-  @ApiOperation({ summary: 'Get all plans with pagination and filters' })
-  @ApiResponse({ status: 200, description: 'Plans retrieved successfully' })
-  async findMany(
-    @Query() query: QueryPlanDto,
-  ): Promise<PaginationResponse<Plan>> {
-    return this.plansService.findMany(query);
-  }
-
-  @Get('list')
-  @ApiOperation({ summary: 'Get plans list with related data' })
-  @ApiResponse({
-    status: 200,
-    description: 'Plans list retrieved successfully',
-    type: [PlanListDto],
-  })
-  getPlanList(): Promise<PlanListDto[]> {
-    return this.plansService.getPlanList();
-  }
-
   @Get('rate-card/:rateCardId')
   @ApiOperation({ summary: 'Get plans by rate card ID' })
   @ApiResponse({
@@ -151,35 +131,8 @@ export class PlansController {
   }
 
   // NEW_API'S
-  @Get('mapping/status/counts')
-  @ApiOperation({
-    summary: 'Get plan mapping status counts (active, expired)',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Plan mapping status counts retrieved successfully',
-    type: PlanMappingStatusCountsDto,
-  })
-  async getPlanMappingStatusCounts(): Promise<{
-    active: number;
-    expired: number;
-  }> {
-    return this.plansService.getPlanMappingStatusCounts();
-  }
 
   // NEW_API'S
-  @Get('mapping')
-  @ApiOperation({
-    summary: 'Get all plan mapping with pagination and filters',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Plan mappings retrieved successfully',
-    type: PlanMapping,
-  })
-  async getPlanMapping(): Promise<PlanMapping[]> {
-    return this.plansService.getPlanMapping();
-  }
 
   @Get('status/ready/count')
   @ApiOperation({ summary: 'Get count of ready plans' })
@@ -215,31 +168,6 @@ export class PlansController {
   }
 
   // Additional routes for UI functionality
-  @Get('filters/options')
-  @ApiOperation({ summary: 'Get filter options for plans' })
-  @ApiResponse({
-    status: 200,
-    description: 'Filter options retrieved successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        tariffs: { type: 'array', items: { type: 'string' } },
-        planTypes: { type: 'array', items: { type: 'string' } },
-        customers: { type: 'array', items: { type: 'string' } },
-        states: { type: 'array', items: { type: 'string' } },
-        distributors: { type: 'array', items: { type: 'string' } },
-      },
-    },
-  })
-  async getFilterOptions(): Promise<{
-    tariffs: string[];
-    planTypes: string[];
-    customers: string[];
-    states: string[];
-    distributors: string[];
-  }> {
-    return this.plansService.getFilterOptions();
-  }
 
   @Get('export')
   @ApiOperation({ summary: 'Export plans to CSV/Excel' })
@@ -334,5 +262,80 @@ export class PlansController {
     @Query('limit') limit: number = 10,
   ): Promise<string[]> {
     return this.plansService.getSearchSuggestions(query, limit);
+  }
+
+  @Get()
+  @ApiOperation({ summary: 'Get all plans with pagination and filters' })
+  @ApiResponse({ status: 200, description: 'Plans retrieved successfully' })
+  async findMany(
+    @Query() query: QueryPlanDto,
+  ): Promise<PaginationResponse<Plan>> {
+    return this.plansService.findMany(query);
+  }
+
+  @Get('list')
+  @ApiOperation({ summary: 'Get plans list with related data' })
+  @ApiResponse({
+    status: 200,
+    description: 'Plans list retrieved successfully',
+    type: [PlanListDto],
+  })
+  getPlanList(): Promise<PlanListDto[]> {
+    return this.plansService.getPlanList();
+  }
+
+  @Get('filters/options')
+  @ApiOperation({ summary: 'Get filter options for plans' })
+  @ApiResponse({
+    status: 200,
+    description: 'Filter options retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        tariffs: { type: 'array', items: { type: 'string' } },
+        planTypes: { type: 'array', items: { type: 'string' } },
+        customers: { type: 'array', items: { type: 'string' } },
+        states: { type: 'array', items: { type: 'string' } },
+        distributors: { type: 'array', items: { type: 'string' } },
+      },
+    },
+  })
+  async getFilterOptions(): Promise<{
+    tariffs: string[];
+    planTypes: string[];
+    customers: string[];
+    states: string[];
+    distributors: string[];
+  }> {
+    return this.plansService.getFilterOptions();
+  }
+
+  @Get('mapping')
+  @ApiOperation({
+    summary: 'Get all plan mapping with pagination and filters',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Plan mappings retrieved successfully',
+    type: PlanMapping,
+  })
+  async getPlanMapping(): Promise<PlanMapping[]> {
+    return this.plansService.getPlanMapping();
+  }
+
+  @Get('mapping/status/counts')
+  @ApiOperation({
+    summary: 'Get plan mapping status counts (active, expired)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Plan mapping status counts retrieved successfully',
+    type: PlanMappingStatusCountsDto,
+  })
+  async getPlanMappingStatusCounts(): Promise<{
+    active: number;
+    expired: number;
+  }> {
+    return this.plansService.getPlanMappingStatusCounts();
   }
 }

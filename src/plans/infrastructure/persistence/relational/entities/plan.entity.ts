@@ -9,8 +9,8 @@ import {
   OneToMany,
 } from 'typeorm';
 
-import { BillingCodeEntity } from '@src/plans/infrastructure/persistence/relational/entities/billing-code.entity';
-import { ChargeEntity } from '@src/plans/infrastructure/persistence/relational/entities/charge.entity';
+import { BillingCodeEntity } from '@src/billing/infrastructure/persistence/relational/entities/billing-code.entity';
+import { ChargeEntity } from '@src/charges/infrastructure/persistence/relational/entities/charge.entity';
 import { PlanTypeEntity } from '@src/plans/infrastructure/persistence/relational/entities/plan-type.entity';
 import { ZoneEntity } from '@src/plans/infrastructure/persistence/relational/entities/zone.entity';
 import { RateCardEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-card.entity';

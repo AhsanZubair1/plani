@@ -6,12 +6,9 @@ import {
   Patch,
   Param,
   Delete,
-  UseGuards,
   Query,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import {
-  ApiBearerAuth,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiParam,
@@ -31,8 +28,6 @@ import { UpdatenetworkTarrifDto } from './dto/update-network-tarrif.dto';
 import { networkTarrifsService } from './network-tarrifs.service';
 
 @ApiTags('Networktarrifs')
-@ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
 @Controller({
   path: 'network-tarrifs',
   version: '1',
