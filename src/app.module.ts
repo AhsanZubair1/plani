@@ -15,16 +15,17 @@ import { retailTariffsModule } from '@src/retail-tariffs/retail-tariffs.module';
 
 import { AuthModule } from './auth/auth.module';
 import authConfig from './auth/config/auth.config';
+import { BillingModule } from './billing/billing.module';
+import { ChargesModule } from './charges/charges.module';
 import appConfig from './config/app.config';
 import { AllConfigType } from './config/config.type';
 import databaseConfig from './database/config/database.config';
 import { TypeOrmConfigService } from './database/typeorm-config.service';
+import { LoggingModule } from './logging/logging.module';
 import { PlansModule } from './plans/plans.module';
 import { RatesModule } from './rates/rates.module';
 import { SessionModule } from './session/session.module';
 import { UsersModule } from './users/users.module';
-import { ChargesModule } from './charges/charges.module';
-import { BillingModule } from './billing/billing.module';
 
 const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
   useClass: TypeOrmConfigService,
@@ -99,6 +100,7 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
     retailTariffsModule,
     ChargesModule,
     BillingModule,
+    LoggingModule,
   ],
 })
 export class AppModule {}

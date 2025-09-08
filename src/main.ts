@@ -14,6 +14,8 @@ import { HttpExceptionFilter } from '@src/common/http-exception.filter';
 
 import { AppModule } from './app.module';
 import { AllConfigType } from './config/config.type';
+import { LoggingInterceptor } from './logging/interceptors/logging.interceptor';
+import { LoggingService } from './logging/logging.service';
 import { ResolvePromisesInterceptor } from './utils/serializer.interceptor';
 import validationOptions from './utils/validation-options';
 
@@ -47,7 +49,9 @@ async function bootstrap() {
 
   app.useGlobalPipes(new ValidationPipe(validationOptions));
   app.useGlobalFilters(new HttpExceptionFilter());
+  const loggingService = app.get(LoggingService);
   app.useGlobalInterceptors(
+    new LoggingInterceptor(loggingService),
     new ResolvePromisesInterceptor(),
     new ClassSerializerInterceptor(app.get(Reflector)),
   );
