@@ -51,9 +51,9 @@ async function bootstrap() {
   app.useGlobalFilters(new HttpExceptionFilter());
   const loggingService = app.get(LoggingService);
   app.useGlobalInterceptors(
-    new LoggingInterceptor(loggingService),
     new ResolvePromisesInterceptor(),
     new ClassSerializerInterceptor(app.get(Reflector)),
+    new LoggingInterceptor(loggingService),
   );
 
   const options = new DocumentBuilder()
