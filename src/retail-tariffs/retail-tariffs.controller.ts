@@ -6,12 +6,9 @@ import {
   Patch,
   Param,
   Delete,
-  UseGuards,
   Query,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
 import {
-  ApiBearerAuth,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiParam,
@@ -31,8 +28,6 @@ import { UpdateretailTariffsDto } from './dto/update-retail-tariffs.dto';
 import { retailTariffsService } from './retail-tariffs.service';
 
 @ApiTags('Retailtariffs')
-@ApiBearerAuth()
-@UseGuards(AuthGuard('jwt'))
 @Controller({
   path: 'retail-tariffs',
   version: '1',

@@ -10,9 +10,10 @@ import {
 } from 'typeorm';
 
 import { TABLES } from '@src/common/constants';
-import { EntityRelationalHelper } from '@src/utils/relational-entity-helper';
-import { ntcRelnEntity } from './ntc-reln.entity';
 import { distributorEntity } from '@src/retail-tariffs/infrastructure/persistence/relational/entities/distributor.entity';
+import { EntityRelationalHelper } from '@src/utils/relational-entity-helper';
+
+import { ntcRelnEntity } from './ntc-reln.entity';
 
 @Entity({
   name: TABLES.networkTariff,

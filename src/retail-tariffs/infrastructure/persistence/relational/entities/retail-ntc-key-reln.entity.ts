@@ -5,10 +5,11 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { retailTariffsEntity } from './retail-tariffs.entity';
 
 import { TABLES } from '@src/common/constants';
 import { networkTariffKeyEntity } from '@src/network-tarrifs/infrastructure/persistence/relational/entities/network-tariff-key.entity';
+
+import { retailTariffsEntity } from './retail-tariffs.entity';
 
 @Entity({ name: TABLES.retailNtcKeyReln })
 export class retailNtcKeyRelnEntity {

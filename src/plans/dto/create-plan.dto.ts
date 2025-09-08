@@ -7,7 +7,6 @@ import {
   IsDateString,
   IsInt,
   Min,
-  Max,
 } from 'class-validator';
 
 export class CreatePlanDto {

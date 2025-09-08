@@ -21,7 +21,6 @@
     "postgenerate:query": "npm run lint -- --fix",
     "generate:version": "hygen generate-version add-to-relational-resource",
     "seed:run": "env-cmd ts-node -r tsconfig-paths/register ./src/database/seeds/relational/run-seed.ts",
-    "seed:plans": "env-cmd ts-node -r tsconfig-paths/register ./src/database/seeds/relational/run-seed.ts",
     "postgenerate:version": "npm run lint -- --fix",
     "add:property": "hygen property add-to-relational",
     "postadd:property": "npm run lint -- --fix",

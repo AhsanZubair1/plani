@@ -6,13 +6,17 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 
+import { BillingCodeEntity } from '@src/billing/infrastructure/persistence/relational/entities/billing-code.entity';
+import { ChargeEntity } from '@src/charges/infrastructure/persistence/relational/entities/charge.entity';
 import { PlanTypeEntity } from '@src/plans/infrastructure/persistence/relational/entities/plan-type.entity';
 import { ZoneEntity } from '@src/plans/infrastructure/persistence/relational/entities/zone.entity';
 import { RateCardEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-card.entity';
 import { customerTypeEntity } from '@src/retail-tariffs/infrastructure/persistence/relational/entities/customer-type.entity';
 import { distributorEntity } from '@src/retail-tariffs/infrastructure/persistence/relational/entities/distributor.entity';
+import { retailTariffsEntity } from '@src/retail-tariffs/infrastructure/persistence/relational/entities/retail-tariffs.entity';
 
 @Entity({ name: 'plans' })
 export class PlanEntity {
@@ -98,6 +102,9 @@ export class PlanEntity {
   customerType: customerTypeEntity;
 
   @Column({ type: 'int' })
+  retail_tariff_id: number;
+
+  @Column({ type: 'int' })
   rate_card_id: number;
 
   @ManyToOne(() => RateCardEntity, { eager: true })
@@ -128,4 +135,17 @@ export class PlanEntity {
   })
   @JoinColumn({ name: 'zone_id' })
   zone: ZoneEntity;
+
+  @OneToMany(() => BillingCodeEntity, (billingCode) => billingCode.plan)
+  billingCodes: BillingCodeEntity[];
+
+  @OneToMany(() => ChargeEntity, (charge) => charge.plan)
+  charges: ChargeEntity[];
+
+  @ManyToOne(() => retailTariffsEntity, (retailTariff) => retailTariff.plans, {
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
+  @JoinColumn({ name: 'retail_tariff_id' })
+  retailTariff: retailTariffsEntity;
 }

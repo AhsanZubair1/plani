@@ -1,7 +1,8 @@
 import { Entity, PrimaryGeneratedColumn, Column, OneToMany } from 'typeorm';
+
 import { TABLES } from '@src/common/constants';
-import { retailNtcKeyRelnEntity } from '@src/retail-tariffs/infrastructure/persistence/relational/entities/retail-ntc-key-reln.entity';
 import { ntcRelnEntity } from '@src/network-tarrifs/infrastructure/persistence/relational/entities/ntc-reln.entity';
+import { retailNtcKeyRelnEntity } from '@src/retail-tariffs/infrastructure/persistence/relational/entities/retail-ntc-key-reln.entity';
 
 @Entity({ name: TABLES.networkTariffKey })
 export class networkTariffKeyEntity {
