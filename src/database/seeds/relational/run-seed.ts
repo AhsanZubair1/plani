@@ -164,25 +164,21 @@ async function seedTariffTypes(dataSource: DataSource) {
     {
       tariff_type_code: 'SR',
       tariff_type_name: 'Single Rate',
-      time_definition: 'All day',
       fuel_type_id: 1,
     },
     {
       tariff_type_code: 'TOU',
       tariff_type_name: 'Time of Use',
-      time_definition: 'Peak and off-peak periods',
       fuel_type_id: 1,
     },
     {
       tariff_type_code: 'FLEX',
       tariff_type_name: 'Flexible Pricing',
-      time_definition: 'Variable pricing periods',
       fuel_type_id: 1,
     },
     {
       tariff_type_code: 'GAS',
       tariff_type_name: 'Gas',
-      time_definition: 'All day',
       fuel_type_id: 2,
     },
   ];
@@ -195,11 +191,10 @@ async function seedTariffTypes(dataSource: DataSource) {
 
     if (existing.length === 0) {
       const result = await dataSource.query(
-        'INSERT INTO tariff_types (tariff_type_code, tariff_type_name, time_definition, fuel_type_id, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW()) RETURNING tariff_type_id',
+        'INSERT INTO tariff_types (tariff_type_code, tariff_type_name, fuel_type_id, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING tariff_type_id',
         [
           tariffType.tariff_type_code,
           tariffType.tariff_type_name,
-          tariffType.time_definition,
           tariffType.fuel_type_id,
         ],
       );

@@ -115,35 +115,6 @@ export class PlanEntity {
   @UpdateDateColumn({ name: 'updated_at' })
   updated_at: Date;
 
-  // EXTRA
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  billing_code: string | null;
-
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  billing_code_type: string | null;
-
-  @Column({ type: 'int', nullable: true })
-  billing_cycle_days: number | null;
-
-  @Column({ type: 'varchar', length: 50, nullable: true })
-  billing_frequency: string | null;
-
-  @Column({ type: 'int', nullable: true })
-  due_date_offset_days: number | null;
-
-  @Column({ type: 'boolean', default: false, nullable: false })
-  has_time_based_rates: boolean;
-
-  @Column({ type: 'text', nullable: true })
-  rate_structure_description: string | null;
-
-  @Column({ type: 'decimal', precision: 10, scale: 4, nullable: true })
-  default_rate_per_kwh: number | null;
-
-  @Column({ type: 'decimal', precision: 10, scale: 4, nullable: true })
-  default_supply_charge_per_day: number | null;
-  //
-
   @ManyToOne(() => ZoneEntity, (zone) => zone.plans, {
     onDelete: 'SET NULL',
     nullable: true,

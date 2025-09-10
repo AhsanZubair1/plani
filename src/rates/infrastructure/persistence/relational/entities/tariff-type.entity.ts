@@ -18,7 +18,7 @@ export class TariffTypeEntity {
   @PrimaryGeneratedColumn('increment')
   tariff_type_id: number;
 
-  @Column({ type: 'varchar', length: 20, unique: true, nullable: false })
+  @Column({ type: 'varchar', length: 20, nullable: false })
   tariff_type_code: string;
 
   @Column({ type: 'varchar', length: 100, nullable: false })
@@ -32,11 +32,6 @@ export class TariffTypeEntity {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updated_at: Date;
-
-  // EXTRA
-  @Column({ type: 'varchar', length: 100 })
-  time_definition: string;
-  //
 
   @ManyToOne(() => FuelTypeEntity)
   @JoinColumn({ name: 'fuel_type_id' })

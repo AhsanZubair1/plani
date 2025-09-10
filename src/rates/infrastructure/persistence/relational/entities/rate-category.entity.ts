@@ -11,7 +11,7 @@ export class RateCategoryEntity {
   @PrimaryGeneratedColumn('increment')
   rate_category_id: number;
 
-  @Column({ type: 'varchar', length: 20, unique: true, nullable: false })
+  @Column({ type: 'varchar', length: 20, nullable: false })
   rate_category_code: string;
 
   @Column({ type: 'varchar', length: 100, nullable: false })

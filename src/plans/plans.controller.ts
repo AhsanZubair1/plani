@@ -4,11 +4,8 @@ import {
   Post,
   Body,
   Query,
-  Param,
-  ParseIntPipe,
   HttpCode,
   HttpStatus,
-  UseGuards,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
@@ -51,24 +48,6 @@ export class PlansController {
   @ApiResponse({ status: 400, description: 'Bad request' })
   async create(@Body() createPlanDto: CreatePlanDto): Promise<Plan> {
     return this.plansService.create(createPlanDto);
-  }
-
-  @Get(':id/rates')
-  @ApiOperation({
-    summary: 'Get plan with comprehensive rate structure',
-    description:
-      'Get a plan with its complete rate structure including time-based rates, usage blocks, peak/off-peak rates, and seasonal pricing',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Plan with rates retrieved successfully',
-    type: PlanWithRatesDto,
-  })
-  @ApiResponse({ status: 404, description: 'Plan not found' })
-  async getPlanWithRates(
-    @Param('id', ParseIntPipe) id: number,
-  ): Promise<PlanWithRatesDto> {
-    return await this.plansService.getPlanWithRates(id);
   }
 
   // @Get(':id')

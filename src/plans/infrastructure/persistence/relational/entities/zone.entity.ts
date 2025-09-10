@@ -11,7 +11,6 @@ export class ZoneEntity {
     type: 'varchar',
     length: 50,
     nullable: false,
-    unique: true,
   })
   zone_code: string;
 
@@ -28,21 +27,6 @@ export class ZoneEntity {
     name: 'supply_areas',
   })
   supply_areas: string | null;
-
-  // EXTRA
-  // @Column({
-  //   type: 'text',
-  //   nullable: true,
-  //   name: 'included_postcodes',
-  // })
-  // included_postcodes: string | null;
-
-  // @Column({
-  //   type: 'text',
-  //   nullable: true,
-  //   name: 'excluded_postcodes',
-  // })
-  // excluded_postcodes: string | null;
 
   @OneToMany(() => PlanEntity, (plan) => plan.zone)
   plans: PlanEntity[];

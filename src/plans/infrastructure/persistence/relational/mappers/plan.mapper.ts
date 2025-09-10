@@ -32,19 +32,6 @@ export class PlanMapper {
     domain.contractTermId = raw.contract_term_id;
     domain.billFreqId = raw.bill_freq_id;
 
-    // Billing Information
-    domain.billingCode = raw.billing_code;
-    domain.billingCodeType = raw.billing_code_type;
-    domain.billingCycleDays = raw.billing_cycle_days;
-    domain.billingFrequency = raw.billing_frequency;
-    domain.dueDateOffsetDays = raw.due_date_offset_days;
-
-    // Rate Information
-    domain.hasTimeBasedRates = raw.has_time_based_rates;
-    domain.rateStructureDescription = raw.rate_structure_description;
-    domain.defaultRatePerKwh = raw.default_rate_per_kwh;
-    domain.defaultSupplyChargePerDay = raw.default_supply_charge_per_day;
-
     return domain;
   }
 
@@ -77,19 +64,6 @@ export class PlanMapper {
     entity.rate_card_id = domain.rateCardId;
     entity.contract_term_id = domain.contractTermId;
     entity.bill_freq_id = domain.billFreqId;
-
-    // Billing Information
-    entity.billing_code = domain.billingCode;
-    entity.billing_code_type = domain.billingCodeType;
-    entity.billing_cycle_days = domain.billingCycleDays;
-    entity.billing_frequency = domain.billingFrequency;
-    entity.due_date_offset_days = domain.dueDateOffsetDays;
-
-    // Rate Information
-    entity.has_time_based_rates = domain.hasTimeBasedRates;
-    entity.rate_structure_description = domain.rateStructureDescription;
-    entity.default_rate_per_kwh = domain.defaultRatePerKwh;
-    entity.default_supply_charge_per_day = domain.defaultSupplyChargePerDay;
 
     return entity;
   }

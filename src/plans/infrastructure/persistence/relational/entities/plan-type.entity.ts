@@ -11,7 +11,6 @@ export class PlanTypeEntity {
     type: 'varchar',
     length: 50,
     nullable: false,
-    unique: true,
   })
   plan_type_code: string;
 

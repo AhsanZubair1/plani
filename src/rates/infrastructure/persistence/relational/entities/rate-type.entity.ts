@@ -15,7 +15,7 @@ export class RateTypeEntity {
   @PrimaryGeneratedColumn('increment')
   rate_type_id: number;
 
-  @Column({ type: 'varchar', length: 20, unique: true, nullable: false })
+  @Column({ type: 'varchar', length: 20, nullable: false })
   rate_type_code: string;
 
   @Column({ type: 'varchar', length: 100, nullable: false })
