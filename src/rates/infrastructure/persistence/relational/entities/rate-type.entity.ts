@@ -6,9 +6,11 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany, // Add this import
 } from 'typeorm';
 
 import { RateClassEntity } from './rate-class.entity';
+import { RateItemEntity } from './rate-item.entity'; // Add this import
 
 @Entity({ name: 'rate_types' })
 export class RateTypeEntity {
@@ -36,4 +38,7 @@ export class RateTypeEntity {
   @ManyToOne(() => RateClassEntity)
   @JoinColumn({ name: 'rate_class_id' })
   rateClass: RateClassEntity | null;
+
+  @OneToMany(() => RateItemEntity, (rateItem) => rateItem.rateType)
+  rateItems: RateItemEntity[];
 }

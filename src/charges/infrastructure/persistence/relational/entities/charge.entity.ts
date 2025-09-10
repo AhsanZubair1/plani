@@ -37,9 +37,8 @@ export class ChargeEntity {
   @Column({ type: 'varchar', length: 100, nullable: true })
   reference_01: string;
 
-  // Foreign Key Columns
-  @Column({ type: 'int', nullable: true })
-  plan_id: number | null;
+  @Column({ type: 'int', nullable: false })
+  plan_id: number;
 
   @Column({ type: 'int', nullable: true })
   charge_type_id: number | null;
@@ -58,9 +57,10 @@ export class ChargeEntity {
 
   @ManyToOne(() => PlanEntity, (plan) => plan.charges, {
     onDelete: 'CASCADE',
+    nullable: false,
   })
   @JoinColumn({ name: 'plan_id' })
-  plan: PlanEntity | null;
+  plan: PlanEntity;
 
   @ManyToOne(() => ChargeTypeEntity, (chargeType) => chargeType.charges, {
     onDelete: 'CASCADE',

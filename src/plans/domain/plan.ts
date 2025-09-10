@@ -177,33 +177,29 @@ export class Plan {
     type: Number,
     example: 1,
     description: 'Plan type ID',
-    nullable: true,
   })
-  planTypeId: number | null;
+  planTypeId: number;
 
   @ApiProperty({
     type: Number,
     example: 1,
     description: 'Distributor ID',
-    nullable: true,
   })
-  distributorId: number | null;
+  distributorId: number;
 
   @ApiProperty({
     type: Number,
     example: 1,
     description: 'Customer type ID',
-    nullable: true,
   })
-  customerTypeId: number | null;
+  customerTypeId: number;
 
   @ApiProperty({
     type: Number,
     example: 1,
     description: 'Rate card ID',
-    nullable: true,
   })
-  rateCardId: number | null;
+  rateCardId: number;
 
   @ApiProperty({
     type: Number,

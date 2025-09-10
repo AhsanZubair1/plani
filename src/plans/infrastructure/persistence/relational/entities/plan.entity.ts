@@ -88,17 +88,17 @@ export class PlanEntity {
   @Column({ type: 'int', nullable: true })
   zone_id: number | null;
 
-  @Column({ type: 'int', nullable: true })
-  plan_type_id: number | null;
+  @Column({ type: 'int', nullable: false })
+  plan_type_id: number;
 
-  @Column({ type: 'int', nullable: true })
-  distributor_id: number | null;
+  @Column({ type: 'int', nullable: false })
+  distributor_id: number;
 
-  @Column({ type: 'int', nullable: true })
-  customer_type_id: number | null;
+  @Column({ type: 'int', nullable: false })
+  customer_type_id: number;
 
-  @Column({ type: 'int', nullable: true })
-  rate_card_id: number | null;
+  @Column({ type: 'int', nullable: false })
+  rate_card_id: number;
 
   @Column({ type: 'int', nullable: true })
   contract_term_id: number | null;
@@ -123,30 +123,29 @@ export class PlanEntity {
   zone: ZoneEntity | null;
 
   @ManyToOne(() => PlanTypeEntity, (planType) => planType.plans, {
-    onDelete: 'CASCADE',
-    nullable: true,
+    nullable: false,
   })
   @JoinColumn({ name: 'plan_type_id' })
-  planType: PlanTypeEntity | null;
+  planType: PlanTypeEntity;
 
   @ManyToOne(() => distributorEntity, (distributor) => distributor.plans, {
-    nullable: true,
+    nullable: false,
   })
   @JoinColumn({ name: 'distributor_id' })
-  distributor: distributorEntity | null;
+  distributor: distributorEntity;
 
   @ManyToOne(() => customerTypeEntity, (customerType) => customerType.plans, {
-    nullable: true,
+    nullable: false,
   })
   @JoinColumn({ name: 'customer_type_id' })
-  customerType: customerTypeEntity | null;
+  customerType: customerTypeEntity;
 
   @ManyToOne(() => RateCardEntity, {
     eager: true,
-    nullable: true,
+    nullable: false,
   })
   @JoinColumn({ name: 'rate_card_id' })
-  rateCard: RateCardEntity | null;
+  rateCard: RateCardEntity;
 
   @ManyToOne(() => retailTariffsEntity, (retailTariff) => retailTariff.plans, {
     onDelete: 'SET NULL',

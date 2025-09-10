@@ -11,7 +11,7 @@ export class RateItem {
   // Related data
   timings?: RateItemTiming[];
   blocks?: RateItemBlock[];
-  demands?: RateItemDemand[];
+  demand?: RateItemDemand | null;
 }
 
 export class RateItemTiming {

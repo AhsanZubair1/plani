@@ -4,7 +4,9 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToOne,
 } from 'typeorm';
+import { RateEntity } from './rate.entity';
 
 @Entity({ name: 'rate_categories' })
 export class RateCategoryEntity {
@@ -25,4 +27,7 @@ export class RateCategoryEntity {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updated_at: Date;
+
+  @OneToOne(() => RateEntity, (rate) => rate.rateCategory)
+  rate: RateEntity;
 }

@@ -6,9 +6,10 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
-
 import { RateEntity } from './rate.entity';
+import { RateItemEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-item.entity';
 
 @Entity({ name: 'rate_seasons' })
 export class RateSeasonEntity {
@@ -33,13 +34,18 @@ export class RateSeasonEntity {
   @Column({ type: 'int', nullable: false })
   rate_id: number;
 
-  @ManyToOne(() => RateEntity)
-  @JoinColumn({ name: 'rate_id' })
-  rate: RateEntity;
-
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
   updated_at: Date;
+
+  @ManyToOne(() => RateEntity, (rate) => rate.rateSeasons, {
+    nullable: false,
+  })
+  @JoinColumn({ name: 'rate_id' })
+  rate: RateEntity;
+
+  @OneToMany(() => RateItemEntity, (rateItem) => rateItem.rateSeason)
+  rateItems: RateItemEntity[];
 }

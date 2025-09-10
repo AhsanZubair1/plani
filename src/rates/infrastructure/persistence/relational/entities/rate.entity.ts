@@ -2,14 +2,16 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
-  ManyToOne,
+  OneToOne,
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  ManyToOne,
+  OneToMany,
 } from 'typeorm';
-
 import { RateCardEntity } from './rate-card.entity';
 import { RateCategoryEntity } from './rate-category.entity';
+import { RateSeasonEntity } from './rate-season.entity';
 
 @Entity({ name: 'rates' })
 export class RateEntity {
@@ -22,7 +24,7 @@ export class RateEntity {
   @Column({ type: 'varchar', length: 100, nullable: false })
   rate_name: string;
 
-  @Column({ type: 'int', nullable: false })
+  @Column({ type: 'int', nullable: false, unique: true })
   rate_category_id: number;
 
   @Column({ type: 'int', nullable: false })
@@ -34,11 +36,16 @@ export class RateEntity {
   @UpdateDateColumn({ name: 'updated_at' })
   updated_at: Date;
 
-  @ManyToOne(() => RateCategoryEntity)
+  @OneToOne(() => RateCategoryEntity, (rateCategory) => rateCategory.rate, {
+    nullable: false,
+  })
   @JoinColumn({ name: 'rate_category_id' })
   rateCategory: RateCategoryEntity;
 
   @ManyToOne(() => RateCardEntity)
   @JoinColumn({ name: 'rate_card_id' })
   rateCard: RateCardEntity;
+
+  @OneToMany(() => RateSeasonEntity, (rateSeason) => rateSeason.rate)
+  rateSeasons: RateSeasonEntity[];
 }

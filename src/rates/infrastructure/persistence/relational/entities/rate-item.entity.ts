@@ -7,6 +7,7 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToOne,
 } from 'typeorm';
 
 import { RateItemBlockEntity } from './rate-item-block.entity';
@@ -50,6 +51,7 @@ export class RateItemEntity {
 
   @ManyToOne(() => RateTypeEntity, {
     onDelete: 'CASCADE',
+    nullable: true,
   })
   @JoinColumn({ name: 'rate_type_id' })
   rateType: RateTypeEntity | null;
@@ -66,6 +68,9 @@ export class RateItemEntity {
   @OneToMany(() => RateItemBlockEntity, (block) => block.rateItem)
   blocks: RateItemBlockEntity[];
 
-  @OneToMany(() => RateItemDemandEntity, (demand) => demand.rateItem)
-  demands: RateItemDemandEntity[];
+  @OneToOne(() => RateItemDemandEntity, (demand) => demand.rateItem, {
+    cascade: true,
+    nullable: true,
+  })
+  demand: RateItemDemandEntity | null;
 }

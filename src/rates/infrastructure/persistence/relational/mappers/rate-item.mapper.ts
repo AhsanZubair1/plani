@@ -32,9 +32,9 @@ export class RateItemMapper {
       domain.blocks = raw.blocks.map((block) => this.blockToDomain(block));
     }
 
-    if (raw.demands) {
-      domain.demands = raw.demands.map((demand) => this.demandToDomain(demand));
-    }
+    // if (raw.demand) {
+    //   domain.demand = raw.demand
+    // }
 
     return domain;
   }

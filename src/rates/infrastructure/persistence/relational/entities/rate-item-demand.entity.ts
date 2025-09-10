@@ -6,6 +6,7 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToOne,
 } from 'typeorm';
 
 import { RateItemEntity } from './rate-item.entity';
@@ -37,7 +38,7 @@ export class RateItemDemandEntity {
   @UpdateDateColumn({ name: 'updated_at' })
   updated_at: Date;
 
-  @ManyToOne(() => RateItemEntity, (rateItem) => rateItem.demands, {
+  @OneToOne(() => RateItemEntity, (rateItem) => rateItem.demand, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'rate_item_id' })
