@@ -1,14 +1,15 @@
 import { Module } from '@nestjs/common';
 
-import { RelationalLogPersistenceModule } from './infrastructure/persistence/relational/relational-log-persistence.module';
 import { LoggingService } from './logging.service';
 import { LoggingController } from './logging.controller';
 import { LoggingInterceptor } from './interceptors/logging.interceptor';
+import { LokiService } from './loki.service';
 
 @Module({
-  imports: [RelationalLogPersistenceModule],
+  imports: [],
   controllers: [LoggingController],
   providers: [
+    LokiService,
     LoggingService,
     LoggingInterceptor,
     {

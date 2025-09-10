@@ -10,8 +10,7 @@ import { Observable } from 'rxjs';
 import { throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 
-import { Log } from '@src/logging/domain/log';
-import { LoggingService } from '@src/logging/logging.service';
+import { LoggingService, ApiLogData } from '@src/logging/logging.service';
 
 @Injectable()
 export class LoggingInterceptor implements NestInterceptor {
@@ -80,8 +79,8 @@ export class LoggingInterceptor implements NestInterceptor {
             ? requestBody
             : this.getRequestPlaceholder(request);
 
-        // Log to database asynchronously
-        this.logToDatabase({
+        // Log to Loki asynchronously
+        this.logToLoki({
           method,
           url,
           user_id: userId,
@@ -94,7 +93,7 @@ export class LoggingInterceptor implements NestInterceptor {
           controller,
           action,
         }).catch((error) => {
-          this.logger.error('Failed to log to database:', error);
+          this.logger.error('Failed to log to Loki:', error);
         });
       }),
       catchError((error) => {
@@ -108,8 +107,8 @@ export class LoggingInterceptor implements NestInterceptor {
             ? requestBody
             : this.getRequestPlaceholder(request);
 
-        // Log error to database asynchronously
-        this.logToDatabase({
+        // Log error to Loki asynchronously
+        this.logToLoki({
           method,
           url,
           user_id: userId,
@@ -123,7 +122,7 @@ export class LoggingInterceptor implements NestInterceptor {
           controller,
           action,
         }).catch((logError) => {
-          this.logger.error('Failed to log error to database:', logError);
+          this.logger.error('Failed to log error to Loki:', logError);
         });
 
         return throwError(() => error);
@@ -166,9 +165,11 @@ export class LoggingInterceptor implements NestInterceptor {
 
     const sanitized = this.removeSensitiveFields(body, sensitiveFields);
 
-    // Return null if the sanitized object is empty
+    // Always return something, even if it's just a placeholder
     if (Object.keys(sanitized).length === 0) {
-      return null;
+      return JSON.stringify({
+        message: 'Request body sanitized (all fields removed)',
+      });
     }
 
     return JSON.stringify(sanitized);
@@ -190,7 +191,7 @@ export class LoggingInterceptor implements NestInterceptor {
       }
 
       // Limit response body size to prevent database bloat
-      const maxSize = 10000; // 10KB
+      const maxSize = 5000; // 5KB (reduced for better visibility)
       const bodyString =
         typeof parsedBody === 'string'
           ? parsedBody
@@ -272,12 +273,10 @@ export class LoggingInterceptor implements NestInterceptor {
     return JSON.stringify(basicInfo);
   }
 
-  private async logToDatabase(
-    logData: Omit<Log, 'id' | 'created_at'>,
-  ): Promise<void> {
+  private async logToLoki(logData: ApiLogData): Promise<void> {
     try {
       // Add debug logging to see what's being stored
-      this.logger.debug('Logging to database:', {
+      this.logger.debug('Logging to Loki:', {
         method: logData.method,
         url: logData.url,
         request_body_length: logData.request_body?.length || 0,

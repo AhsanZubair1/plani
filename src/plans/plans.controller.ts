@@ -8,10 +8,8 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
-<<<<<<< Updated upstream
-import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
-=======
 import { AuthGuard } from '@nestjs/passport';
 import {
   ApiTags,
@@ -19,7 +17,6 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
->>>>>>> Stashed changes
 
 import { PlanMapping } from '@src/plans/domain/plan-mapping';
 import { PlanMappingStatusCountsDto } from '@src/plans/dto/plan-mapping-status-counts.dto';
@@ -152,6 +149,7 @@ export class PlansController {
   }
 
   @Get('list')
+  // @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Get plans list with related data' })
   @ApiResponse({
     status: 200,

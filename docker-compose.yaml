@@ -1,41 +1,28 @@
 services:
-  postgres:
-    image: postgres:16.3-alpine
+  loki:
+    image: grafana/loki:2.9.0
     ports:
-      - ${DATABASE_PORT}:5432
+      - '3100:3100'
+    command: -config.file=/etc/loki/local-config.yaml
     volumes:
-      - boilerplate-db:/var/lib/postgresql/data
+      - loki-data:/loki
     environment:
-      POSTGRES_USER: ${DATABASE_USERNAME}
-      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
-      POSTGRES_DB: ${DATABASE_NAME}
+      - LOKI_CONFIG=/etc/loki/local-config.yaml
 
-  maildev:
-    build:
-      context: .
-      dockerfile: maildev.Dockerfile
+  grafana:
+    image: grafana/grafana:10.2.0
     ports:
-      - ${MAIL_CLIENT_PORT}:1080
-      - ${MAIL_PORT}:1025
-
-  adminer:
-    image: adminer
-    restart: always
-    ports:
-      - 8080:8080
-
-  # Uncomment to use redis
-  # redis:
-  #   image: redis:7-alpine
-  #   ports:
-  #     - 6379:6379
-
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - ${APP_PORT}:${APP_PORT}
+      - '3001:3000'
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+    depends_on:
+      - loki
 
 volumes:
-  boilerplate-db:
+  loki-data:
+  grafana-data:
