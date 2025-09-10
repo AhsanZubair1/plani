@@ -8,6 +8,7 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
+
 import { ChargeEntity } from '@src/charges/infrastructure/persistence/relational/entities/charge.entity';
 import { PlanTypeEntity } from '@src/plans/infrastructure/persistence/relational/entities/plan-type.entity';
 import { ZoneEntity } from '@src/plans/infrastructure/persistence/relational/entities/zone.entity';

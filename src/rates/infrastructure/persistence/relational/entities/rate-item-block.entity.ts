@@ -7,6 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
 import { RateItemEntity } from './rate-item.entity';
 
 @Entity({ name: 'rate_item_blocks' })

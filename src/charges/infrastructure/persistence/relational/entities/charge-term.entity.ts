@@ -8,7 +8,6 @@ import {
 } from 'typeorm';
 
 import { ChargeTermNameEntity } from './charge-term-name.entity';
-
 import { ChargeEntity } from './charge.entity';
 
 @Entity({ name: 'charge_terms' })

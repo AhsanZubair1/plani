@@ -1,9 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { ChargeAbstractRepository } from '@src/charges/infrastructure/persistence/charge.abstract.repository';
+
 import { ChargeEntity } from './entities/charge.entity';
 import { ChargeRepository } from './repositories/charge.repository';
-import { ChargeAbstractRepository } from '@src/charges/infrastructure/persistence/charge.abstract.repository';
 
 @Module({
   imports: [TypeOrmModule.forFeature([ChargeEntity])],

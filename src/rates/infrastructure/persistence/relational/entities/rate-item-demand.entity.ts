@@ -7,6 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
 import { RateItemEntity } from './rate-item.entity';
 import { RatePeriodEntity } from './rate-period.entity';
 

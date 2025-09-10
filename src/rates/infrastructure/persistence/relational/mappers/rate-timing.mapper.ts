@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { RateTiming } from '@src/rates/domain/rate-timing';
-
-import { RateTimingEntity } from '../entities/rate-timing.entity';
+import { RateTimingEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-timing.entity';
 
 @Injectable()
 export class RateTimingMapper {

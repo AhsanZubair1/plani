@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { RateBlock } from '@src/rates/domain/rate-block';
-
-import { RateBlockEntity } from '../entities/rate-block.entity';
+import { RateBlockEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-block.entity';
 
 @Injectable()
 export class RateBlockMapper {

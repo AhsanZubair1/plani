@@ -7,6 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
 import { PlanEntity } from '@src/plans/infrastructure/persistence/relational/entities/plan.entity';
 
 @Entity({ name: 'rate_timings' })

@@ -6,11 +6,10 @@ import {
   RateItemBlock,
   RateItemDemand,
 } from '@src/rates/domain/rate-item';
-
-import { RateItemEntity } from '../entities/rate-item.entity';
-import { RateItemTimingEntity } from '../entities/rate-item-timing.entity';
-import { RateItemBlockEntity } from '../entities/rate-item-block.entity';
-import { RateItemDemandEntity } from '../entities/rate-item-demand.entity';
+import { RateItemBlockEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-item-block.entity';
+import { RateItemDemandEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-item-demand.entity';
+import { RateItemTimingEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-item-timing.entity';
+import { RateItemEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-item.entity';
 
 @Injectable()
 export class RateItemMapper {

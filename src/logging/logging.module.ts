@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 
-import { LoggingService } from './logging.service';
-import { LoggingController } from './logging.controller';
 import { LoggingInterceptor } from './interceptors/logging.interceptor';
+import { LoggingController } from './logging.controller';
+import { LoggingService } from './logging.service';
 import { LokiService } from './loki.service';
 
 @Module({

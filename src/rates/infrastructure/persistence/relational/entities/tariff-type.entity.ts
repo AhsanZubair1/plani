@@ -8,7 +8,9 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
+
 import { RateCardEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-card.entity';
+
 import { FuelTypeEntity } from './fuel-type.entity';
 
 @Entity({ name: 'tariff_types' })

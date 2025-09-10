@@ -7,6 +7,7 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+
 import { ChargeClassEntity } from './charge-class.entity';
 import { ChargeTermEntity } from './charge-term.entity';
 

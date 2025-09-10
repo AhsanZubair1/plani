@@ -1,8 +1,8 @@
 import { Controller, Get, Query, Param, ParseIntPipe } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiQuery } from '@nestjs/swagger';
 
-import { LoggingService } from './logging.service';
 import { Log } from './domain/log';
+import { LoggingService } from './logging.service';
 
 @ApiTags('Logging')
 @Controller({

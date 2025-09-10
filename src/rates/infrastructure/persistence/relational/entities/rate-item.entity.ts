@@ -8,12 +8,13 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-import { RateSeasonEntity } from './rate-season.entity';
-import { RateTypeEntity } from './rate-type.entity';
-import { RatePeriodEntity } from './rate-period.entity';
-import { RateItemTimingEntity } from './rate-item-timing.entity';
+
 import { RateItemBlockEntity } from './rate-item-block.entity';
 import { RateItemDemandEntity } from './rate-item-demand.entity';
+import { RateItemTimingEntity } from './rate-item-timing.entity';
+import { RatePeriodEntity } from './rate-period.entity';
+import { RateSeasonEntity } from './rate-season.entity';
+import { RateTypeEntity } from './rate-type.entity';
 
 @Entity({ name: 'rate_items' })
 export class RateItemEntity {

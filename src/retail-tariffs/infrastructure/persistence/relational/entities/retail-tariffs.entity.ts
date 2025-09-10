@@ -8,10 +8,12 @@ import {
   JoinColumn,
   OneToMany,
 } from 'typeorm';
+
 import { TABLES } from '@src/common/constants';
 import { PlanEntity } from '@src/plans/infrastructure/persistence/relational/entities/plan.entity';
 import { retailNtcKeyRelnEntity } from '@src/retail-tariffs/infrastructure/persistence/relational/entities/retail-ntc-key-reln.entity';
 import { EntityRelationalHelper } from '@src/utils/relational-entity-helper';
+
 import { customerTypeEntity } from './customer-type.entity';
 import { distributorEntity } from './distributor.entity';
 

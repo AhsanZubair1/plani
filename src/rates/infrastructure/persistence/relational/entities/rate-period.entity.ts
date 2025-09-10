@@ -7,8 +7,8 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-import { RateItemEntity } from './rate-item.entity';
 import { RateItemDemandEntity } from './rate-item-demand.entity';
+import { RateItemEntity } from './rate-item.entity';
 
 @Entity({ name: 'rate_periods' })
 export class RatePeriodEntity {
