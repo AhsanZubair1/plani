@@ -76,5 +76,8 @@ LOGGING_REGION=ca-central-1
 LOGGING_GROUP=testLogs
 LOGGING_STREAM=first
 
+# Loki Configuration
+LOKI_URL=http://localhost:3100
+
 AZURE_OCR_ENDPOINT=https://dummy-azure-ocr-endpoint.cognitiveservices.azure.com
 AZURE_OCR_API_KEY=12345678abcd1234efgh5678ijkl9012

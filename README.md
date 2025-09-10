@@ -2,9 +2,51 @@
 
 Implementing the [Realworld Medium Clone Specifications](https://realworld-docs.netlify.app/docs/implementation-creation/features) using TypeORM/Postgres and Hexagonal Architecture.
 
+## Quick Start with Logging
+
+To set up Loki and Grafana for logging:
+
+**Prerequisites:**
+
+- PostgreSQL database must be running externally
+- Configure database connection in your `.env` file
+
+```bash
+# Start Loki and Grafana services
+./scripts/start-with-logging.sh
+
+# Or manually
+docker-compose up -d
+```
+
+**Then start your API server:**
+
+```bash
+# Option 1: Use the helper script (checks Loki is running)
+./scripts/start-api.sh
+
+# Option 2: Start directly
+npm run start:dev
+```
+
+**Access Points:**
+
+- 🌐 **API**: http://localhost:3000 (when running locally)
+- 📊 **Grafana Dashboard**: http://localhost:3001 (admin/admin)
+- 🔍 **Loki API**: http://localhost:3100
+
+**View Logs:**
+
+1. Open Grafana at http://localhost:3001
+2. Login with admin/admin
+3. Navigate to "API Logs Dashboard" for pre-configured views
+4. Or use "Explore" for custom LogQL queries
+
 ## Documentation <!-- omit in toc -->
 
 [Full documentation here](/docs/readme.md)
+
+[Loki & Grafana Logging Setup](/docs/loki-grafana-logging.md)
 
 ## Roadmap
 
@@ -46,3 +88,9 @@ Implementing the [Realworld Medium Clone Specifications](https://realworld-docs.
 - [x] User Module: Complete CRUD functionality including:
   - Follow/Unfollow APIs: Allow users to follow and unfollow other users.
   - Social Logins: Integration with Apple, Facebook, Google, and Twitter for user authentication.
+- [x] **Loki & Grafana Logging**: Modern logging infrastructure with:
+  - **Loki**: High-performance log aggregation system
+  - **Grafana**: Rich dashboards and log visualization
+  - **Real-time Monitoring**: Live log streaming and analytics
+  - **Performance Metrics**: Request rates, response times, and error tracking
+  - **Database-free Logging**: Reduced database load and improved performance

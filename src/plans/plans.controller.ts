@@ -10,7 +10,9 @@ import {
   ParseIntPipe,
   HttpCode,
   HttpStatus,
+  UseGuards,
 } from '@nestjs/common';
+import { AuthGuard } from '@nestjs/passport';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 import { PlanMapping } from '@src/plans/domain/plan-mapping';
@@ -274,6 +276,7 @@ export class PlansController {
   }
 
   @Get('list')
+  @UseGuards(AuthGuard('jwt'))
   @ApiOperation({ summary: 'Get plans list with related data' })
   @ApiResponse({
     status: 200,
