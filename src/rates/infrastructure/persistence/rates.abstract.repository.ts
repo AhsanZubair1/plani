@@ -1,13 +1,18 @@
+import { Injectable } from '@nestjs/common';
+
 import { FuelType } from '@src/rates/domain/fuel-type';
 import { Rate } from '@src/rates/domain/rate';
+import { RateBlock } from '@src/rates/domain/rate-block';
 import { RateCard } from '@src/rates/domain/rate-card';
 import { RateCategory } from '@src/rates/domain/rate-category';
 import { RateClass } from '@src/rates/domain/rate-class';
 import { RateSeason } from '@src/rates/domain/rate-season';
+import { RateTiming } from '@src/rates/domain/rate-timing';
 import { RateType } from '@src/rates/domain/rate-type';
 import { TariffType } from '@src/rates/domain/tariff-type';
 import { NullableType } from '@src/utils/types/nullable.type';
 
+@Injectable()
 export abstract class RatesAbstractRepository {
   // FuelType methods
   abstract createFuelType(data: FuelType): Promise<FuelType>;
@@ -124,4 +129,33 @@ export abstract class RatesAbstractRepository {
     payload: Partial<RateSeason>,
   ): Promise<RateSeason>;
   abstract deleteRateSeason(id: RateSeason['rateSeasonId']): Promise<void>;
+
+  // RateBlock methods
+  abstract findRateBlocksByPlanId(planId: number): Promise<RateBlock[]>;
+  abstract findActiveRateBlocksByPlanId(planId: number): Promise<RateBlock[]>;
+  abstract findRateBlocksByPlanIdAndType(
+    planId: number,
+    rateType: string,
+  ): Promise<RateBlock[]>;
+  abstract findRateBlocksByPlanIdAndSeason(
+    planId: number,
+    season: string,
+  ): Promise<RateBlock[]>;
+  abstract findRateBlocksByTimeRange(
+    planId: number,
+    startTime: string,
+    endTime: string,
+  ): Promise<RateBlock[]>;
+
+  // RateTiming methods
+  abstract findRateTimingsByPlanId(planId: number): Promise<RateTiming[]>;
+  abstract findRateTimingsByPlanIdAndSeason(
+    planId: number,
+    season: string,
+  ): Promise<RateTiming[]>;
+  abstract findRateTimingsByTimeRange(
+    planId: number,
+    startTime: string,
+    endTime: string,
+  ): Promise<RateTiming[]>;
 }

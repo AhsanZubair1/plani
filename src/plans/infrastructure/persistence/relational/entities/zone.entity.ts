@@ -27,21 +27,21 @@ export class ZoneEntity {
     nullable: true,
     name: 'supply_areas',
   })
-  supply_areas: string;
+  supply_areas: string | null;
 
   @Column({
     type: 'text',
     nullable: true,
     name: 'included_postcodes',
   })
-  included_postcodes: string;
+  included_postcodes: string | null;
 
   @Column({
     type: 'text',
     nullable: true,
     name: 'excluded_postcodes',
   })
-  excluded_postcodes: string;
+  excluded_postcodes: string | null;
 
   @OneToMany(() => PlanEntity, (plan) => plan.zone)
   plans: PlanEntity[];

@@ -40,8 +40,9 @@ export class Plan {
     type: Date,
     example: '2024-12-31',
     description: 'Effective to date',
+    nullable: true,
   })
-  effectiveTo: Date;
+  effectiveTo: Date | null;
 
   @ApiProperty({
     type: Date,
@@ -138,8 +139,9 @@ export class Plan {
     type: Number,
     example: 0.25,
     description: 'Lowest RPS (cents per kWh)',
+    nullable: true,
   })
-  lowestRps: number;
+  lowestRps: number | null;
 
   // Foreign Key References
   @ApiProperty({
@@ -190,4 +192,82 @@ export class Plan {
     description: 'Bill frequency ID',
   })
   billFreqId: number;
+
+  // Billing Information
+  @ApiProperty({
+    type: String,
+    example: 'BILL001',
+    description: 'Billing code',
+  })
+  billingCode: string;
+
+  @ApiProperty({
+    type: String,
+    example: 'STANDARD',
+    description: 'Billing code type',
+  })
+  billingCodeType: string;
+
+  @ApiProperty({
+    type: Number,
+    example: 30,
+    description: 'Billing cycle in days',
+  })
+  billingCycleDays: number;
+
+  @ApiProperty({
+    type: String,
+    example: 'MONTHLY',
+    description: 'Billing frequency',
+  })
+  billingFrequency: string;
+
+  @ApiProperty({
+    type: Number,
+    example: 15,
+    description: 'Due date offset in days',
+  })
+  dueDateOffsetDays: number;
+
+  @ApiProperty({
+    type: Boolean,
+    example: true,
+    description: 'Whether plan has time-based rates',
+  })
+  hasTimeBasedRates: boolean;
+
+  @ApiProperty({
+    type: String,
+    example: 'Time-of-use pricing with peak and off-peak rates',
+    description: 'Rate structure description',
+  })
+  rateStructureDescription: string;
+
+  @ApiProperty({
+    type: Number,
+    example: 0.2,
+    description: 'Default rate per kWh in cents',
+  })
+  defaultRatePerKwh: number;
+
+  @ApiProperty({
+    type: Number,
+    example: 0.1,
+    description: 'Default supply charge per day in cents',
+  })
+  defaultSupplyChargePerDay: number;
+
+  @ApiProperty({
+    type: Date,
+    example: '2024-01-01T00:00:00Z',
+    description: 'Created timestamp',
+  })
+  createdAt: Date;
+
+  @ApiProperty({
+    type: Date,
+    example: '2024-01-01T00:00:00Z',
+    description: 'Updated timestamp',
+  })
+  updatedAt: Date;
 }

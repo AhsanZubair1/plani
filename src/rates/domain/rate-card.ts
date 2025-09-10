@@ -19,8 +19,9 @@ export class RateCard {
     type: String,
     example: 'Standard',
     description: 'Underlying network type',
+    nullable: true,
   })
-  underlyingNtType: string;
+  underlyingNtType: string | null;
 
   @ApiProperty({
     type: Number,

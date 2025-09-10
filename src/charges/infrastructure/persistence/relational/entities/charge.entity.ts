@@ -24,14 +24,14 @@ export class ChargeEntity {
   @Column({ type: 'varchar', length: 255 })
   charge_description: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 4 })
-  charge_amount: number;
+  @Column({ type: 'decimal', precision: 10, scale: 4, nullable: true })
+  charge_amount: number | null;
 
-  @Column({ type: 'decimal', precision: 10, scale: 4 })
-  charge_perc: number;
+  @Column({ type: 'decimal', precision: 10, scale: 4, nullable: true })
+  charge_perc: number | null;
 
-  @Column({ type: 'decimal', precision: 10, scale: 4 })
-  greenpower_perc: number;
+  @Column({ type: 'decimal', precision: 10, scale: 4, nullable: true })
+  greenpower_perc: number | null;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   reference_01: string;

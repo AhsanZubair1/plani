@@ -25,8 +25,8 @@ export class distributorEntity {
   @Column({ type: 'varchar', length: 255 })
   distributor_name: string;
 
-  @Column({ type: 'varchar', length: 10 })
-  mirn_prefix: string;
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  mirn_prefix: string | null;
 
   @ManyToOne(() => stateEntity, (state) => state.distributors)
   @JoinColumn({ name: 'state_id' })

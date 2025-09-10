@@ -3,15 +3,23 @@ import {
   Get,
   Post,
   Body,
-  Patch,
-  Param,
-  Delete,
   Query,
+  Param,
   ParseIntPipe,
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
+<<<<<<< Updated upstream
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+=======
+import { AuthGuard } from '@nestjs/passport';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
+>>>>>>> Stashed changes
 
 import { PlanMapping } from '@src/plans/domain/plan-mapping';
 import { PlanMappingStatusCountsDto } from '@src/plans/dto/plan-mapping-status-counts.dto';
@@ -20,13 +28,15 @@ import { PaginationResponse } from '@src/utils/types/pagination-options';
 import { Plan } from './domain/plan';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { PlanListDto } from './dto/plan-list.dto';
-import { PlanStatusCountsDto } from './dto/plan-status-counts.dto';
+import { PlanWithRatesDto } from './dto/plan-with-rates.dto';
 import { PlanDto } from './dto/plan.dto';
 import { QueryPlanDto } from './dto/query-plan.dto';
 import { UpdatePlanDto } from './dto/update-plan.dto';
 import { PlansService } from './plans.service';
 
 @ApiTags('Plans')
+// @ApiBearerAuth()
+// @UseGuards(AuthGuard('jwt'))
 @Controller({
   path: 'plans',
   version: '1',
@@ -46,17 +56,22 @@ export class PlansController {
     return this.plansService.create(createPlanDto);
   }
 
-  @Get('rate-card/:rateCardId')
-  @ApiOperation({ summary: 'Get plans by rate card ID' })
+  @Get(':id/rates')
+  @ApiOperation({
+    summary: 'Get plan with comprehensive rate structure',
+    description:
+      'Get a plan with its complete rate structure including time-based rates, usage blocks, peak/off-peak rates, and seasonal pricing',
+  })
   @ApiResponse({
     status: 200,
-    description: 'Plans retrieved successfully',
-    type: [PlanDto],
+    description: 'Plan with rates retrieved successfully',
+    type: PlanWithRatesDto,
   })
-  async findByRateCard(
-    @Param('rateCardId', ParseIntPipe) rateCardId: number,
-  ): Promise<Plan[]> {
-    return this.plansService.findByRateCard(rateCardId);
+  @ApiResponse({ status: 404, description: 'Plan not found' })
+  async getPlanWithRates(
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<PlanWithRatesDto> {
+    return await this.plansService.getPlanWithRates(id);
   }
 
   // @Get(':id')
@@ -71,101 +86,9 @@ export class PlansController {
   //   return this.plansService.findOne(id);
   // }
 
-  @Patch(':id')
-  @ApiOperation({ summary: 'Update a plan' })
-  @ApiResponse({
-    status: 200,
-    description: 'Plan updated successfully',
-    type: PlanDto,
-  })
-  @ApiResponse({ status: 404, description: 'Plan not found' })
-  async update(
-    @Param('id', ParseIntPipe) id: number,
-    @Body() updatePlanDto: UpdatePlanDto,
-  ): Promise<Plan> {
-    return this.plansService.update(id, updatePlanDto);
-  }
-
-  @Delete(':id')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete a plan permanently' })
-  @ApiResponse({ status: 204, description: 'Plan deleted successfully' })
-  @ApiResponse({ status: 404, description: 'Plan not found' })
-  async remove(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.plansService.remove(id);
-  }
-
-  @Patch(':id/soft-delete')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Soft delete a plan' })
-  @ApiResponse({ status: 204, description: 'Plan soft deleted successfully' })
-  @ApiResponse({ status: 404, description: 'Plan not found' })
-  async softDelete(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.plansService.softDelete(id);
-  }
-
-  @Patch(':id/restore')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Restore a soft deleted plan' })
-  @ApiResponse({ status: 204, description: 'Plan restored successfully' })
-  @ApiResponse({ status: 404, description: 'Plan not found' })
-  async restore(@Param('id', ParseIntPipe) id: number): Promise<void> {
-    return this.plansService.restore(id);
-  }
-
-  @Get('status/counts')
-  @ApiOperation({
-    summary: 'Get plan status counts (ready, incomplete, expired)',
-  })
-  @ApiResponse({
-    status: 200,
-    description: 'Plan status counts retrieved successfully',
-    type: PlanStatusCountsDto,
-  })
-  async getPlanStatusCounts(): Promise<{
-    ready: number;
-    incomplete: number;
-    expired: number;
-  }> {
-    return this.plansService.getPlanStatusCounts();
-  }
-
   // NEW_API'S
 
   // NEW_API'S
-
-  @Get('status/ready/count')
-  @ApiOperation({ summary: 'Get count of ready plans' })
-  @ApiResponse({
-    status: 200,
-    description: 'Ready plans count retrieved successfully',
-    schema: { type: 'number', example: 1323 },
-  })
-  async getReadyPlansCount(): Promise<number> {
-    return this.plansService.getReadyPlansCount();
-  }
-
-  @Get('status/incomplete/count')
-  @ApiOperation({ summary: 'Get count of incomplete plans' })
-  @ApiResponse({
-    status: 200,
-    description: 'Incomplete plans count retrieved successfully',
-    schema: { type: 'number', example: 48 },
-  })
-  async getIncompletePlansCount(): Promise<number> {
-    return this.plansService.getIncompletePlansCount();
-  }
-
-  @Get('status/expired/count')
-  @ApiOperation({ summary: 'Get count of expired plans' })
-  @ApiResponse({
-    status: 200,
-    description: 'Expired plans count retrieved successfully',
-    schema: { type: 'number', example: 4559 },
-  })
-  async getExpiredPlansCount(): Promise<number> {
-    return this.plansService.getExpiredPlansCount();
-  }
 
   // Additional routes for UI functionality
 
@@ -197,34 +120,6 @@ export class PlansController {
     return this.plansService.bulkUpdate(body.planIds, body.updates);
   }
 
-  @Get('dashboard/summary')
-  @ApiOperation({ summary: 'Get plans dashboard summary' })
-  @ApiResponse({
-    status: 200,
-    description: 'Dashboard summary retrieved successfully',
-    schema: {
-      type: 'object',
-      properties: {
-        totalPlans: { type: 'number' },
-        readyPlans: { type: 'number' },
-        incompletePlans: { type: 'number' },
-        expiredPlans: { type: 'number' },
-        expiringSoon: { type: 'number' },
-        recentUploads: { type: 'number' },
-      },
-    },
-  })
-  async getDashboardSummary(): Promise<{
-    totalPlans: number;
-    readyPlans: number;
-    incompletePlans: number;
-    expiredPlans: number;
-    expiringSoon: number;
-    recentUploads: number;
-  }> {
-    return this.plansService.getDashboardSummary();
-  }
-
   @Get('expiring-soon')
   @ApiOperation({ summary: 'Get plans expiring soon (within 7 days)' })
   @ApiResponse({
@@ -245,23 +140,6 @@ export class PlansController {
   })
   async getRecentUploads(): Promise<Plan[]> {
     return this.plansService.getRecentUploads();
-  }
-
-  @Get('search/suggestions')
-  @ApiOperation({ summary: 'Get search suggestions for plan names' })
-  @ApiResponse({
-    status: 200,
-    description: 'Search suggestions retrieved successfully',
-    schema: {
-      type: 'array',
-      items: { type: 'string' },
-    },
-  })
-  getSearchSuggestions(
-    @Query('q') query: string,
-    @Query('limit') limit: number = 10,
-  ): Promise<string[]> {
-    return this.plansService.getSearchSuggestions(query, limit);
   }
 
   @Get()

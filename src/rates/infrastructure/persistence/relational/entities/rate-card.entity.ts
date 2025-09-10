@@ -18,8 +18,8 @@ export class RateCardEntity {
   @Column({ type: 'varchar', length: 255 })
   rate_card_name: string;
 
-  @Column({ type: 'varchar', length: 50 })
-  underlying_nt_type: string;
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  underlying_nt_type: string | null;
 
   @Column({ type: 'int' })
   tariff_type_id: number;

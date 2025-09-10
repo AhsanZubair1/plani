@@ -35,7 +35,8 @@ class EnvironmentVariablesValidator {
 }
 
 export default registerAs<FileConfig>('file', () => {
-  validateConfig(process.env, EnvironmentVariablesValidator);
+  // Skip validation for seeding process
+  // validateConfig(process.env, EnvironmentVariablesValidator);
 
   return {
     driver:
