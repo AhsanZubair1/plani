@@ -3,8 +3,8 @@ export class RateItem {
   rateItemName: string;
   rateItemDetails?: string | null;
   rateSeasonId: number;
-  rateTypeId: number;
-  ratePeriodId: number;
+  rateTypeId: number | null;
+  ratePeriodId: number | null;
   createdAt: Date;
   updatedAt: Date;
 
@@ -18,10 +18,10 @@ export class RateItemTiming {
   rateItemTimingId: number;
   timeBandStart: string;
   timeBandEnd: string;
-  weekdays: boolean;
-  weekendSat: boolean;
-  weekendSun: boolean;
-  rateItemId: number;
+  weekdays: boolean | null;
+  weekendSat: boolean | null;
+  weekendSun: boolean | null;
+  rateItemId: number | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -29,9 +29,9 @@ export class RateItemTiming {
 export class RateItemBlock {
   rateItemBlockId: number;
   blockNumber: number;
-  blockConsumption: number;
+  blockConsumption: number | null;
   blockRate: number;
-  rateItemId: number;
+  rateItemId: number | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -39,10 +39,10 @@ export class RateItemBlock {
 export class RateItemDemand {
   rateItemDemandId: number;
   minKw: number;
-  maxKw: number;
+  maxKw: number | null;
   charge: number;
-  rateItemId: number;
-  measurementPeriodId: number;
+  rateItemId: number | null;
+  measurementPeriodId: number | null;
   createdAt: Date;
   updatedAt: Date;
 }

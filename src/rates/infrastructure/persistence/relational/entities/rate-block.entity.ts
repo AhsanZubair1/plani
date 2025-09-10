@@ -12,7 +12,7 @@ import { PlanEntity } from '@src/plans/infrastructure/persistence/relational/ent
 
 @Entity({ name: 'rate_blocks' })
 export class RateBlockEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('increment')
   rate_block_id: number;
 
   @Column({ type: 'varchar', length: 100 })

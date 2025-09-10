@@ -35,7 +35,7 @@ export class PlansService {
     plan.ebillingOnly = createPlanDto.ebillingOnly ?? false;
     plan.solarCustOnly = createPlanDto.solarCustOnly ?? false;
     plan.evOnly = createPlanDto.evOnly ?? false;
-    plan.instrinctGreen = createPlanDto.instrinctGreen ?? false;
+    plan.intrinsicGreen = createPlanDto.instrinctGreen ?? false;
 
     return this.plansRepository.create(plan);
   }

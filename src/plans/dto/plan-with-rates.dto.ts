@@ -70,15 +70,17 @@ export class TimeBasedRate {
     type: Number,
     example: 0.35,
     description: 'Rate per kWh in cents for this time period',
+    nullable: true,
   })
-  ratePerKwh: number;
+  ratePerKwh: number | null;
 
   @ApiProperty({
     type: Number,
     example: 0.15,
     description: 'Supply charge per day in cents for this time period',
+    nullable: true,
   })
-  supplyChargePerDay: number;
+  supplyChargePerDay: number | null;
 
   @ApiProperty({
     type: [UsageBlock],
@@ -120,8 +122,9 @@ export class PlanWithRatesDto {
     type: String,
     example: 'Time-of-use pricing with peak and off-peak rates',
     description: 'Rate structure description',
+    nullable: true,
   })
-  rateStructureDescription: string;
+  rateStructureDescription: string | null;
 
   @ApiProperty({
     type: Boolean,
@@ -134,27 +137,31 @@ export class PlanWithRatesDto {
     type: Number,
     example: 0.2,
     description: 'Default rate per kWh in cents',
+    nullable: true,
   })
-  defaultRatePerKwh: number;
+  defaultRatePerKwh: number | null;
 
   @ApiProperty({
     type: Number,
     example: 0.1,
     description: 'Default supply charge per day in cents',
+    nullable: true,
   })
-  defaultSupplyChargePerDay: number;
+  defaultSupplyChargePerDay: number | null;
 
   @ApiProperty({
     type: [TimeBasedRate],
     description: 'Time-based rates for this plan',
+    nullable: true,
   })
-  timeBasedRates: TimeBasedRate[];
+  timeBasedRates: TimeBasedRate[] | null;
 
   @ApiProperty({
     type: [UsageBlock],
     description: 'Usage blocks for this plan',
+    nullable: true,
   })
-  usageBlocks: UsageBlock[];
+  usageBlocks: UsageBlock[] | null;
 
   @ApiProperty({
     type: Object,
@@ -166,15 +173,16 @@ export class PlanWithRatesDto {
       peakHours: '06:00-22:00',
       offPeakHours: '22:00-06:00',
     },
+    nullable: true,
   })
   peakOffPeakRates: {
-    peakRate: number;
-    offPeakRate: number;
-    shoulderRate?: number;
+    peakRate: number | null;
+    offPeakRate: number | null;
+    shoulderRate?: number | null;
     peakHours: string;
     offPeakHours: string;
     shoulderHours?: string;
-  };
+  } | null;
 
   @ApiProperty({
     type: Object,
@@ -187,6 +195,7 @@ export class PlanWithRatesDto {
       hasSeasonalRates: true,
       hasUsageBlocks: true,
     },
+    nullable: true,
   })
   rateStructureSummary: {
     totalRateBlocks: number;
@@ -195,7 +204,7 @@ export class PlanWithRatesDto {
     hasShoulderRates: boolean;
     hasSeasonalRates: boolean;
     hasUsageBlocks: boolean;
-  };
+  } | null;
 
   @ApiProperty({
     type: Date,

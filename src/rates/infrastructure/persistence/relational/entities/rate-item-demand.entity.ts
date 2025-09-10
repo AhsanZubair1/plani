@@ -7,29 +7,28 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-
 import { RateItemEntity } from './rate-item.entity';
 import { RatePeriodEntity } from './rate-period.entity';
 
 @Entity({ name: 'rate_item_demands' })
 export class RateItemDemandEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('increment')
   rate_item_demand_id: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 8 })
+  @Column({ type: 'decimal', precision: 10, scale: 8, nullable: false })
   min_kw: number;
 
-  @Column({ type: 'decimal', precision: 10, scale: 8 })
-  max_kw: number;
+  @Column({ type: 'decimal', precision: 10, scale: 8, nullable: true })
+  max_kw: number | null;
 
-  @Column({ type: 'decimal', precision: 10, scale: 8 })
+  @Column({ type: 'decimal', precision: 10, scale: 8, nullable: false })
   charge: number;
 
-  @Column({ type: 'int' })
-  rate_item_id: number;
+  @Column({ type: 'int', nullable: true })
+  rate_item_id: number | null;
 
-  @Column({ type: 'int' })
-  measurement_period_id: number;
+  @Column({ type: 'int', nullable: true })
+  measurement_period_id: number | null;
 
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;
@@ -41,11 +40,11 @@ export class RateItemDemandEntity {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'rate_item_id' })
-  rateItem: RateItemEntity;
+  rateItem: RateItemEntity | null;
 
   @ManyToOne(() => RatePeriodEntity, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'measurement_period_id' })
-  measurementPeriod: RatePeriodEntity;
+  measurementPeriod: RatePeriodEntity | null;
 }

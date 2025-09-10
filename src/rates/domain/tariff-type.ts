@@ -33,6 +33,7 @@ export class TariffType {
     type: Number,
     example: 1,
     description: 'Fuel type ID',
+    nullable: true,
   })
-  fuelTypeId: number;
+  fuelTypeId: number | null;
 }

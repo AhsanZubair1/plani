@@ -17,7 +17,7 @@ export class PlanMapper {
     domain.ebillingOnly = raw.ebilling_only;
     domain.solarCustOnly = raw.solar_cust_only;
     domain.evOnly = raw.ev_only;
-    domain.instrinctGreen = raw.intrinsic_green;
+    domain.intrinsicGreen = raw.intrinsic_green;
     domain.eligibilityCriteria = raw.eligibility_criteria;
     domain.priceVariationDetails = raw.price_variation_details;
     domain.termsAndConditions = raw.terms_and_conditions;
@@ -63,7 +63,7 @@ export class PlanMapper {
     entity.ebilling_only = domain.ebillingOnly;
     entity.solar_cust_only = domain.solarCustOnly;
     entity.ev_only = domain.evOnly;
-    entity.intrinsic_green = domain.instrinctGreen;
+    entity.intrinsic_green = domain.intrinsicGreen;
     entity.eligibility_criteria = domain.eligibilityCriteria;
     entity.price_variation_details = domain.priceVariationDetails;
     entity.terms_and_conditions = domain.termsAndConditions;

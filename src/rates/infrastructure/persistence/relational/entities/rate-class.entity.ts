@@ -8,19 +8,19 @@ import {
 
 @Entity({ name: 'rate_classes' })
 export class RateClassEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('increment')
   rate_class_id: number;
 
-  @Column({ type: 'varchar', length: 20, unique: true })
+  @Column({ type: 'varchar', length: 20, unique: true, nullable: false })
   rate_class_code: string;
 
-  @Column({ type: 'varchar', length: 100 })
+  @Column({ type: 'varchar', length: 100, nullable: false })
   rate_class_name: string;
 
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: false, nullable: false })
   validate_24_hour_timing: boolean;
 
-  @Column({ type: 'int', default: 1 })
+  @Column({ type: 'int', default: 1, nullable: false })
   multiplier: number;
 
   @CreateDateColumn({ name: 'created_at' })

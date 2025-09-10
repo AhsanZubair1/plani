@@ -24,9 +24,18 @@ export class RateCard {
   underlyingNtType: string | null;
 
   @ApiProperty({
+    type: String,
+    example: 'Standard',
+    description: 'time definition',
+    nullable: true,
+  })
+  timeDefinition: string | null;
+
+  @ApiProperty({
     type: Number,
     example: 1,
     description: 'Tariff type ID',
+    nullable: true,
   })
-  tariffTypeId: number;
+  tariffTypeId: number | null;
 }

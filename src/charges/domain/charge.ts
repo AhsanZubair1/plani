@@ -5,11 +5,11 @@ export class Charge {
   charge_amount: number | null;
   charge_perc: number | null;
   greenpower_perc: number | null;
-  reference_01?: string;
-  plan_id: number;
-  charge_type_id: number;
-  charge_category_id: number;
-  charge_term_id: number;
+  reference_01: string | null;
+  plan_id: number | null;
+  charge_type_id: number | null;
+  charge_category_id: number | null;
+  charge_term_id: number | null;
   created_at: Date;
   updated_at: Date;
 }

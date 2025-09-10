@@ -48,8 +48,9 @@ export class Plan {
     type: Date,
     example: '2024-06-01',
     description: 'Review date',
+    nullable: true,
   })
-  reviewDate: Date;
+  reviewDate: Date | null;
 
   @ApiProperty({
     type: Boolean,
@@ -98,21 +99,31 @@ export class Plan {
     example: false,
     description: 'Intrinsic green',
   })
-  instrinctGreen: boolean;
+  intrinsicGreen: boolean;
+
+  @ApiProperty({
+    type: Boolean,
+    example: false,
+    description: 'Intrinsic GPP',
+    nullable: true,
+  })
+  intrinsicGpp: boolean | null;
 
   @ApiProperty({
     type: String,
     example: 'Residential customers only',
     description: 'Eligibility criteria',
+    nullable: true,
   })
-  eligibilityCriteria: string;
+  eligibilityCriteria: string | null;
 
   @ApiProperty({
     type: String,
     example: 'Price may vary based on market conditions',
     description: 'Price variation details',
+    nullable: true,
   })
-  priceVariationDetails: string;
+  priceVariationDetails: string | null;
 
   @ApiProperty({
     type: String,
@@ -125,15 +136,17 @@ export class Plan {
     type: String,
     example: 'Contract expires after 12 months',
     description: 'Contract expiry details',
+    nullable: true,
   })
-  contractExpiryDetails: string;
+  contractExpiryDetails: string | null;
 
   @ApiProperty({
     type: String,
     example: 'Fixed rates for 12 months',
     description: 'Fixed rates information',
+    nullable: true,
   })
-  fixedRates: string;
+  fixedRates: string | null;
 
   @ApiProperty({
     type: Number,
@@ -143,119 +156,78 @@ export class Plan {
   })
   lowestRps: number | null;
 
-  // Foreign Key References
+  @ApiProperty({
+    type: String,
+    example: 'https://example.com/factsheet.pdf',
+    description: 'Factsheet URL',
+    nullable: true,
+  })
+  factsheetUrl: string | null;
+
+  // Foreign Key References (all nullable as per entity)
   @ApiProperty({
     type: Number,
     example: 1,
     description: 'Zone ID',
+    nullable: true,
   })
-  zoneId: number;
+  zoneId: number | null;
 
   @ApiProperty({
     type: Number,
     example: 1,
     description: 'Plan type ID',
+    nullable: true,
   })
-  planTypeId: number;
-
-  @ApiProperty({
-    type: Number,
-    example: 1,
-    description: 'Customer type ID',
-  })
-  customerTypeId: number;
+  planTypeId: number | null;
 
   @ApiProperty({
     type: Number,
     example: 1,
     description: 'Distributor ID',
+    nullable: true,
   })
-  distributorId: number;
+  distributorId: number | null;
+
+  @ApiProperty({
+    type: Number,
+    example: 1,
+    description: 'Customer type ID',
+    nullable: true,
+  })
+  customerTypeId: number | null;
 
   @ApiProperty({
     type: Number,
     example: 1,
     description: 'Rate card ID',
+    nullable: true,
   })
-  rateCardId: number;
+  rateCardId: number | null;
 
   @ApiProperty({
     type: Number,
     example: 1,
     description: 'Contract term ID',
+    nullable: true,
   })
-  contractTermId: number;
+  contractTermId: number | null;
+
+  @ApiProperty({
+    type: Number,
+    example: 1,
+    description: 'Retail tariff ID',
+    nullable: true,
+  })
+  retailTariffId: number | null;
 
   @ApiProperty({
     type: Number,
     example: 1,
     description: 'Bill frequency ID',
+    nullable: true,
   })
-  billFreqId: number;
-
-  // Billing Information
-  @ApiProperty({
-    type: String,
-    example: 'BILL001',
-    description: 'Billing code',
-  })
-  billingCode: string;
-
-  @ApiProperty({
-    type: String,
-    example: 'STANDARD',
-    description: 'Billing code type',
-  })
-  billingCodeType: string;
-
-  @ApiProperty({
-    type: Number,
-    example: 30,
-    description: 'Billing cycle in days',
-  })
-  billingCycleDays: number;
-
-  @ApiProperty({
-    type: String,
-    example: 'MONTHLY',
-    description: 'Billing frequency',
-  })
-  billingFrequency: string;
-
-  @ApiProperty({
-    type: Number,
-    example: 15,
-    description: 'Due date offset in days',
-  })
-  dueDateOffsetDays: number;
-
-  @ApiProperty({
-    type: Boolean,
-    example: true,
-    description: 'Whether plan has time-based rates',
-  })
-  hasTimeBasedRates: boolean;
-
-  @ApiProperty({
-    type: String,
-    example: 'Time-of-use pricing with peak and off-peak rates',
-    description: 'Rate structure description',
-  })
-  rateStructureDescription: string;
-
-  @ApiProperty({
-    type: Number,
-    example: 0.2,
-    description: 'Default rate per kWh in cents',
-  })
-  defaultRatePerKwh: number;
-
-  @ApiProperty({
-    type: Number,
-    example: 0.1,
-    description: 'Default supply charge per day in cents',
-  })
-  defaultSupplyChargePerDay: number;
+  billFreqId: number | null;
 
   @ApiProperty({
     type: Date,
@@ -270,4 +242,76 @@ export class Plan {
     description: 'Updated timestamp',
   })
   updatedAt: Date;
+
+  // Billing Information (EXTRA fields)
+  @ApiProperty({
+    type: String,
+    example: 'BILL001',
+    description: 'Billing code',
+    nullable: true,
+  })
+  billingCode: string | null;
+
+  @ApiProperty({
+    type: String,
+    example: 'STANDARD',
+    description: 'Billing code type',
+    nullable: true,
+  })
+  billingCodeType: string | null;
+
+  @ApiProperty({
+    type: Number,
+    example: 30,
+    description: 'Billing cycle in days',
+    nullable: true,
+  })
+  billingCycleDays: number | null;
+
+  @ApiProperty({
+    type: String,
+    example: 'MONTHLY',
+    description: 'Billing frequency',
+    nullable: true,
+  })
+  billingFrequency: string | null;
+
+  @ApiProperty({
+    type: Number,
+    example: 15,
+    description: 'Due date offset in days',
+    nullable: true,
+  })
+  dueDateOffsetDays: number | null;
+
+  @ApiProperty({
+    type: Boolean,
+    example: true,
+    description: 'Whether plan has time-based rates',
+  })
+  hasTimeBasedRates: boolean;
+
+  @ApiProperty({
+    type: String,
+    example: 'Time-of-use pricing with peak and off-peak rates',
+    description: 'Rate structure description',
+    nullable: true,
+  })
+  rateStructureDescription: string | null;
+
+  @ApiProperty({
+    type: Number,
+    example: 0.2,
+    description: 'Default rate per kWh in cents',
+    nullable: true,
+  })
+  defaultRatePerKwh: number | null;
+
+  @ApiProperty({
+    type: Number,
+    example: 0.1,
+    description: 'Default supply charge per day in cents',
+    nullable: true,
+  })
+  defaultSupplyChargePerDay: number | null;
 }

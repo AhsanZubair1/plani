@@ -13,10 +13,10 @@ import { ChargeEntity } from './charge.entity';
 
 @Entity({ name: 'charge_terms' })
 export class ChargeTermEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('increment')
   charge_term_id: number;
 
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ type: 'varchar', length: 50, nullable: false })
   charge_term_code: string;
 
   @CreateDateColumn({ name: 'created_at' })

@@ -33,6 +33,7 @@ export class RateType {
     type: Number,
     example: 1,
     description: 'Rate class ID',
+    nullable: true,
   })
-  rateClassId: number;
+  rateClassId: number | null;
 }

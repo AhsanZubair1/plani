@@ -219,36 +219,43 @@ async function seedRateCards(dataSource: DataSource) {
     {
       rate_card_name: 'TRU556579SR_RC',
       underlying_nt_type: 'Time Varying',
+      time_definition: null,
       tariff_type_code: 'SR',
     },
     {
       rate_card_name: 'TRU566093MR_RC',
       underlying_nt_type: 'Time Varying',
+      time_definition: null,
       tariff_type_code: 'SR',
     },
     {
       rate_card_name: 'TRU566094MR_RC',
       underlying_nt_type: 'Time Varying',
+      time_definition: null,
       tariff_type_code: 'SR',
     },
     {
       rate_card_name: 'TRU556433MR_RC',
       underlying_nt_type: 'Time Varying',
+      time_definition: null,
       tariff_type_code: 'TOU',
     },
     {
       rate_card_name: 'TRU556443SR_RC',
       underlying_nt_type: 'Time Varying',
+      time_definition: null,
       tariff_type_code: 'TOU',
     },
     {
       rate_card_name: 'TRU567149SR_RC',
       underlying_nt_type: null,
+      time_definition: null,
       tariff_type_code: 'GAS',
     },
     {
       rate_card_name: 'TRU567144MR_RC',
       underlying_nt_type: null,
+      time_definition: null,
       tariff_type_code: 'GAS',
     },
   ];

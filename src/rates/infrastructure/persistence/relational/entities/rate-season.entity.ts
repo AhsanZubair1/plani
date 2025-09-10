@@ -12,25 +12,25 @@ import { RateEntity } from './rate.entity';
 
 @Entity({ name: 'rate_seasons' })
 export class RateSeasonEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('increment')
   rate_season_id: number;
 
-  @Column({ type: 'varchar', length: 20 })
+  @Column({ type: 'varchar', length: 20, nullable: false })
   season_code: string;
 
-  @Column({ type: 'varchar', length: 100 })
-  season_name: string;
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  season_name: string | null;
 
-  @Column({ type: 'date' })
+  @Column({ type: 'date', nullable: false })
   effective_from: Date;
 
-  @Column({ type: 'date' })
-  effective_to: Date;
+  @Column({ type: 'date', nullable: true })
+  effective_to: Date | null;
 
-  @Column({ type: 'decimal', precision: 10, scale: 6 })
-  daily_charge: number;
+  @Column({ type: 'decimal', precision: 10, scale: 6, nullable: true })
+  daily_charge: number | null;
 
-  @Column({ type: 'int' })
+  @Column({ type: 'int', nullable: false })
   rate_id: number;
 
   @ManyToOne(() => RateEntity)

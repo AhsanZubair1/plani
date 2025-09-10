@@ -12,25 +12,29 @@ import { TariffTypeEntity } from './tariff-type.entity';
 
 @Entity({ name: 'rate_cards' })
 export class RateCardEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('increment')
   rate_card_id: number;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 255, nullable: false })
   rate_card_name: string;
 
   @Column({ type: 'varchar', length: 50, nullable: true })
   underlying_nt_type: string | null;
 
-  @Column({ type: 'int' })
-  tariff_type_id: number;
+  // ADDED-NEW
+  @Column({ type: 'varchar', length: 50, nullable: true })
+  time_definition: string | null;
 
-  @ManyToOne(() => TariffTypeEntity, { eager: true })
-  @JoinColumn({ name: 'tariff_type_id' })
-  tariffType: TariffTypeEntity;
+  @Column({ type: 'int', nullable: true })
+  tariff_type_id: number | null;
 
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;
 
   @UpdateDateColumn({ name: 'updated_at' })
   updated_at: Date;
+
+  @ManyToOne(() => TariffTypeEntity, { eager: true })
+  @JoinColumn({ name: 'tariff_type_id' })
+  tariffType: TariffTypeEntity | null;
 }

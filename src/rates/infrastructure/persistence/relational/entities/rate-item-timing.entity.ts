@@ -7,31 +7,30 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
-
 import { RateItemEntity } from './rate-item.entity';
 
 @Entity({ name: 'rate_item_timings' })
 export class RateItemTimingEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('increment')
   rate_item_timing_id: number;
 
-  @Column({ type: 'time' })
+  @Column({ type: 'time', nullable: false })
   time_band_start: string;
 
-  @Column({ type: 'time' })
+  @Column({ type: 'time', nullable: false })
   time_band_end: string;
 
-  @Column({ type: 'boolean', default: false })
-  weekdays: boolean;
+  @Column({ type: 'boolean', default: false, nullable: true })
+  weekdays: boolean | null;
 
-  @Column({ type: 'boolean', default: false })
-  weekend_sat: boolean;
+  @Column({ type: 'boolean', default: false, nullable: true })
+  weekend_sat: boolean | null;
 
-  @Column({ type: 'boolean', default: false })
-  weekend_sun: boolean;
+  @Column({ type: 'boolean', default: false, nullable: true })
+  weekend_sun: boolean | null;
 
-  @Column({ type: 'int' })
-  rate_item_id: number;
+  @Column({ type: 'int', nullable: true })
+  rate_item_id: number | null;
 
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;
@@ -43,5 +42,5 @@ export class RateItemTimingEntity {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'rate_item_id' })
-  rateItem: RateItemEntity;
+  rateItem: RateItemEntity | null;
 }

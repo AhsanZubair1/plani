@@ -12,13 +12,13 @@ import { RateItemDemandEntity } from './rate-item-demand.entity';
 
 @Entity({ name: 'rate_periods' })
 export class RatePeriodEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('increment')
   rate_period_id: number;
 
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ type: 'varchar', length: 50, nullable: false })
   rate_period_code: string;
 
-  @Column({ type: 'varchar', length: 100 })
+  @Column({ type: 'varchar', length: 100, nullable: false })
   rate_period_name: string;
 
   @CreateDateColumn({ name: 'created_at' })

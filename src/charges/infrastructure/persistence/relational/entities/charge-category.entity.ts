@@ -14,17 +14,17 @@ import { ChargeEntity } from './charge.entity';
 
 @Entity({ name: 'charge_categories' })
 export class ChargeCategoryEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('increment')
   charge_category_id: number;
 
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ type: 'varchar', length: 50, nullable: false })
   charge_category_code: string;
 
-  @Column({ type: 'varchar', length: 100 })
+  @Column({ type: 'varchar', length: 100, nullable: false })
   charge_category_name: string;
 
-  @Column({ type: 'int' })
-  charge_class_id: number;
+  @Column({ type: 'int', nullable: true })
+  charge_class_id: number | null;
 
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;
@@ -40,7 +40,7 @@ export class ChargeCategoryEntity {
     },
   )
   @JoinColumn({ name: 'charge_class_id' })
-  chargeClass: ChargeClassEntity;
+  chargeClass: ChargeClassEntity | null;
 
   @OneToMany(() => ChargeEntity, (charge) => charge.chargeCategory)
   charges: ChargeEntity[];

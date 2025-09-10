@@ -10,10 +10,10 @@ export class customerTypeEntity {
   @PrimaryGeneratedColumn('increment')
   customer_type_id: number;
 
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ type: 'varchar', length: 50, nullable: false })
   customer_type_code: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 255, nullable: false })
   customer_type_name: string;
 
   @OneToMany(
