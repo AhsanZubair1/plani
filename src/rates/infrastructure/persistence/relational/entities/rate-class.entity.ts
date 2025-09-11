@@ -1,9 +1,11 @@
+import { RateTypeEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-type.entity';
 import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
 
 @Entity({ name: 'rate_classes' })
@@ -28,4 +30,7 @@ export class RateClassEntity {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updated_at: Date;
+
+  @OneToMany(() => RateTypeEntity, (rateType) => rateType.rateClass)
+  rateTypes: RateTypeEntity[];
 }

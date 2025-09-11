@@ -8,9 +8,7 @@ import {
   UpdateDateColumn,
   OneToMany,
 } from 'typeorm';
-
 import { RateCardEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-card.entity';
-
 import { FuelTypeEntity } from './fuel-type.entity';
 
 @Entity({ name: 'tariff_types' })
@@ -33,7 +31,10 @@ export class TariffTypeEntity {
   @UpdateDateColumn({ name: 'updated_at' })
   updated_at: Date;
 
-  @ManyToOne(() => FuelTypeEntity)
+  @ManyToOne(() => FuelTypeEntity, (fuelType) => fuelType.tariffTypes, {
+    nullable: true,
+    onDelete: 'SET NULL',
+  })
   @JoinColumn({ name: 'fuel_type_id' })
   fuelType: FuelTypeEntity | null;
 

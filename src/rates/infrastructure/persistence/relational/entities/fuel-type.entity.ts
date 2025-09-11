@@ -4,7 +4,9 @@ import {
   Column,
   CreateDateColumn,
   UpdateDateColumn,
+  OneToMany,
 } from 'typeorm';
+import { TariffTypeEntity } from './tariff-type.entity';
 
 @Entity({ name: 'fuel_types' })
 export class FuelTypeEntity {
@@ -22,4 +24,7 @@ export class FuelTypeEntity {
 
   @UpdateDateColumn({ name: 'updated_at' })
   updated_at: Date;
+
+  @OneToMany(() => TariffTypeEntity, (tariffType) => tariffType.fuelType)
+  tariffTypes: TariffTypeEntity[];
 }
