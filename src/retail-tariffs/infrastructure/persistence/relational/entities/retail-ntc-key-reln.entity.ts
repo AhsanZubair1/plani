@@ -16,6 +16,12 @@ export class retailNtcKeyRelnEntity {
   @PrimaryGeneratedColumn('increment')
   retail_ntc_reln_id: number;
 
+  @Column({ type: 'int', nullable: false })
+  retail_tariff_id: number;
+
+  @Column({ type: 'int', nullable: false })
+  network_tariff_key_id: number;
+
   @ManyToOne(
     () => retailTariffsEntity,
     (retailTariff) => retailTariff.retailNtcKeyRelations,
@@ -23,16 +29,10 @@ export class retailNtcKeyRelnEntity {
   @JoinColumn({ name: 'retail_tariff_id' })
   retail_tariff: retailTariffsEntity;
 
-  @Column({ type: 'int' })
-  retail_tariff_id: number;
-
   @ManyToOne(
     () => networkTariffKeyEntity,
     (networkTariffKey) => networkTariffKey.retailNtcKeyRelations,
   )
   @JoinColumn({ name: 'network_tariff_key_id' })
   network_tariff_key: networkTariffKeyEntity;
-
-  @Column({ type: 'int' })
-  network_tariff_key_id: number;
 }

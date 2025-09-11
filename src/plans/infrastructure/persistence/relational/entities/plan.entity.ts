@@ -9,7 +9,6 @@ import {
   OneToMany,
 } from 'typeorm';
 
-import { BillingCodeEntity } from '@src/billing/infrastructure/persistence/relational/entities/billing-code.entity';
 import { ChargeEntity } from '@src/charges/infrastructure/persistence/relational/entities/charge.entity';
 import { PlanTypeEntity } from '@src/plans/infrastructure/persistence/relational/entities/plan-type.entity';
 import { ZoneEntity } from '@src/plans/infrastructure/persistence/relational/entities/zone.entity';
@@ -20,102 +19,95 @@ import { retailTariffsEntity } from '@src/retail-tariffs/infrastructure/persiste
 
 @Entity({ name: 'plans' })
 export class PlanEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('increment')
   plan_id: number;
 
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ type: 'varchar', length: 50, nullable: false })
   int_plan_code: string;
 
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ type: 'varchar', length: 50, nullable: false })
   ext_plan_code: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 255, nullable: false })
   plan_name: string;
 
-  @Column({ type: 'date' })
+  @Column({ type: 'date', nullable: false })
   effective_from: Date;
 
-  @Column({ type: 'date' })
-  effective_to: Date;
+  @Column({ type: 'date', nullable: true })
+  effective_to: Date | null;
 
-  @Column({ type: 'date' })
-  review_date: Date;
+  @Column({ type: 'date', nullable: true })
+  review_date: Date | null;
 
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: false, nullable: false })
   restricted: boolean;
 
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: false, nullable: false })
   contingent: boolean;
 
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: false, nullable: false })
   direct_debit_only: boolean;
 
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: false, nullable: false })
   ebilling_only: boolean;
 
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: false, nullable: false })
   solar_cust_only: boolean;
 
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: false, nullable: false })
   ev_only: boolean;
 
-  @Column({ type: 'boolean', default: false })
-  instrinct_green: boolean;
+  @Column({ type: 'boolean', default: false, nullable: false })
+  intrinsic_green: boolean;
 
-  @Column({ type: 'varchar', length: 500 })
-  eligibility_criteria: string;
+  @Column({ type: 'boolean', default: false, nullable: true })
+  intrinsic_gpp: boolean | null;
 
-  @Column({ type: 'varchar', length: 500 })
-  price_variation_details: string;
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  eligibility_criteria: string | null;
 
-  @Column({ type: 'text' })
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  price_variation_details: string | null;
+
+  @Column({ type: 'text', nullable: false })
   terms_and_conditions: string;
 
-  @Column({ type: 'varchar', length: 500 })
-  contract_expiry_details: string;
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  contract_expiry_details: string | null;
 
-  @Column({ type: 'varchar', length: 500 })
-  fixed_rates: string;
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  fixed_rates: string | null;
 
-  @Column({ type: 'decimal', precision: 10, scale: 2 })
-  lowest_rps: number;
+  @Column({ type: 'decimal', precision: 10, scale: 2, nullable: true })
+  lowest_rps: number | null;
 
-  // Foreign Key Columns
-  @Column({ type: 'int' })
-  zone_id: number;
+  @Column({ type: 'text', nullable: true })
+  factsheet_url: string | null;
 
-  @Column({ type: 'int' })
+  @Column({ type: 'int', nullable: true })
+  zone_id: number | null;
+
+  @Column({ type: 'int', nullable: false })
   plan_type_id: number;
 
-  @Column({ type: 'int' })
-  customer_type_id: number;
-
-  @Column({ type: 'int' })
+  @Column({ type: 'int', nullable: false })
   distributor_id: number;
 
-  @ManyToOne(() => distributorEntity, (distributor) => distributor.plans)
-  @JoinColumn({ name: 'distributor_id' })
-  distributor: distributorEntity;
+  @Column({ type: 'int', nullable: false })
+  customer_type_id: number;
 
-  @ManyToOne(() => customerTypeEntity, (customerType) => customerType.plans)
-  @JoinColumn({ name: 'customer_type_id' })
-  customerType: customerTypeEntity;
-
-  @Column({ type: 'int' })
-  retail_tariff_id: number;
-
-  @Column({ type: 'int' })
+  @Column({ type: 'int', nullable: false })
   rate_card_id: number;
 
-  @ManyToOne(() => RateCardEntity, { eager: true })
-  @JoinColumn({ name: 'rate_card_id' })
-  rateCard: RateCardEntity;
+  @Column({ type: 'int', nullable: true })
+  contract_term_id: number | null;
 
-  @Column({ type: 'int' })
-  contract_term_id: number;
+  @Column({ type: 'int', nullable: true })
+  retail_tariff_id: number | null;
 
-  @Column({ type: 'int' })
-  bill_freq_id: number;
+  @Column({ type: 'int', nullable: true })
+  bill_freq_id: number | null;
 
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;
@@ -123,29 +115,45 @@ export class PlanEntity {
   @UpdateDateColumn({ name: 'updated_at' })
   updated_at: Date;
 
+  @ManyToOne(() => ZoneEntity, (zone) => zone.plans, {
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
+  @JoinColumn({ name: 'zone_id' })
+  zone: ZoneEntity | null;
+
   @ManyToOne(() => PlanTypeEntity, (planType) => planType.plans, {
-    onDelete: 'CASCADE', // Optional: define deletion behavior
+    nullable: false,
   })
   @JoinColumn({ name: 'plan_type_id' })
   planType: PlanTypeEntity;
 
-  @ManyToOne(() => ZoneEntity, (zone) => zone.plans, {
-    onDelete: 'SET NULL', // Set to null when zone is deleted
-    nullable: true, // Make the relationship optional
+  @ManyToOne(() => distributorEntity, (distributor) => distributor.plans, {
+    nullable: false,
   })
-  @JoinColumn({ name: 'zone_id' })
-  zone: ZoneEntity;
+  @JoinColumn({ name: 'distributor_id' })
+  distributor: distributorEntity;
 
-  @OneToMany(() => BillingCodeEntity, (billingCode) => billingCode.plan)
-  billingCodes: BillingCodeEntity[];
+  @ManyToOne(() => customerTypeEntity, (customerType) => customerType.plans, {
+    nullable: false,
+  })
+  @JoinColumn({ name: 'customer_type_id' })
+  customerType: customerTypeEntity;
 
-  @OneToMany(() => ChargeEntity, (charge) => charge.plan)
-  charges: ChargeEntity[];
+  @ManyToOne(() => RateCardEntity, {
+    eager: true,
+    nullable: false,
+  })
+  @JoinColumn({ name: 'rate_card_id' })
+  rateCard: RateCardEntity;
 
   @ManyToOne(() => retailTariffsEntity, (retailTariff) => retailTariff.plans, {
     onDelete: 'SET NULL',
     nullable: true,
   })
   @JoinColumn({ name: 'retail_tariff_id' })
-  retailTariff: retailTariffsEntity;
+  retailTariff: retailTariffsEntity | null;
+
+  @OneToMany(() => ChargeEntity, (charge) => charge.plan)
+  charges: ChargeEntity[];
 }

@@ -48,7 +48,7 @@ async function runSeeds() {
 
     // Seed Billing Frequencies
     console.log('📊 Seeding Billing Frequencies...');
-    // await seedBillingFrequencies(dataSource);
+    // await seedBillingFrequencies(dataSource); // Table doesn't exist
 
     // Seed Retail Tariffs
     console.log('📊 Seeding Retail Tariffs...');
@@ -60,7 +60,7 @@ async function runSeeds() {
 
     // Seed Billing Code Types
     console.log('📊 Seeding Billing Code Types...');
-    await seedBillingCodeTypes(dataSource);
+    // await seedBillingCodeTypes(dataSource); // Table doesn't exist
 
     // Seed Charge Classes
     console.log('📊 Seeding Charge Classes...');
@@ -80,11 +80,51 @@ async function runSeeds() {
 
     // Seed Billing Codes
     console.log('📊 Seeding Billing Codes...');
-    await seedBillingCodes(dataSource);
+    // await seedBillingCodes(dataSource); // Table doesn't exist
 
     // Seed Charges
     console.log('📊 Seeding Charges...');
     await seedCharges(dataSource);
+
+    // Seed Rate Seasons
+    console.log('📊 Seeding Rate Seasons...');
+    // await seedRateSeasons(dataSource); // Table exists but no data
+
+    // Seed Rate Classes
+    console.log('📊 Seeding Rate Classes...');
+    await seedRateClasses(dataSource);
+
+    // Seed Rate Types
+    console.log('📊 Seeding Rate Types...');
+    await seedRateTypes(dataSource);
+
+    // Seed Rate Periods
+    console.log('📊 Seeding Rate Periods...');
+    await seedRatePeriods(dataSource);
+
+    // Seed Rate Items
+    console.log('📊 Seeding Rate Items...');
+    // await seedRateItems(dataSource); // Depends on rate_seasons which has no data
+
+    // Seed Rate Item Timings
+    console.log('📊 Seeding Rate Item Timings...');
+    // await seedRateItemTimings(dataSource); // Depends on rate_items
+
+    // Seed Rate Item Blocks
+    console.log('📊 Seeding Rate Item Blocks...');
+    // await seedRateItemBlocks(dataSource); // Depends on rate_items
+
+    // Seed Rate Item Demands
+    console.log('📊 Seeding Rate Item Demands...');
+    // await seedRateItemDemands(dataSource); // Depends on rate_items
+
+    // Seed Rate Blocks (Legacy)
+    console.log('📊 Seeding Rate Blocks...');
+    // await seedRateBlocks(dataSource); // Depends on rate_items
+
+    // Seed Rate Timings (Legacy)
+    console.log('📊 Seeding Rate Timings...');
+    // await seedRateTimings(dataSource); // Depends on rate_items
 
     console.log('✅ Database seeding completed successfully!');
   } catch (error) {
@@ -98,10 +138,7 @@ async function runSeeds() {
 async function seedFuelTypes(dataSource: DataSource) {
   const fuelTypes = [
     { fuel_type_code: 'ELEC', fuel_type_name: 'Electricity' },
-    { fuel_type_code: 'GAS', fuel_type_name: 'Natural Gas' },
-    { fuel_type_code: 'SOLAR', fuel_type_name: 'Solar' },
-    { fuel_type_code: 'WIND', fuel_type_name: 'Wind' },
-    { fuel_type_code: 'HYDRO', fuel_type_name: 'Hydroelectric' },
+    { fuel_type_code: 'GAS', fuel_type_name: 'Gas' },
   ];
 
   for (const fuelType of fuelTypes) {
@@ -125,51 +162,23 @@ async function seedFuelTypes(dataSource: DataSource) {
 async function seedTariffTypes(dataSource: DataSource) {
   const tariffTypes = [
     {
-      tariff_type_code: 'PEAK',
-      tariff_type_name: 'Peak Rate',
-      time_definition: '7:00 AM - 10:00 PM, Monday to Friday',
+      tariff_type_code: 'SR',
+      tariff_type_name: 'Single Rate',
       fuel_type_id: 1,
     },
     {
-      tariff_type_code: 'OFF_PEAK',
-      tariff_type_name: 'Off-Peak Rate',
-      time_definition: '10:00 PM - 7:00 AM, Monday to Friday',
+      tariff_type_code: 'TOU',
+      tariff_type_name: 'Time of Use',
       fuel_type_id: 1,
     },
     {
-      tariff_type_code: 'WEEKEND',
-      tariff_type_name: 'Weekend Rate',
-      time_definition: 'All day Saturday and Sunday',
+      tariff_type_code: 'FLEX',
+      tariff_type_name: 'Flexible Pricing',
       fuel_type_id: 1,
     },
     {
-      tariff_type_code: 'SHOULDER',
-      tariff_type_name: 'Shoulder Rate',
-      time_definition: '7:00 AM - 10:00 AM, 2:00 PM - 7:00 PM',
-      fuel_type_id: 1,
-    },
-    {
-      tariff_type_code: 'CONTROLLED',
-      tariff_type_name: 'Controlled Load',
-      time_definition: '11:00 PM - 7:00 AM',
-      fuel_type_id: 1,
-    },
-    {
-      tariff_type_code: 'SOLAR_FIT',
-      tariff_type_name: 'Solar Feed-in Tariff',
-      time_definition: 'All day',
-      fuel_type_id: 3,
-    },
-    {
-      tariff_type_code: 'GAS_STANDARD',
-      tariff_type_name: 'Standard Gas Rate',
-      time_definition: 'All day',
-      fuel_type_id: 2,
-    },
-    {
-      tariff_type_code: 'GAS_HEATING',
-      tariff_type_name: 'Gas Heating Rate',
-      time_definition: 'Winter months only',
+      tariff_type_code: 'GAS',
+      tariff_type_name: 'Gas',
       fuel_type_id: 2,
     },
   ];
@@ -181,19 +190,20 @@ async function seedTariffTypes(dataSource: DataSource) {
     );
 
     if (existing.length === 0) {
-      await dataSource.query(
-        'INSERT INTO tariff_types (tariff_type_code, tariff_type_name, time_definition, fuel_type_id, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW())',
+      const result = await dataSource.query(
+        'INSERT INTO tariff_types (tariff_type_code, tariff_type_name, fuel_type_id, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW()) RETURNING tariff_type_id',
         [
           tariffType.tariff_type_code,
           tariffType.tariff_type_name,
-          tariffType.time_definition,
           tariffType.fuel_type_id,
         ],
       );
-      console.log(`  ✓ Created tariff type: ${tariffType.tariff_type_name}`);
+      console.log(
+        `  ✓ Created tariff type: ${tariffType.tariff_type_name} with ID: ${result[0].tariff_type_id}`,
+      );
     } else {
       console.log(
-        `  - Tariff type already exists: ${tariffType.tariff_type_name}`,
+        `  - Tariff type already exists: ${tariffType.tariff_type_name} with ID: ${existing[0].tariff_type_id}`,
       );
     }
   }
@@ -202,54 +212,46 @@ async function seedTariffTypes(dataSource: DataSource) {
 async function seedRateCards(dataSource: DataSource) {
   const rateCards = [
     {
-      rate_card_name: 'Residential Standard Rate Card',
-      underlying_nt_type: 'RES_STD',
-      tariff_type_id: 1,
+      rate_card_name: 'TRU556579SR_RC',
+      underlying_nt_type: 'Time Varying',
+      time_definition: null,
+      tariff_type_code: 'SR',
     },
     {
-      rate_card_name: 'Residential Time of Use Rate Card',
-      underlying_nt_type: 'RES_TOU',
-      tariff_type_id: 2,
+      rate_card_name: 'TRU566093MR_RC',
+      underlying_nt_type: 'Time Varying',
+      time_definition: null,
+      tariff_type_code: 'SR',
     },
     {
-      rate_card_name: 'Residential Solar Rate Card',
-      underlying_nt_type: 'RES_SOLAR',
-      tariff_type_id: 6,
+      rate_card_name: 'TRU566094MR_RC',
+      underlying_nt_type: 'Time Varying',
+      time_definition: null,
+      tariff_type_code: 'SR',
     },
     {
-      rate_card_name: 'Commercial Standard Rate Card',
-      underlying_nt_type: 'COM_STD',
-      tariff_type_id: 1,
+      rate_card_name: 'TRU556433MR_RC',
+      underlying_nt_type: 'Time Varying',
+      time_definition: null,
+      tariff_type_code: 'TOU',
     },
     {
-      rate_card_name: 'Commercial Time of Use Rate Card',
-      underlying_nt_type: 'COM_TOU',
-      tariff_type_id: 4,
+      rate_card_name: 'TRU556443SR_RC',
+      underlying_nt_type: 'Time Varying',
+      time_definition: null,
+      tariff_type_code: 'TOU',
     },
     {
-      rate_card_name: 'Industrial Peak Rate Card',
-      underlying_nt_type: 'IND_PEAK',
-      tariff_type_id: 1,
+      rate_card_name: 'TRU567149SR_RC',
+      underlying_nt_type: null,
+      time_definition: null,
+      tariff_type_code: 'GAS',
     },
     {
-      rate_card_name: 'Industrial Off-Peak Rate Card',
-      underlying_nt_type: 'IND_OFF',
-      tariff_type_id: 2,
-    },
-    {
-      rate_card_name: 'Controlled Load Rate Card',
-      underlying_nt_type: 'CTRL_LOAD',
-      tariff_type_id: 5,
-    },
-    {
-      rate_card_name: 'Gas Standard Rate Card',
-      underlying_nt_type: 'GAS_STD',
-      tariff_type_id: 7,
-    },
-    {
-      rate_card_name: 'Gas Heating Rate Card',
-      underlying_nt_type: 'GAS_HEAT',
-      tariff_type_id: 8,
+      rate_card_name: 'TRU567144MR_RC',
+      underlying_nt_type: null,
+      time_definition: null,
+      tariff_type_code: 'GAS',
     },
   ];
 
@@ -260,15 +262,28 @@ async function seedRateCards(dataSource: DataSource) {
     );
 
     if (existing.length === 0) {
+      // Get the tariff_type_id by code
+      const tariffType = await dataSource.query(
+        'SELECT tariff_type_id FROM tariff_types WHERE tariff_type_code = $1',
+        [rateCard.tariff_type_code],
+      );
+
+      if (tariffType.length === 0) {
+        console.log(
+          `  ❌ Tariff type code ${rateCard.tariff_type_code} does not exist for rate card: ${rateCard.rate_card_name}`,
+        );
+        continue;
+      }
+
+      const tariffTypeId = tariffType[0].tariff_type_id;
+
       await dataSource.query(
         'INSERT INTO rate_cards (rate_card_name, underlying_nt_type, tariff_type_id, created_at, updated_at) VALUES ($1, $2, $3, NOW(), NOW())',
-        [
-          rateCard.rate_card_name,
-          rateCard.underlying_nt_type,
-          rateCard.tariff_type_id,
-        ],
+        [rateCard.rate_card_name, rateCard.underlying_nt_type, tariffTypeId],
       );
-      console.log(`  ✓ Created rate card: ${rateCard.rate_card_name}`);
+      console.log(
+        `  ✓ Created rate card: ${rateCard.rate_card_name} with tariff_type_code: ${rateCard.tariff_type_code} (ID: ${tariffTypeId})`,
+      );
     } else {
       console.log(`  - Rate card already exists: ${rateCard.rate_card_name}`);
     }
@@ -277,14 +292,13 @@ async function seedRateCards(dataSource: DataSource) {
 
 async function seedStates(dataSource: DataSource) {
   const states = [
+    { state_code: 'NT', state_name: 'Northern Territory' },
     { state_code: 'NSW', state_name: 'New South Wales' },
-    { state_code: 'VIC', state_name: 'Victoria' },
     { state_code: 'QLD', state_name: 'Queensland' },
-    { state_code: 'WA', state_name: 'Western Australia' },
     { state_code: 'SA', state_name: 'South Australia' },
     { state_code: 'TAS', state_name: 'Tasmania' },
-    { state_code: 'ACT', state_name: 'Australian Capital Territory' },
-    { state_code: 'NT', state_name: 'Northern Territory' },
+    { state_code: 'WA', state_name: 'Western Australia' },
+    { state_code: 'VIC', state_name: 'Victoria' },
   ];
 
   for (const state of states) {
@@ -308,64 +322,100 @@ async function seedStates(dataSource: DataSource) {
 async function seedDistributors(dataSource: DataSource) {
   const distributors = [
     {
+      distributor_code: 'PWC',
+      distributor_name: 'Power and Water Corporation',
+      mirn_prefix: null,
+      state_id: 1,
+    },
+    {
       distributor_code: 'AUSGRID',
       distributor_name: 'Ausgrid',
-      mirn_prefix: 'NSW',
-      state_id: 1,
+      mirn_prefix: null,
+      state_id: 2,
     },
     {
       distributor_code: 'ENDEAVOUR',
       distributor_name: 'Endeavour Energy',
-      mirn_prefix: 'NSW',
-      state_id: 1,
-    },
-    {
-      distributor_code: 'ESSENTIAL',
-      distributor_name: 'Essential Energy',
-      mirn_prefix: 'NSW',
-      state_id: 1,
-    },
-    {
-      distributor_code: 'CITIPOWER',
-      distributor_name: 'CitiPower',
-      mirn_prefix: 'VIC',
+      mirn_prefix: null,
       state_id: 2,
-    },
-    {
-      distributor_code: 'POWERCOR',
-      distributor_name: 'Powercor Australia',
-      mirn_prefix: 'VIC',
-      state_id: 2,
-    },
-    {
-      distributor_code: 'UNITED',
-      distributor_name: 'United Energy',
-      mirn_prefix: 'VIC',
-      state_id: 2,
-    },
-    {
-      distributor_code: 'ENERGEX',
-      distributor_name: 'Energex',
-      mirn_prefix: 'QLD',
-      state_id: 3,
     },
     {
       distributor_code: 'ERGON',
       distributor_name: 'Ergon Energy',
-      mirn_prefix: 'QLD',
+      mirn_prefix: null,
       state_id: 3,
     },
     {
-      distributor_code: 'WESTERN_POWER',
-      distributor_name: 'Western Power',
-      mirn_prefix: 'WA',
+      distributor_code: 'ENERGEX',
+      distributor_name: 'Energex',
+      mirn_prefix: null,
       state_id: 4,
     },
     {
       distributor_code: 'SA_POWER',
       distributor_name: 'SA Power Networks',
-      mirn_prefix: 'SA',
+      mirn_prefix: null,
+      state_id: 4,
+    },
+    {
+      distributor_code: 'AURORA',
+      distributor_name: 'Aurora Energy',
+      mirn_prefix: null,
       state_id: 5,
+    },
+    {
+      distributor_code: 'WESTERN',
+      distributor_name: 'Western Power',
+      mirn_prefix: null,
+      state_id: 6,
+    },
+    {
+      distributor_code: 'CITIPOWER',
+      distributor_name: 'CitiPower',
+      mirn_prefix: null,
+      state_id: 7,
+    },
+    {
+      distributor_code: 'JEMENA',
+      distributor_name: 'Jemena',
+      mirn_prefix: null,
+      state_id: 7,
+    },
+    {
+      distributor_code: 'POWERCOR',
+      distributor_name: 'Powercor',
+      mirn_prefix: null,
+      state_id: 7,
+    },
+    {
+      distributor_code: 'UNITED',
+      distributor_name: 'United Energy',
+      mirn_prefix: null,
+      state_id: 7,
+    },
+    {
+      distributor_code: 'AUSNET',
+      distributor_name: 'Ausnet',
+      mirn_prefix: null,
+      state_id: 7,
+    },
+    {
+      distributor_code: 'AGN',
+      distributor_name: 'Australian Gas Networks',
+      mirn_prefix: '532',
+      state_id: 4,
+    },
+    {
+      distributor_code: 'MULTI',
+      distributor_name: 'Multinet',
+      mirn_prefix: '531',
+      state_id: 7,
+    },
+    {
+      distributor_code: 'AUSNET_GAS',
+      distributor_name: 'Ausnet Services',
+      mirn_prefix: '533',
+      state_id: 7,
     },
   ];
 
@@ -396,19 +446,8 @@ async function seedDistributors(dataSource: DataSource) {
 
 async function seedCustomerTypes(dataSource: DataSource) {
   const customerTypes = [
-    { customer_type_code: 'RES', customer_type_name: 'Residential' },
-    {
-      customer_type_code: 'SME',
-      customer_type_name: 'Small to Medium Enterprise',
-    },
-    { customer_type_code: 'LGE', customer_type_name: 'Large Enterprise' },
-    { customer_type_code: 'IND', customer_type_name: 'Industrial' },
-    { customer_type_code: 'GOV', customer_type_name: 'Government' },
-    { customer_type_code: 'EDU', customer_type_name: 'Educational' },
-    { customer_type_code: 'HOS', customer_type_name: 'Hospitality' },
-    { customer_type_code: 'RET', customer_type_name: 'Retail' },
-    { customer_type_code: 'MAN', customer_type_name: 'Manufacturing' },
-    { customer_type_code: 'AGR', customer_type_name: 'Agricultural' },
+    { customer_type_code: 'RESI', customer_type_name: 'Residential' },
+    { customer_type_code: 'BUS', customer_type_name: 'Business' },
   ];
 
   for (const customerType of customerTypes) {
@@ -435,16 +474,8 @@ async function seedCustomerTypes(dataSource: DataSource) {
 
 async function seedPlanTypes(dataSource: DataSource) {
   const planTypes = [
-    { plan_type_code: 'RES_BASIC', plan_type_name: 'Residential Basic' },
-    { plan_type_code: 'RES_PREMIUM', plan_type_name: 'Residential Premium' },
-    { plan_type_code: 'RES_GREEN', plan_type_name: 'Residential Green' },
-    { plan_type_code: 'COM_SMALL', plan_type_name: 'Commercial Small' },
-    { plan_type_code: 'COM_MEDIUM', plan_type_name: 'Commercial Medium' },
-    { plan_type_code: 'COM_LARGE', plan_type_name: 'Commercial Large' },
-    { plan_type_code: 'IND_HEAVY', plan_type_name: 'Industrial Heavy' },
-    { plan_type_code: 'SOLAR_FIT', plan_type_name: 'Solar Feed-in Tariff' },
-    { plan_type_code: 'EV_CHARGING', plan_type_name: 'EV Charging' },
-    { plan_type_code: 'TIME_OF_USE', plan_type_name: 'Time of Use' },
+    { plan_type_code: 'STANDING', plan_type_name: 'Standing Offer' },
+    { plan_type_code: 'MARKET', plan_type_name: 'Market Offer' },
   ];
 
   for (const planType of planTypes) {
@@ -468,74 +499,14 @@ async function seedPlanTypes(dataSource: DataSource) {
 async function seedZones(dataSource: DataSource) {
   const zones = [
     {
-      zone_code: 'NSW_SYD',
-      zone_name: 'New South Wales - Sydney',
-      supply_areas: 'Sydney Metropolitan Area, Blue Mountains, Central Coast',
-      included_postcodes: '1000-2999, 3000-3999',
-      excluded_postcodes: '4000-4999',
+      zone_code: 'ENV_CEN_1',
+      zone_name: 'Envestra Central 1',
+      supply_areas: null,
     },
     {
-      zone_code: 'NSW_REG',
-      zone_name: 'New South Wales - Regional',
-      supply_areas: 'Regional NSW, Hunter Valley, Illawarra',
-      included_postcodes: '2000-2999, 3000-3999',
-      excluded_postcodes: '1000-1999',
-    },
-    {
-      zone_code: 'VIC_MEL',
-      zone_name: 'Victoria - Melbourne',
-      supply_areas: 'Melbourne Metropolitan Area, Mornington Peninsula',
-      included_postcodes: '3000-3999',
-      excluded_postcodes: '4000-4999',
-    },
-    {
-      zone_code: 'VIC_REG',
-      zone_name: 'Victoria - Regional',
-      supply_areas: 'Regional Victoria, Geelong, Ballarat',
-      included_postcodes: '3000-3999, 4000-4999',
-      excluded_postcodes: '5000-5999',
-    },
-    {
-      zone_code: 'QLD_BNE',
-      zone_name: 'Queensland - Brisbane',
-      supply_areas: 'Brisbane Metropolitan Area, Gold Coast, Sunshine Coast',
-      included_postcodes: '4000-4999',
-      excluded_postcodes: '5000-5999',
-    },
-    {
-      zone_code: 'QLD_REG',
-      zone_name: 'Queensland - Regional',
-      supply_areas: 'Regional Queensland, Cairns, Townsville',
-      included_postcodes: '4000-4999, 5000-5999',
-      excluded_postcodes: '6000-6999',
-    },
-    {
-      zone_code: 'WA_PER',
-      zone_name: 'Western Australia - Perth',
-      supply_areas: 'Perth Metropolitan Area, Fremantle',
-      included_postcodes: '6000-6999',
-      excluded_postcodes: '7000-7999',
-    },
-    {
-      zone_code: 'WA_REG',
-      zone_name: 'Western Australia - Regional',
-      supply_areas: 'Regional WA, Kalgoorlie, Broome',
-      included_postcodes: '6000-6999, 7000-7999',
-      excluded_postcodes: '8000-8999',
-    },
-    {
-      zone_code: 'SA_ADL',
-      zone_name: 'South Australia - Adelaide',
-      supply_areas: 'Adelaide Metropolitan Area, Adelaide Hills',
-      included_postcodes: '5000-5999',
-      excluded_postcodes: '6000-6999',
-    },
-    {
-      zone_code: 'TAS_HOB',
-      zone_name: 'Tasmania - Hobart',
-      supply_areas: 'Hobart Metropolitan Area, Southern Tasmania',
-      included_postcodes: '7000-7999',
-      excluded_postcodes: '8000-8999',
+      zone_code: 'MAIN_2',
+      zone_name: 'Main 2',
+      supply_areas: null,
     },
   ];
 
@@ -547,14 +518,8 @@ async function seedZones(dataSource: DataSource) {
 
     if (existing.length === 0) {
       await dataSource.query(
-        'INSERT INTO zones (zone_code, zone_name, supply_areas, included_postcodes, excluded_postcodes) VALUES ($1, $2, $3, $4, $5)',
-        [
-          zone.zone_code,
-          zone.zone_name,
-          zone.supply_areas,
-          zone.included_postcodes,
-          zone.excluded_postcodes,
-        ],
+        'INSERT INTO zones (zone_code, zone_name, supply_areas) VALUES ($1, $2, $3)',
+        [zone.zone_code, zone.zone_name, zone.supply_areas],
       );
       console.log(`  ✓ Created zone: ${zone.zone_name}`);
     } else {
@@ -563,70 +528,102 @@ async function seedZones(dataSource: DataSource) {
   }
 }
 
-// async function seedBillingFrequencies(dataSource: DataSource) {
-//   const billingFrequencies = [
-//     { frequency_code: 'MONTHLY', frequency_name: 'Monthly Billing' },
-//     { frequency_code: 'QUARTERLY', frequency_name: 'Quarterly Billing' },
-//     { frequency_code: 'ANNUAL', frequency_name: 'Annual Billing' },
-//     { frequency_code: 'BI_MONTHLY', frequency_name: 'Bi-Monthly Billing' },
-//   ];
+/*
+async function seedContractTerms(dataSource: DataSource) {
+  const contractTerms = [
+    { contract_term_code: 'NA', contract_term_name: 'None' },
+    { contract_term_code: 'Y1', contract_term_name: '1 Year' },
+    { contract_term_code: 'Y2', contract_term_name: '2 Year' },
+    { contract_term_code: 'Y3', contract_term_name: '3 Year' },
+    { contract_term_code: 'Y4', contract_term_name: '4 Year' },
+    { contract_term_code: 'Y5', contract_term_name: '5 Year' },
+    { contract_term_code: 'OTHER', contract_term_name: 'Other' },
+  ];
 
-//   // for (const freq of billingFrequencies) {
-//   //   const existing = await dataSource.query(
-//   //     'SELECT * FROM billing_frequencies WHERE frequency_code = $1',
-//   //     [freq.frequency_code],
-//   //   );
+  for (const contractTerm of contractTerms) {
+    const existing = await dataSource.query(
+      'SELECT * FROM contract_terms WHERE contract_term_code = $1',
+      [contractTerm.contract_term_code],
+    );
 
-//   //   if (existing.length === 0) {
-//   //     await dataSource.query(
-//   //       'INSERT INTO billing_frequencies (frequency_code, frequency_name) VALUES ($1, $2)',
-//   //       [freq.frequency_code, freq.frequency_name],
-//   //     );
-//   //     console.log(`  ✓ Created billing frequency: ${freq.frequency_name}`);
-//   //   } else {
-//   //     console.log(
-//   //       `  - Billing frequency already exists: ${freq.frequency_name}`,
-//   //     );
-//   //   }
-//   // }
-// }
+    if (existing.length === 0) {
+      await dataSource.query(
+        'INSERT INTO contract_terms (contract_term_code, contract_term_name, created_at, updated_at) VALUES ($1, $2, NOW(), NOW())',
+        [contractTerm.contract_term_code, contractTerm.contract_term_name],
+      );
+      console.log(
+        `  ✓ Created contract term: ${contractTerm.contract_term_name}`,
+      );
+    } else {
+      console.log(
+        `  - Contract term already exists: ${contractTerm.contract_term_name}`,
+      );
+    }
+  }
+}
+*/
+
+async function seedBillingFrequencies(dataSource: DataSource) {
+  const billingFrequencies = [
+    { frequency_code: 'M1', frequency_name: '1 month' },
+    { frequency_code: 'M2', frequency_name: '2 months' },
+    { frequency_code: 'M3', frequency_name: '3 months' },
+    { frequency_code: 'M4', frequency_name: '4 months' },
+    { frequency_code: 'M5', frequency_name: '5 months' },
+  ];
+
+  for (const freq of billingFrequencies) {
+    const existing = await dataSource.query(
+      'SELECT * FROM billing_frequencies WHERE frequency_code = $1',
+      [freq.frequency_code],
+    );
+
+    if (existing.length === 0) {
+      await dataSource.query(
+        'INSERT INTO billing_frequencies (frequency_code, frequency_name, created_at, updated_at) VALUES ($1, $2, NOW(), NOW())',
+        [freq.frequency_code, freq.frequency_name],
+      );
+      console.log(`  ✓ Created billing frequency: ${freq.frequency_name}`);
+    } else {
+      console.log(
+        `  - Billing frequency already exists: ${freq.frequency_name}`,
+      );
+    }
+  }
+}
 
 async function seedRetailTariffs(dataSource: DataSource) {
   const retailTariffs = [
     {
-      retail_tariff_code: 'RES_STD',
-      retail_tariff_name: 'Standard Residential Tariff',
-      distributor_id: 1,
+      retail_tariff_code: 'PEAK',
+      retail_tariff_name: 'Peak 1',
+      sacl_flag: false,
+      active: true,
+      distributor_id: 9,
       customer_type_id: 1,
     },
     {
-      retail_tariff_code: 'RES_TOU',
-      retail_tariff_name: 'Time of Use Tariff',
-      distributor_id: 1,
+      retail_tariff_code: 'SR_CL',
+      retail_tariff_name: 'Single Rate with Controlled Load 1',
+      sacl_flag: false,
+      active: true,
+      distributor_id: 9,
       customer_type_id: 1,
     },
     {
-      retail_tariff_code: 'SOLAR_FIT',
-      retail_tariff_name: 'Solar Feed-in Tariff',
-      distributor_id: 1,
+      retail_tariff_code: 'SA_PEAK',
+      retail_tariff_name: 'Peak Only',
+      sacl_flag: false,
+      active: true,
+      distributor_id: 6,
       customer_type_id: 1,
     },
     {
-      retail_tariff_code: 'COM_STD',
-      retail_tariff_name: 'Commercial Standard Tariff',
-      distributor_id: 1,
-      customer_type_id: 2,
-    },
-    {
-      retail_tariff_code: 'IND_PEAK',
-      retail_tariff_name: 'Industrial Peak Tariff',
-      distributor_id: 1,
-      customer_type_id: 4,
-    },
-    {
-      retail_tariff_code: 'EV_CHARGE',
-      retail_tariff_name: 'EV Charging Tariff',
-      distributor_id: 1,
+      retail_tariff_code: 'SA_PEAK_CL',
+      retail_tariff_name: 'Peak with Controlled Load 1',
+      sacl_flag: true,
+      active: true,
+      distributor_id: 6,
       customer_type_id: 1,
     },
   ];
@@ -640,12 +637,14 @@ async function seedRetailTariffs(dataSource: DataSource) {
     if (existing.length === 0) {
       await dataSource.query(
         `INSERT INTO retail_tariffs (
-          retail_tariff_code, retail_tariff_name, distributor_id, 
+          retail_tariff_code, retail_tariff_name, sacl_flag, active, distributor_id, 
           customer_type_id, created_at, updated_at
-        ) VALUES ($1, $2, $3, $4, NOW(), NOW())`,
+        ) VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())`,
         [
           tariff.retail_tariff_code,
           tariff.retail_tariff_name,
+          tariff.sacl_flag,
+          tariff.active,
           tariff.distributor_id,
           tariff.customer_type_id,
         ],
@@ -662,180 +661,215 @@ async function seedRetailTariffs(dataSource: DataSource) {
 async function seedPlans(dataSource: DataSource) {
   const plans = [
     {
-      int_plan_code: 'RES001',
-      ext_plan_code: 'EXT_RES001',
-      plan_name: 'Residential Basic Plan',
-      effective_from: '2024-01-01',
-      effective_to: '2024-12-31',
-      review_date: '2024-06-01',
+      int_plan_code: 'VE_3RD_UN_PDC',
+      ext_plan_code: 'TRU566093MR',
+      plan_name: 'Balance Plan - Peak Only - Third Party Offer',
+      effective_from: '2025-07-01',
+      effective_to: null,
+      review_date: '2025-01-01',
       restricted: false,
       contingent: false,
       direct_debit_only: false,
       ebilling_only: false,
       solar_cust_only: false,
       ev_only: false,
-      instrinct_green: false,
-      eligibility_criteria: 'Residential customers only',
-      price_variation_details: 'Price may vary based on market conditions',
-      terms_and_conditions: 'Standard residential terms and conditions apply',
-      contract_expiry_details: 'Contract expires after 12 months',
-      fixed_rates: 'Fixed rates for 12 months',
-      lowest_rps: 0.25,
-      zone_id: 1,
-      plan_type_id: 1,
+      intrinsic_green: false,
+      intrinsic_gpp: null,
+      eligibility_criteria:
+        'The details in this fact sheet are for residential customers located in the distribution area outlined with the meter configuration described. Offer only available through selected third party channels.',
+      price_variation_details:
+        'Prices may be varied in line with your terms and conditions. We will give you notice before any new prices take effect.',
+      terms_and_conditions:
+        'Please refer to our website www.energyaustralia.com.au for solar feed-in eligibility and full terms and conditions.',
+      contract_expiry_details:
+        'The Benefit Period for this plan is for 1 year. We will provide you with notice of your options prior to the end of the Benefit Period. Your contract will continue until it is ended by either party.',
+      fixed_rates: '0',
+      lowest_rps: 1328.92,
+      factsheet_url:
+        'Victorian_Energy_Fact_Sheet_TRU566093MR_Electricity_CZ_6.pdf',
+      zone_id: null,
+      plan_type_id: 2,
       customer_type_id: 1,
-      distributor_id: 1,
-      rate_card_id: 1,
+      distributor_id: 12,
+      rate_card_id: 2,
       contract_term_id: 1,
-      bill_freq_id: 1,
+      bill_freq_id: 3,
+      retail_tariff_id: null,
+    },
+    {
+      int_plan_code: 'VE_3RD_TR_PKO',
+      ext_plan_code: 'TRU566094MR',
+      plan_name: 'Balance Plan - Peak Only - Third Party Offer',
+      effective_from: '2025-07-01',
+      effective_to: null,
+      review_date: '2025-01-01',
+      restricted: false,
+      contingent: false,
+      direct_debit_only: false,
+      ebilling_only: false,
+      solar_cust_only: false,
+      ev_only: false,
+      intrinsic_green: false,
+      intrinsic_gpp: null,
+      eligibility_criteria:
+        'The details in this fact sheet are for residential customers located in the distribution area outlined with the meter configuration described. Offer only available through selected third party channels.',
+      price_variation_details:
+        'Prices may be varied in line with your terms and conditions. We will give you notice before any new prices take effect.',
+      terms_and_conditions:
+        'Please refer to our website www.energyaustralia.com.au for solar feed-in eligibility and full terms and conditions.',
+      contract_expiry_details:
+        'The Benefit Period for this plan is for 1 year. We will provide you with notice of your options prior to the end of the Benefit Period. Your contract will continue until it is ended by either party.',
+      fixed_rates: '0',
+      lowest_rps: null,
+      factsheet_url: null,
+      zone_id: null,
+      plan_type_id: 2,
+      customer_type_id: 1,
+      distributor_id: 13,
+      rate_card_id: 3,
+      contract_term_id: 1,
+      bill_freq_id: 3,
+      retail_tariff_id: null,
+    },
+    {
+      int_plan_code: 'VE_TAPRC_CI_T7',
+      ext_plan_code: 'TRU556433MR',
+      plan_name: 'Balance Plan - Time of Use - Comparator',
+      effective_from: '2025-07-01',
+      effective_to: null,
+      review_date: '2025-01-01',
+      restricted: false,
+      contingent: false,
+      direct_debit_only: false,
+      ebilling_only: false,
+      solar_cust_only: false,
+      ev_only: false,
+      intrinsic_green: false,
+      intrinsic_gpp: null,
+      eligibility_criteria:
+        'The details in this fact sheet are for residential customers located in the distribution area outlined with the meter configuration described.',
+      price_variation_details:
+        'Prices may be varied in line with your terms and conditions. We will give you notice before any new prices take effect.',
+      terms_and_conditions:
+        'Please refer to our website www.energyaustralia.com.au for solar feed-in eligibility and full terms and conditions.',
+      contract_expiry_details:
+        'The Benefit Period for this plan is for 1 year. We will provide you with notice of your options prior to the end of the Benefit Period. Your contract will continue until it is ended by either party.',
+      fixed_rates: '0',
+      lowest_rps: null,
+      factsheet_url: null,
+      zone_id: null,
+      plan_type_id: 2,
+      customer_type_id: 1,
+      distributor_id: 9,
+      rate_card_id: 4,
+      contract_term_id: 1,
+      bill_freq_id: 3,
       retail_tariff_id: 1,
     },
     {
-      int_plan_code: 'RES002',
-      ext_plan_code: 'EXT_RES002',
-      plan_name: 'Residential Premium Plan',
-      effective_from: '2024-01-01',
-      effective_to: '2024-12-31',
-      review_date: '2024-06-01',
+      int_plan_code: 'VE_RSOT_CI_T71',
+      ext_plan_code: 'TRU556443SR',
+      plan_name: 'Standing Offer (Home) - Time of Use with Controlled Load',
+      effective_from: '2025-07-01',
+      effective_to: null,
+      review_date: '2025-01-01',
       restricted: false,
       contingent: false,
-      direct_debit_only: true,
-      ebilling_only: true,
+      direct_debit_only: false,
+      ebilling_only: false,
       solar_cust_only: false,
       ev_only: false,
-      instrinct_green: true,
+      intrinsic_green: false,
+      intrinsic_gpp: null,
       eligibility_criteria:
-        'Residential customers with direct debit and e-billing',
-      price_variation_details: 'Premium pricing with green energy benefits',
+        'The details in this fact sheet are for residential customers located in the distribution area outlined with the meter configuration described.',
+      price_variation_details:
+        "The rates for the Victorian Default Offer are regulated by the Essential Services Commission (ESC). The ESC will review these rates annually starting on 1 January each year. We'll notify you before a rate change occurs.",
       terms_and_conditions:
-        'Premium residential terms with green energy benefits',
-      contract_expiry_details: 'Contract expires after 24 months',
-      fixed_rates: 'Fixed rates for 24 months',
-      lowest_rps: 0.22,
-      zone_id: 1,
-      plan_type_id: 2,
+        'Please refer to our website www.energyaustralia.com.au for solar feed-in eligibility and full terms and conditions.',
+      contract_expiry_details:
+        'This contract continues for as long as you remain on the plan.',
+      fixed_rates: '0',
+      lowest_rps: null,
+      factsheet_url: null,
+      zone_id: null,
+      plan_type_id: 1,
       customer_type_id: 1,
-      distributor_id: 1,
-      rate_card_id: 2,
-      contract_term_id: 2,
-      bill_freq_id: 1,
+      distributor_id: 9,
+      rate_card_id: 5,
+      contract_term_id: 1,
+      bill_freq_id: 3,
       retail_tariff_id: 2,
     },
     {
-      int_plan_code: 'SOLAR001',
-      ext_plan_code: 'EXT_SOLAR001',
-      plan_name: 'Solar Feed-in Tariff Plan',
-      effective_from: '2024-01-01',
-      effective_to: '2024-12-31',
-      review_date: '2024-06-01',
+      int_plan_code: 'VG_RSOT_R1',
+      ext_plan_code: 'TRU567149SR',
+      plan_name: 'Standing Offer (Home) (R1)',
+      effective_from: '2025-07-01',
+      effective_to: null,
+      review_date: '2025-01-01',
       restricted: false,
       contingent: false,
       direct_debit_only: false,
       ebilling_only: false,
-      solar_cust_only: true,
+      solar_cust_only: false,
       ev_only: false,
-      instrinct_green: true,
-      eligibility_criteria: 'Customers with solar panel installations',
-      price_variation_details: 'Feed-in tariff rates apply',
-      terms_and_conditions: 'Solar feed-in tariff terms and conditions',
-      contract_expiry_details: 'Contract expires after 12 months',
-      fixed_rates: 'Feed-in tariff rates for 12 months',
-      lowest_rps: 0.15,
+      intrinsic_green: false,
+      intrinsic_gpp: null,
+      eligibility_criteria:
+        'The details in this fact sheet are for residential customers located in the distribution area outlined with the meter configuration described.',
+      price_variation_details:
+        "The rates for Standing Offer (Home) may vary, either when we are directed to change regulated rates, or when we review our rates each year. We'll notify you before any rate change occurs.",
+      terms_and_conditions:
+        'For full terms and conditions, please refer to our website www.energyaustralia.com.au.',
+      contract_expiry_details:
+        'This contract continues for as long as you remain on the plan.',
+      fixed_rates: '0',
+      lowest_rps: null,
+      factsheet_url: null,
       zone_id: 1,
-      plan_type_id: 8,
+      plan_type_id: 1,
       customer_type_id: 1,
-      distributor_id: 1,
-      rate_card_id: 3,
-      contract_term_id: 1,
-      bill_freq_id: 1,
-      retail_tariff_id: 3,
-    },
-    {
-      int_plan_code: 'COM001',
-      ext_plan_code: 'EXT_COM001',
-      plan_name: 'Commercial Small Business Plan',
-      effective_from: '2024-01-01',
-      effective_to: '2024-12-31',
-      review_date: '2024-06-01',
-      restricted: false,
-      contingent: false,
-      direct_debit_only: true,
-      ebilling_only: true,
-      solar_cust_only: false,
-      ev_only: false,
-      instrinct_green: false,
-      eligibility_criteria: 'Small to medium commercial customers',
-      price_variation_details: 'Commercial pricing structure',
-      terms_and_conditions: 'Commercial terms and conditions',
-      contract_expiry_details: 'Contract expires after 12 months',
-      fixed_rates: 'Fixed rates for 12 months',
-      lowest_rps: 0.2,
-      zone_id: 1,
-      plan_type_id: 4,
-      customer_type_id: 2,
-      distributor_id: 1,
-      rate_card_id: 4,
-      contract_term_id: 1,
-      bill_freq_id: 1,
-      retail_tariff_id: 4,
-    },
-    {
-      int_plan_code: 'IND001',
-      ext_plan_code: 'EXT_IND001',
-      plan_name: 'Industrial Heavy Usage Plan',
-      effective_from: '2024-01-01',
-      effective_to: '2024-12-31',
-      review_date: '2024-06-01',
-      restricted: false,
-      contingent: false,
-      direct_debit_only: true,
-      ebilling_only: true,
-      solar_cust_only: false,
-      ev_only: false,
-      instrinct_green: false,
-      eligibility_criteria: 'Industrial customers with high energy consumption',
-      price_variation_details: 'Industrial pricing with volume discounts',
-      terms_and_conditions: 'Industrial terms and conditions',
-      contract_expiry_details: 'Contract expires after 24 months',
-      fixed_rates: 'Fixed rates for 24 months with volume discounts',
-      lowest_rps: 0.18,
-      zone_id: 1,
-      plan_type_id: 7,
-      customer_type_id: 4,
-      distributor_id: 1,
+      distributor_id: 14,
       rate_card_id: 6,
-      contract_term_id: 2,
-      bill_freq_id: 1,
-      retail_tariff_id: 5,
+      contract_term_id: 1,
+      bill_freq_id: 2,
+      retail_tariff_id: null,
     },
     {
-      int_plan_code: 'EV001',
-      ext_plan_code: 'EXT_EV001',
-      plan_name: 'EV Charging Plan',
-      effective_from: '2024-01-01',
-      effective_to: '2024-12-31',
-      review_date: '2024-06-01',
+      int_plan_code: 'VG_TAPRC_A2',
+      ext_plan_code: 'TRU567144MR',
+      plan_name: 'Balance Plan - Comparator (A2)',
+      effective_from: '2025-07-01',
+      effective_to: null,
+      review_date: '2025-01-01',
       restricted: false,
       contingent: false,
       direct_debit_only: false,
       ebilling_only: false,
       solar_cust_only: false,
-      ev_only: true,
-      instrinct_green: true,
-      eligibility_criteria: 'Customers with electric vehicles',
-      price_variation_details: 'EV charging rates with off-peak benefits',
-      terms_and_conditions: 'EV charging terms and conditions',
-      contract_expiry_details: 'Contract expires after 12 months',
-      fixed_rates: 'EV charging rates for 12 months',
-      lowest_rps: 0.12,
-      zone_id: 1,
-      plan_type_id: 9,
+      ev_only: false,
+      intrinsic_green: false,
+      intrinsic_gpp: null,
+      eligibility_criteria:
+        "The details presented in this fact sheet are for a residential customer located in the distribution area outlined with a metering configuration as described. Unless otherwise specified, 'Peak Only' is the default meter type.",
+      price_variation_details:
+        'Prices may be varied in line with your terms and conditions. We will give you notice before any new prices take effect.',
+      terms_and_conditions:
+        'For full terms and conditions, please refer to our website www.energyaustralia.com.au.',
+      contract_expiry_details:
+        'The Benefit Period for this plan is for 1 year. We will provide you with notice of your options prior to the end of the Benefit Period. Your contract will continue until it is ended by either party.',
+      fixed_rates: '0',
+      lowest_rps: null,
+      factsheet_url: null,
+      zone_id: 2,
+      plan_type_id: 2,
       customer_type_id: 1,
-      distributor_id: 1,
-      rate_card_id: 2,
+      distributor_id: 15,
+      rate_card_id: 7,
       contract_term_id: 1,
-      bill_freq_id: 1,
-      retail_tariff_id: 6,
+      bill_freq_id: 2,
+      retail_tariff_id: null,
     },
   ];
 
@@ -848,20 +882,28 @@ async function seedPlans(dataSource: DataSource) {
     if (existing.length === 0) {
       await dataSource.query(
         `INSERT INTO plans (
-          int_plan_code, ext_plan_code, plan_name, effective_from, effective_to, 
-          review_date, restricted, contingent, direct_debit_only, ebilling_only, 
-          solar_cust_only, ev_only, instrinct_green, eligibility_criteria, 
-          price_variation_details, terms_and_conditions, contract_expiry_details, 
-          fixed_rates, lowest_rps, zone_id, plan_type_id, customer_type_id, 
-          distributor_id, rate_card_id, contract_term_id, bill_freq_id, 
-          retail_tariff_id, created_at, updated_at
-        ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, NOW(), NOW()
-        )`,
+            int_plan_code, ext_plan_code, plan_name, plan_type_id, customer_type_id,
+            distributor_id, zone_id, rate_card_id, contract_term_id, retail_tariff_id,
+            bill_freq_id, effective_from, effective_to, review_date, restricted,
+            contingent, direct_debit_only, ebilling_only, intrinsic_green, intrinsic_gpp,
+            solar_cust_only, ev_only, eligibility_criteria, price_variation_details,
+            terms_and_conditions, contract_expiry_details, fixed_rates, lowest_rps,
+            factsheet_url, created_at, updated_at
+          ) VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25, $26, $27, $28, $29, NOW(), NOW()
+          )`,
         [
           plan.int_plan_code,
           plan.ext_plan_code,
           plan.plan_name,
+          plan.plan_type_id,
+          plan.customer_type_id,
+          plan.distributor_id,
+          plan.zone_id,
+          plan.rate_card_id,
+          plan.contract_term_id,
+          plan.retail_tariff_id,
+          plan.bill_freq_id,
           plan.effective_from,
           plan.effective_to,
           plan.review_date,
@@ -869,23 +911,17 @@ async function seedPlans(dataSource: DataSource) {
           plan.contingent,
           plan.direct_debit_only,
           plan.ebilling_only,
+          plan.intrinsic_green,
+          plan.intrinsic_gpp,
           plan.solar_cust_only,
           plan.ev_only,
-          plan.instrinct_green,
           plan.eligibility_criteria,
           plan.price_variation_details,
           plan.terms_and_conditions,
           plan.contract_expiry_details,
           plan.fixed_rates,
           plan.lowest_rps,
-          plan.zone_id,
-          plan.plan_type_id,
-          plan.customer_type_id,
-          plan.distributor_id,
-          plan.rate_card_id,
-          plan.contract_term_id,
-          plan.bill_freq_id,
-          plan.retail_tariff_id,
+          plan.factsheet_url,
         ],
       );
       console.log(`  ✓ Created plan: ${plan.plan_name}`);
@@ -898,24 +934,16 @@ async function seedPlans(dataSource: DataSource) {
 async function seedBillingCodeTypes(dataSource: DataSource) {
   const billingCodeTypes = [
     {
-      billing_code_type: 'ENERGY',
-      billing_code_type_name: 'Energy Consumption',
+      billing_code_type: 'PRODUCT',
+      billing_code_type_name: 'Product Code',
     },
     {
-      billing_code_type: 'SERVICE',
-      billing_code_type_name: 'Service Charges',
+      billing_code_type: 'OFFERING',
+      billing_code_type_name: 'Offering Code',
     },
     {
-      billing_code_type: 'GREEN',
-      billing_code_type_name: 'Green Energy',
-    },
-    {
-      billing_code_type: 'NETWORK',
-      billing_code_type_name: 'Network Charges',
-    },
-    {
-      billing_code_type: 'RETAIL',
-      billing_code_type_name: 'Retail Charges',
+      billing_code_type: 'PRICING',
+      billing_code_type_name: 'Pricing Tag',
     },
   ];
 
@@ -946,28 +974,18 @@ async function seedBillingCodeTypes(dataSource: DataSource) {
 async function seedChargeClasses(dataSource: DataSource) {
   const chargeClasses = [
     {
-      charge_class_code: 'ENERGY',
-      charge_class_name: 'Energy Charges',
-      multiplier: 1,
+      charge_class_code: 'DISCOUNT',
+      charge_class_name: 'Discount',
+      multiplier: -1,
     },
     {
-      charge_class_code: 'SERVICE',
-      charge_class_name: 'Service Charges',
-      multiplier: 1,
-    },
-    {
-      charge_class_code: 'NETWORK',
-      charge_class_name: 'Network Charges',
-      multiplier: 1,
-    },
-    {
-      charge_class_code: 'RETAIL',
-      charge_class_name: 'Retail Charges',
+      charge_class_code: 'FEE',
+      charge_class_name: 'Fee',
       multiplier: 1,
     },
     {
       charge_class_code: 'GREEN',
-      charge_class_name: 'Green Energy Charges',
+      charge_class_name: 'Greenpower',
       multiplier: 1,
     },
   ];
@@ -1001,49 +1019,64 @@ async function seedChargeClasses(dataSource: DataSource) {
 async function seedChargeTypes(dataSource: DataSource) {
   const chargeTypes = [
     {
-      charge_type_code: 'ENERGY_PEAK',
-      charge_type_name: 'Peak Energy Rate',
+      charge_type_code: 'UNCOND',
+      charge_type_name: 'Unconditional',
       charge_class_id: 1,
     },
     {
-      charge_type_code: 'ENERGY_OFF_PEAK',
-      charge_type_name: 'Off-Peak Energy Rate',
+      charge_type_code: 'COND',
+      charge_type_name: 'Conditional',
       charge_class_id: 1,
     },
     {
-      charge_type_code: 'ENERGY_SHOULDER',
-      charge_type_name: 'Shoulder Energy Rate',
-      charge_class_id: 1,
-    },
-    {
-      charge_type_code: 'SERVICE_FIXED',
-      charge_type_name: 'Fixed Service Charge',
+      charge_type_code: 'CC_FEE',
+      charge_type_name: 'Credit Card Payment Processing Fee',
       charge_class_id: 2,
     },
     {
-      charge_type_code: 'SERVICE_DAILY',
-      charge_type_name: 'Daily Service Charge',
+      charge_type_code: 'DISCON_FEE',
+      charge_type_name: 'Disconnection Fee',
       charge_class_id: 2,
     },
     {
-      charge_type_code: 'NETWORK_DISTRIBUTION',
-      charge_type_name: 'Distribution Network Charge',
+      charge_type_code: 'RECON_FEE',
+      charge_type_name: 'Reconnection Fee',
+      charge_class_id: 2,
+    },
+    {
+      charge_type_code: 'OTHER',
+      charge_type_name: 'Other Fee',
+      charge_class_id: 2,
+    },
+    {
+      charge_type_code: 'GREEN',
+      charge_type_name: 'Greenpower',
       charge_class_id: 3,
     },
     {
-      charge_type_code: 'NETWORK_TRANSMISSION',
-      charge_type_name: 'Transmission Network Charge',
-      charge_class_id: 3,
+      charge_type_code: 'CONN_FEE',
+      charge_type_name: 'Connection Fee',
+      charge_class_id: 2,
     },
     {
-      charge_type_code: 'RETAIL_MARKETING',
-      charge_type_name: 'Retail Marketing Charge',
-      charge_class_id: 4,
+      charge_type_code: 'PROCESS_FEE',
+      charge_type_name: 'Payment Processing Fee',
+      charge_class_id: 2,
     },
     {
-      charge_type_code: 'GREEN_FEED_IN',
-      charge_type_name: 'Green Energy Feed-in Tariff',
-      charge_class_id: 5,
+      charge_type_code: 'CHEQUE_DISHON',
+      charge_type_name: 'Cheque Dishonour Payment Fee',
+      charge_class_id: 2,
+    },
+    {
+      charge_type_code: 'DD_DISHON',
+      charge_type_name: 'Direct Debit Dishonour Payment Fee',
+      charge_class_id: 2,
+    },
+    {
+      charge_type_code: 'ANNUAL_FEE',
+      charge_type_name: 'Annual Fee',
+      charge_class_id: 2,
     },
   ];
 
@@ -1076,29 +1109,39 @@ async function seedChargeTypes(dataSource: DataSource) {
 async function seedChargeCategories(dataSource: DataSource) {
   const chargeCategories = [
     {
-      charge_category_code: 'ENERGY_CONSUMPTION',
-      charge_category_name: 'Energy Consumption',
+      charge_category_code: 'PAY_ON_TIME',
+      charge_category_name: 'Pay On Time',
       charge_class_id: 1,
     },
     {
-      charge_category_code: 'SERVICE_DELIVERY',
-      charge_category_name: 'Service Delivery',
+      charge_category_code: 'DIRECT_DEBIT',
+      charge_category_name: 'Direct Debit',
+      charge_class_id: 1,
+    },
+    {
+      charge_category_code: 'EBILLING',
+      charge_category_name: 'E-billing',
+      charge_class_id: 1,
+    },
+    {
+      charge_category_code: 'BUNDLED',
+      charge_category_name: 'Bundled Services',
+      charge_class_id: 1,
+    },
+    {
+      charge_category_code: 'Other',
+      charge_category_name: 'Other',
+      charge_class_id: 1,
+    },
+    {
+      charge_category_code: 'FEE',
+      charge_category_name: 'Fee',
       charge_class_id: 2,
     },
     {
-      charge_category_code: 'NETWORK_ACCESS',
-      charge_category_name: 'Network Access',
+      charge_category_code: 'GREEN',
+      charge_category_name: 'Greenpower',
       charge_class_id: 3,
-    },
-    {
-      charge_category_code: 'RETAIL_OPERATIONS',
-      charge_category_name: 'Retail Operations',
-      charge_class_id: 4,
-    },
-    {
-      charge_category_code: 'GREEN_ENERGY',
-      charge_category_name: 'Green Energy',
-      charge_class_id: 5,
     },
   ];
 
@@ -1133,22 +1176,43 @@ async function seedChargeCategories(dataSource: DataSource) {
 async function seedChargeTerms(dataSource: DataSource) {
   const chargeTerms = [
     {
+      charge_term_code: 'PERC_BILL_AMT',
+    },
+    {
+      charge_term_code: 'PERC_USG',
+    },
+    {
+      charge_term_code: 'FLAT',
+    },
+    {
+      charge_term_code: 'PERC_USG_FIX',
+    },
+    {
+      charge_term_code: 'YEAR_1',
+    },
+    {
+      charge_term_code: 'YEAR_2',
+    },
+    {
+      charge_term_code: 'YEAR_3',
+    },
+    {
+      charge_term_code: 'YEAR_4',
+    },
+    {
+      charge_term_code: 'YEAR_5',
+    },
+    {
+      charge_term_code: 'AMT_PER_UNIT',
+    },
+    {
       charge_term_code: 'DAILY',
     },
     {
+      charge_term_code: 'WEEKLY',
+    },
+    {
       charge_term_code: 'MONTHLY',
-    },
-    {
-      charge_term_code: 'QUARTERLY',
-    },
-    {
-      charge_term_code: 'ANNUAL',
-    },
-    {
-      charge_term_code: 'PER_KWH',
-    },
-    {
-      charge_term_code: 'PER_KVA',
     },
   ];
 
@@ -1182,64 +1246,34 @@ async function seedBillingCodes(dataSource: DataSource) {
 
   const billingCodes = [
     {
-      billing_code: 'ENERGY_001',
+      billing_code: 'EVRMAY2025MR',
       billing_code_type_id: 1,
-      plan_code: 'RES001',
+      plan_code: 'VE_3RD_UN_PDC',
     },
     {
-      billing_code: 'SERVICE_001',
+      billing_code: 'ABCD123',
       billing_code_type_id: 2,
-      plan_code: 'RES001',
+      plan_code: 'VE_3RD_UN_PDC',
     },
     {
-      billing_code: 'ENERGY_002',
-      billing_code_type_id: 1,
-      plan_code: 'RES002',
-    },
-    {
-      billing_code: 'GREEN_001',
+      billing_code: 'ZZZ334R',
       billing_code_type_id: 3,
-      plan_code: 'RES002',
+      plan_code: 'VE_3RD_UN_PDC',
     },
     {
-      billing_code: 'ENERGY_003',
+      billing_code: 'EVRMAY2025MR',
       billing_code_type_id: 1,
-      plan_code: 'SOLAR001',
+      plan_code: 'VE_3RD_TR_PKO',
     },
     {
-      billing_code: 'GREEN_002',
-      billing_code_type_id: 3,
-      plan_code: 'SOLAR001',
-    },
-    {
-      billing_code: 'ENERGY_004',
-      billing_code_type_id: 1,
-      plan_code: 'COM001',
-    },
-    {
-      billing_code: 'SERVICE_002',
+      billing_code: 'ABCD123',
       billing_code_type_id: 2,
-      plan_code: 'COM001',
+      plan_code: 'VE_3RD_TR_PKO',
     },
     {
-      billing_code: 'ENERGY_005',
-      billing_code_type_id: 1,
-      plan_code: 'IND001',
-    },
-    {
-      billing_code: 'NETWORK_001',
-      billing_code_type_id: 4,
-      plan_code: 'IND001',
-    },
-    {
-      billing_code: 'ENERGY_006',
-      billing_code_type_id: 1,
-      plan_code: 'EV001',
-    },
-    {
-      billing_code: 'GREEN_003',
+      billing_code: 'ZZZ334R',
       billing_code_type_id: 3,
-      plan_code: 'EV001',
+      plan_code: 'VE_3RD_TR_PKO',
     },
   ];
 
@@ -1288,136 +1322,126 @@ async function seedCharges(dataSource: DataSource) {
 
   const charges = [
     {
-      charge_code: 'CHG_001',
-      charge_description: 'Peak Energy Rate',
-      charge_amount: 0.25,
-      charge_perc: 0.0,
-      greenpower_perc: 0.0,
-      reference_01: 'PEAK_RATE',
-      plan_code: 'RES001',
-      charge_type_id: 1,
-      charge_category_id: 1,
-      charge_term_id: 5,
-    },
-    {
-      charge_code: 'CHG_002',
-      charge_description: 'Daily Service Charge',
-      charge_amount: 1.2,
-      charge_perc: 0.0,
-      greenpower_perc: 0.0,
-      reference_01: 'DAILY_SERVICE',
-      plan_code: 'RES001',
-      charge_type_id: 5,
-      charge_category_id: 2,
-      charge_term_id: 1,
-    },
-    {
-      charge_code: 'CHG_003',
-      charge_description: 'Off-Peak Energy Rate',
-      charge_amount: 0.15,
-      charge_perc: 0.0,
-      greenpower_perc: 0.0,
-      reference_01: 'OFF_PEAK_RATE',
-      plan_code: 'RES002',
-      charge_type_id: 2,
-      charge_category_id: 1,
-      charge_term_id: 5,
-    },
-    {
-      charge_code: 'CHG_004',
-      charge_description: 'Green Energy Premium',
-      charge_amount: 0.05,
-      charge_perc: 0.0,
-      greenpower_perc: 100.0,
-      reference_01: 'GREEN_PREMIUM',
-      plan_code: 'RES002',
-      charge_type_id: 9,
-      charge_category_id: 5,
-      charge_term_id: 5,
-    },
-    {
-      charge_code: 'CHG_005',
-      charge_description: 'Solar Feed-in Rate',
-      charge_amount: 0.12,
-      charge_perc: 0.0,
-      greenpower_perc: 100.0,
-      reference_01: 'SOLAR_FIT',
-      plan_code: 'SOLAR001',
-      charge_type_id: 9,
-      charge_category_id: 5,
-      charge_term_id: 5,
-    },
-    {
-      charge_code: 'CHG_006',
-      charge_description: 'Commercial Energy Rate',
-      charge_amount: 0.2,
-      charge_perc: 0.0,
-      greenpower_perc: 0.0,
-      reference_01: 'COM_RATE',
-      plan_code: 'COM001',
-      charge_type_id: 1,
-      charge_category_id: 1,
-      charge_term_id: 5,
-    },
-    {
-      charge_code: 'CHG_007',
-      charge_description: 'Commercial Service Charge',
-      charge_amount: 2.5,
-      charge_perc: 0.0,
-      greenpower_perc: 0.0,
-      reference_01: 'COM_SERVICE',
-      plan_code: 'COM001',
+      charge_code: 'VE_RSOT_CI_PDC_DISCON',
+      charge_description:
+        'Disconnecting electricity to your property or reading your meter where applicable - Business hours',
+      charge_amount: 45.52,
+      charge_perc: null,
+      greenpower_perc: null,
+      reference_01: null,
+      plan_code: 'VE_RSOT_CI_T71',
       charge_type_id: 4,
-      charge_category_id: 2,
+      charge_category_id: 6,
+      charge_term_id: 3,
+    },
+    {
+      charge_code: 'VE_RSOT_CI_PDC_CCFEE',
+      charge_description: 'Credit card payment processing fee',
+      charge_amount: null,
+      charge_perc: 0.36,
+      greenpower_perc: null,
+      reference_01: null,
+      plan_code: 'VE_RSOT_CI_T71',
+      charge_type_id: 3,
+      charge_category_id: 6,
       charge_term_id: 1,
     },
     {
-      charge_code: 'CHG_008',
-      charge_description: 'Industrial Peak Rate',
-      charge_amount: 0.18,
-      charge_perc: 0.0,
-      greenpower_perc: 0.0,
-      reference_01: 'IND_PEAK',
-      plan_code: 'IND001',
+      charge_code: 'VE_RSOT_CI_PDC_GP_10',
+      charge_description: 'PureEnergy 10% = $0.0495 x (10% x total usage)',
+      charge_amount: 0.0495,
+      charge_perc: null,
+      greenpower_perc: 0.1,
+      reference_01: null,
+      plan_code: 'VE_RSOT_CI_T71',
+      charge_type_id: 7,
+      charge_category_id: 7,
+      charge_term_id: 10,
+    },
+    {
+      charge_code: 'VE_RSOT_CI_PDC_GP_20',
+      charge_description: 'PureEnergy 20% = $0.0495 x (20% x total usage)',
+      charge_amount: 0.0495,
+      charge_perc: null,
+      greenpower_perc: 0.2,
+      reference_01: null,
+      plan_code: 'VE_RSOT_CI_T71',
+      charge_type_id: 7,
+      charge_category_id: 7,
+      charge_term_id: 10,
+    },
+    {
+      charge_code: 'VE_RSOT_CI_PDC_GP_100',
+      charge_description: 'PureEnergy 100% = $0.0495 x (100% x total usage)',
+      charge_amount: 0.0495,
+      charge_perc: null,
+      greenpower_perc: 1,
+      reference_01: null,
+      plan_code: 'VE_RSOT_CI_T71',
+      charge_type_id: 7,
+      charge_category_id: 7,
+      charge_term_id: 10,
+    },
+    {
+      charge_code: 'VE_3RD_UN_PDC_DISCON',
+      charge_description: 'Guaranteed Whole of Bill Discount',
+      charge_amount: null,
+      charge_perc: 12,
+      greenpower_perc: null,
+      reference_01:
+        'Guaranteed total energy bill discount. Applies to usage and supply charges.',
+      plan_code: 'VE_3RD_UN_PDC',
       charge_type_id: 1,
-      charge_category_id: 1,
-      charge_term_id: 5,
-    },
-    {
-      charge_code: 'CHG_009',
-      charge_description: 'Network Distribution Charge',
-      charge_amount: 0.08,
-      charge_perc: 0.0,
-      greenpower_perc: 0.0,
-      reference_01: 'NET_DIST',
-      plan_code: 'IND001',
-      charge_type_id: 6,
-      charge_category_id: 3,
-      charge_term_id: 5,
-    },
-    {
-      charge_code: 'CHG_010',
-      charge_description: 'EV Charging Rate',
-      charge_amount: 0.12,
-      charge_perc: 0.0,
-      greenpower_perc: 50.0,
-      reference_01: 'EV_CHARGE',
-      plan_code: 'EV001',
-      charge_type_id: 1,
-      charge_category_id: 1,
-      charge_term_id: 5,
-    },
-    {
-      charge_code: 'CHG_011',
-      charge_description: 'Green Energy Component',
-      charge_amount: 0.03,
-      charge_perc: 0.0,
-      greenpower_perc: 100.0,
-      reference_01: 'GREEN_COMP',
-      plan_code: 'EV001',
-      charge_type_id: 9,
       charge_category_id: 5,
-      charge_term_id: 5,
+      charge_term_id: 1,
+    },
+    {
+      charge_code: 'VE_3RD_TR_PKO_DISCON',
+      charge_description: 'Disconnection Fee',
+      charge_amount: 45.52,
+      charge_perc: null,
+      greenpower_perc: null,
+      reference_01: null,
+      plan_code: 'VE_3RD_TR_PKO',
+      charge_type_id: 4,
+      charge_category_id: 6,
+      charge_term_id: 3,
+    },
+    {
+      charge_code: 'VE_TAPRC_CI_T7_CCFEE',
+      charge_description: 'Credit card payment processing fee',
+      charge_amount: null,
+      charge_perc: 0.36,
+      greenpower_perc: null,
+      reference_01: null,
+      plan_code: 'VE_TAPRC_CI_T7',
+      charge_type_id: 3,
+      charge_category_id: 6,
+      charge_term_id: 1,
+    },
+    {
+      charge_code: 'VG_RSOT_R1_GP_10',
+      charge_description: 'PureEnergy 10% = $0.0495 x (10% x total usage)',
+      charge_amount: 0.0495,
+      charge_perc: null,
+      greenpower_perc: 0.1,
+      reference_01: null,
+      plan_code: 'VG_RSOT_R1',
+      charge_type_id: 7,
+      charge_category_id: 7,
+      charge_term_id: 10,
+    },
+    {
+      charge_code: 'VG_TAPRC_A2_ANNUAL',
+      charge_description: 'Annual Service Fee',
+      charge_amount: 25.0,
+      charge_perc: null,
+      greenpower_perc: null,
+      reference_01: null,
+      plan_code: 'VG_TAPRC_A2',
+      charge_type_id: 12,
+      charge_category_id: 6,
+      charge_term_id: 3,
     },
   ];
 
@@ -1462,6 +1486,819 @@ async function seedCharges(dataSource: DataSource) {
     } else {
       console.log(
         `  - Charge already exists: ${charge.charge_description} for plan ${charge.plan_code}`,
+      );
+    }
+  }
+}
+
+async function seedRateSeasons(dataSource: DataSource) {
+  // First, create a basic rate record if none exists
+  let rates = await dataSource.query('SELECT rate_id FROM rates LIMIT 1');
+  let rateId = rates.length > 0 ? rates[0].rate_id : null;
+
+  if (!rateId) {
+    // Get rate category and rate card IDs
+    const rateCategories = await dataSource.query(
+      'SELECT rate_category_id FROM rate_categories LIMIT 1',
+    );
+    const rateCards = await dataSource.query(
+      'SELECT rate_card_id FROM rate_cards LIMIT 1',
+    );
+
+    if (rateCategories.length > 0 && rateCards.length > 0) {
+      await dataSource.query(
+        'INSERT INTO rates (rate_code, rate_name, rate_category_id, rate_card_id, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW())',
+        [
+          'DEFAULT_RATE',
+          'Default Rate',
+          rateCategories[0].rate_category_id,
+          rateCards[0].rate_card_id,
+        ],
+      );
+
+      // Get the newly created rate ID
+      rates = await dataSource.query(
+        'SELECT rate_id FROM rates WHERE rate_code = $1',
+        ['DEFAULT_RATE'],
+      );
+      rateId = rates[0].rate_id;
+    } else {
+      console.log(
+        '  - No rate categories or rate cards found, skipping rate seasons',
+      );
+      return;
+    }
+  }
+
+  const rateSeasons = [
+    {
+      season_code: 'SUMMER',
+      season_name: 'Summer',
+      effective_from: '2024-01-01',
+      effective_to: '2024-12-31',
+      daily_charge: 0.0,
+      rate_id: rateId,
+    },
+    {
+      season_code: 'WINTER',
+      season_name: 'Winter',
+      effective_from: '2024-01-01',
+      effective_to: '2024-12-31',
+      daily_charge: 0.0,
+      rate_id: rateId,
+    },
+    {
+      season_code: 'SPRING',
+      season_name: 'Spring',
+      effective_from: '2024-01-01',
+      effective_to: '2024-12-31',
+      daily_charge: 0.0,
+      rate_id: rateId,
+    },
+    {
+      season_code: 'AUTUMN',
+      season_name: 'Autumn',
+      effective_from: '2024-01-01',
+      effective_to: '2024-12-31',
+      daily_charge: 0.0,
+      rate_id: rateId,
+    },
+    {
+      season_code: 'ALL_YEAR',
+      season_name: 'All Year',
+      effective_from: '2024-01-01',
+      effective_to: '2024-12-31',
+      daily_charge: 0.0,
+      rate_id: rateId,
+    },
+  ];
+
+  for (const season of rateSeasons) {
+    const existing = await dataSource.query(
+      'SELECT * FROM rate_seasons WHERE season_code = $1',
+      [season.season_code],
+    );
+
+    if (existing.length === 0) {
+      await dataSource.query(
+        'INSERT INTO rate_seasons (season_code, season_name, effective_from, effective_to, daily_charge, rate_id, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())',
+        [
+          season.season_code,
+          season.season_name,
+          season.effective_from,
+          season.effective_to,
+          season.daily_charge,
+          season.rate_id,
+        ],
+      );
+      console.log(`  ✓ Created rate season: ${season.season_name}`);
+    } else {
+      console.log(`  - Rate season already exists: ${season.season_name}`);
+    }
+  }
+}
+
+async function seedRateClasses(dataSource: DataSource) {
+  const rateClasses = [
+    {
+      rate_class_code: 'USAGE',
+      rate_class_name: 'Usage',
+      validate_24_hour_timing: true,
+      multiplier: 1,
+    },
+    {
+      rate_class_code: 'DEMAND',
+      rate_class_name: 'Demand',
+      validate_24_hour_timing: false,
+      multiplier: 1,
+    },
+    {
+      rate_class_code: 'EXPORT',
+      rate_class_name: 'Solar',
+      validate_24_hour_timing: false,
+      multiplier: -1,
+    },
+  ];
+
+  for (const rateClass of rateClasses) {
+    const existing = await dataSource.query(
+      'SELECT * FROM rate_classes WHERE rate_class_code = $1',
+      [rateClass.rate_class_code],
+    );
+
+    if (existing.length === 0) {
+      await dataSource.query(
+        'INSERT INTO rate_classes (rate_class_code, rate_class_name, validate_24_hour_timing, multiplier, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW())',
+        [
+          rateClass.rate_class_code,
+          rateClass.rate_class_name,
+          rateClass.validate_24_hour_timing,
+          rateClass.multiplier,
+        ],
+      );
+      console.log(`  ✓ Created rate class: ${rateClass.rate_class_name}`);
+    } else {
+      console.log(
+        `  - Rate class already exists: ${rateClass.rate_class_name}`,
+      );
+    }
+  }
+}
+
+async function seedRateTypes(dataSource: DataSource) {
+  const rateTypes = [
+    {
+      rate_type_code: 'SINGLE',
+      rate_type_name: 'Single Rate',
+      has_timings: false,
+      rate_class_id: 1,
+    },
+    {
+      rate_type_code: 'PEAK',
+      rate_type_name: 'Peak',
+      has_timings: true,
+      rate_class_id: 1,
+    },
+    {
+      rate_type_code: 'OFF_PEAK',
+      rate_type_name: 'Off-peak',
+      has_timings: true,
+      rate_class_id: 1,
+    },
+    {
+      rate_type_code: 'SHOULDER',
+      rate_type_name: 'Shoulder',
+      has_timings: true,
+      rate_class_id: 1,
+    },
+    {
+      rate_type_code: 'DEMAND',
+      rate_type_name: 'Demand',
+      has_timings: true,
+      rate_class_id: 2,
+    },
+    {
+      rate_type_code: 'EXPORT1',
+      rate_type_name: 'Solar',
+      has_timings: false,
+      rate_class_id: 3,
+    },
+    {
+      rate_type_code: 'EXPORT2_PK',
+      rate_type_name: 'Peak',
+      has_timings: false,
+      rate_class_id: 3,
+    },
+    {
+      rate_type_code: 'EXPORT2_OP',
+      rate_type_name: 'Off-Peak',
+      has_timings: false,
+      rate_class_id: 3,
+    },
+    {
+      rate_type_code: 'EXPORT2_SH',
+      rate_type_name: 'Shoulder',
+      has_timings: false,
+      rate_class_id: 3,
+    },
+    {
+      rate_type_code: 'EXPORT2_ON',
+      rate_type_name: 'Overnight',
+      has_timings: false,
+      rate_class_id: 3,
+    },
+    {
+      rate_type_code: 'EXPORT2_DY',
+      rate_type_name: 'Day',
+      has_timings: false,
+      rate_class_id: 3,
+    },
+    {
+      rate_type_code: 'EXPORT2_EE',
+      rate_type_name: 'Early Evening',
+      has_timings: false,
+      rate_class_id: 3,
+    },
+  ];
+
+  for (const rateType of rateTypes) {
+    const existing = await dataSource.query(
+      'SELECT * FROM rate_types WHERE rate_type_code = $1',
+      [rateType.rate_type_code],
+    );
+
+    if (existing.length === 0) {
+      await dataSource.query(
+        'INSERT INTO rate_types (rate_type_code, rate_type_name, has_timings, rate_class_id, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW())',
+        [
+          rateType.rate_type_code,
+          rateType.rate_type_name,
+          rateType.has_timings,
+          rateType.rate_class_id,
+        ],
+      );
+      console.log(`  ✓ Created rate type: ${rateType.rate_type_name}`);
+    } else {
+      console.log(`  - Rate type already exists: ${rateType.rate_type_name}`);
+    }
+  }
+}
+
+async function seedRatePeriods(dataSource: DataSource) {
+  const ratePeriods = [
+    { rate_period_code: 'NA', rate_period_name: 'Not applicable' },
+    { rate_period_code: 'DAY', rate_period_name: 'Day' },
+    { rate_period_code: 'WEEK', rate_period_name: 'Week' },
+    { rate_period_code: '1_MONTH', rate_period_name: 'Month' },
+    { rate_period_code: '2_MONTH', rate_period_name: '2 months' },
+    { rate_period_code: 'QUARTER', rate_period_name: 'Quarter' },
+    { rate_period_code: '6_MONTH', rate_period_name: '6 months' },
+    { rate_period_code: 'YEAR', rate_period_name: 'Year' },
+    { rate_period_code: 'SEASON', rate_period_name: 'Season' },
+  ];
+
+  for (const period of ratePeriods) {
+    const existing = await dataSource.query(
+      'SELECT * FROM rate_periods WHERE rate_period_code = $1',
+      [period.rate_period_code],
+    );
+
+    if (existing.length === 0) {
+      await dataSource.query(
+        'INSERT INTO rate_periods (rate_period_code, rate_period_name, created_at, updated_at) VALUES ($1, $2, NOW(), NOW())',
+        [period.rate_period_code, period.rate_period_name],
+      );
+      console.log(`  ✓ Created rate period: ${period.rate_period_name}`);
+    } else {
+      console.log(`  - Rate period already exists: ${period.rate_period_name}`);
+    }
+  }
+}
+
+async function seedRateItems(dataSource: DataSource) {
+  const rateItems = [
+    {
+      rate_item_name: 'Peak Energy Rate',
+      rate_item_details: 'Peak time energy consumption rate',
+      rate_season_id: 1, // Summer
+      rate_type_id: 1, // Peak
+      rate_period_id: 1, // Monthly
+    },
+    {
+      rate_item_name: 'Off-Peak Energy Rate',
+      rate_item_details: 'Off-peak time energy consumption rate',
+      rate_season_id: 1, // Summer
+      rate_type_id: 2, // Off-Peak
+      rate_period_id: 1, // Monthly
+    },
+    {
+      rate_item_name: 'Shoulder Energy Rate',
+      rate_item_details: 'Shoulder time energy consumption rate',
+      rate_season_id: 1, // Summer
+      rate_type_id: 3, // Shoulder
+      rate_period_id: 1, // Monthly
+    },
+    {
+      rate_item_name: 'Winter Peak Rate',
+      rate_item_details: 'Winter peak time energy consumption rate',
+      rate_season_id: 2, // Winter
+      rate_type_id: 1, // Peak
+      rate_period_id: 1, // Monthly
+    },
+    {
+      rate_item_name: 'Solar Feed-in Rate',
+      rate_item_details: 'Solar energy feed-in tariff rate',
+      rate_season_id: 5, // All Year
+      rate_type_id: 6, // Solar FIT
+      rate_period_id: 1, // Monthly
+    },
+  ];
+
+  for (const item of rateItems) {
+    const existing = await dataSource.query(
+      'SELECT * FROM rate_items WHERE rate_item_name = $1',
+      [item.rate_item_name],
+    );
+
+    if (existing.length === 0) {
+      await dataSource.query(
+        'INSERT INTO rate_items (rate_item_name, rate_item_details, rate_season_id, rate_type_id, rate_period_id, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, NOW(), NOW())',
+        [
+          item.rate_item_name,
+          item.rate_item_details,
+          item.rate_season_id,
+          item.rate_type_id,
+          item.rate_period_id,
+        ],
+      );
+      console.log(`  ✓ Created rate item: ${item.rate_item_name}`);
+    } else {
+      console.log(`  - Rate item already exists: ${item.rate_item_name}`);
+    }
+  }
+}
+
+async function seedRateItemTimings(dataSource: DataSource) {
+  // Get rate items
+  const rateItems = await dataSource.query(
+    'SELECT rate_item_id, rate_item_name FROM rate_items ORDER BY rate_item_id',
+  );
+
+  const timings = [
+    {
+      rate_item_name: 'Peak Energy Rate',
+      time_band_start: '07:00:00',
+      time_band_end: '22:00:00',
+      weekdays: true,
+      weekend_sat: false,
+      weekend_sun: false,
+    },
+    {
+      rate_item_name: 'Off-Peak Energy Rate',
+      time_band_start: '22:00:00',
+      time_band_end: '07:00:00',
+      weekdays: true,
+      weekend_sat: true,
+      weekend_sun: true,
+    },
+    {
+      rate_item_name: 'Shoulder Energy Rate',
+      time_band_start: '07:00:00',
+      time_band_end: '10:00:00',
+      weekdays: true,
+      weekend_sat: false,
+      weekend_sun: false,
+    },
+    {
+      rate_item_name: 'Winter Peak Rate',
+      time_band_start: '06:00:00',
+      time_band_end: '23:00:00',
+      weekdays: true,
+      weekend_sat: false,
+      weekend_sun: false,
+    },
+    {
+      rate_item_name: 'Solar Feed-in Rate',
+      time_band_start: '00:00:00',
+      time_band_end: '23:59:59',
+      weekdays: true,
+      weekend_sat: true,
+      weekend_sun: true,
+    },
+  ];
+
+  for (const timing of timings) {
+    const rateItem = rateItems.find(
+      (item) => item.rate_item_name === timing.rate_item_name,
+    );
+    if (!rateItem) {
+      console.log(
+        `  - Rate item not found: ${timing.rate_item_name}, skipping timing`,
+      );
+      continue;
+    }
+
+    const existing = await dataSource.query(
+      'SELECT * FROM rate_item_timings WHERE rate_item_id = $1 AND time_band_start = $2',
+      [rateItem.rate_item_id, timing.time_band_start],
+    );
+
+    if (existing.length === 0) {
+      await dataSource.query(
+        'INSERT INTO rate_item_timings (rate_item_id, time_band_start, time_band_end, weekdays, weekend_sat, weekend_sun, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())',
+        [
+          rateItem.rate_item_id,
+          timing.time_band_start,
+          timing.time_band_end,
+          timing.weekdays,
+          timing.weekend_sat,
+          timing.weekend_sun,
+        ],
+      );
+      console.log(`  ✓ Created timing for: ${timing.rate_item_name}`);
+    } else {
+      console.log(`  - Timing already exists for: ${timing.rate_item_name}`);
+    }
+  }
+}
+
+async function seedRateItemBlocks(dataSource: DataSource) {
+  // Get rate items
+  const rateItems = await dataSource.query(
+    'SELECT rate_item_id, rate_item_name FROM rate_items ORDER BY rate_item_id',
+  );
+
+  const blocks = [
+    {
+      rate_item_name: 'Peak Energy Rate',
+      block_number: 1,
+      block_consumption: 100.0,
+      block_rate: 0.25,
+    },
+    {
+      rate_item_name: 'Peak Energy Rate',
+      block_number: 2,
+      block_consumption: 200.0,
+      block_rate: 0.3,
+    },
+    {
+      rate_item_name: 'Off-Peak Energy Rate',
+      block_number: 1,
+      block_consumption: 100.0,
+      block_rate: 0.15,
+    },
+    {
+      rate_item_name: 'Off-Peak Energy Rate',
+      block_number: 2,
+      block_consumption: 200.0,
+      block_rate: 0.18,
+    },
+    {
+      rate_item_name: 'Shoulder Energy Rate',
+      block_number: 1,
+      block_consumption: 100.0,
+      block_rate: 0.2,
+    },
+    {
+      rate_item_name: 'Winter Peak Rate',
+      block_number: 1,
+      block_consumption: 100.0,
+      block_rate: 0.28,
+    },
+    {
+      rate_item_name: 'Solar Feed-in Rate',
+      block_number: 1,
+      block_consumption: 1000.0,
+      block_rate: 0.12,
+    },
+  ];
+
+  for (const block of blocks) {
+    const rateItem = rateItems.find(
+      (item) => item.rate_item_name === block.rate_item_name,
+    );
+    if (!rateItem) {
+      console.log(
+        `  - Rate item not found: ${block.rate_item_name}, skipping block`,
+      );
+      continue;
+    }
+
+    const existing = await dataSource.query(
+      'SELECT * FROM rate_item_blocks WHERE rate_item_id = $1 AND block_number = $2',
+      [rateItem.rate_item_id, block.block_number],
+    );
+
+    if (existing.length === 0) {
+      await dataSource.query(
+        'INSERT INTO rate_item_blocks (rate_item_id, block_number, block_consumption, block_rate, created_at, updated_at) VALUES ($1, $2, $3, $4, NOW(), NOW())',
+        [
+          rateItem.rate_item_id,
+          block.block_number,
+          block.block_consumption,
+          block.block_rate,
+        ],
+      );
+      console.log(
+        `  ✓ Created block ${block.block_number} for: ${block.rate_item_name}`,
+      );
+    } else {
+      console.log(`  - Block already exists for: ${block.rate_item_name}`);
+    }
+  }
+}
+
+async function seedRateItemDemands(dataSource: DataSource) {
+  // Get rate items
+  const rateItems = await dataSource.query(
+    'SELECT rate_item_id, rate_item_name FROM rate_items ORDER BY rate_item_id',
+  );
+
+  const demands = [
+    {
+      rate_item_name: 'Peak Energy Rate',
+      min_kw: 0.0,
+      max_kw: 100.0,
+      charge: 0.05,
+      measurement_period_id: 1, // Monthly
+    },
+    {
+      rate_item_name: 'Peak Energy Rate',
+      min_kw: 100.0,
+      max_kw: 500.0,
+      charge: 0.08,
+      measurement_period_id: 1, // Monthly
+    },
+    {
+      rate_item_name: 'Off-Peak Energy Rate',
+      min_kw: 0.0,
+      max_kw: 200.0,
+      charge: 0.03,
+      measurement_period_id: 1, // Monthly
+    },
+  ];
+
+  for (const demand of demands) {
+    const rateItem = rateItems.find(
+      (item) => item.rate_item_name === demand.rate_item_name,
+    );
+    if (!rateItem) {
+      console.log(
+        `  - Rate item not found: ${demand.rate_item_name}, skipping demand`,
+      );
+      continue;
+    }
+
+    const existing = await dataSource.query(
+      'SELECT * FROM rate_item_demands WHERE rate_item_id = $1 AND min_kw = $2',
+      [rateItem.rate_item_id, demand.min_kw],
+    );
+
+    if (existing.length === 0) {
+      await dataSource.query(
+        'INSERT INTO rate_item_demands (rate_item_id, min_kw, max_kw, charge, measurement_period_id, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, NOW(), NOW())',
+        [
+          rateItem.rate_item_id,
+          demand.min_kw,
+          demand.max_kw,
+          demand.charge,
+          demand.measurement_period_id,
+        ],
+      );
+      console.log(`  ✓ Created demand charge for: ${demand.rate_item_name}`);
+    } else {
+      console.log(
+        `  - Demand charge already exists for: ${demand.rate_item_name}`,
+      );
+    }
+  }
+}
+
+async function seedRateBlocks(dataSource: DataSource) {
+  // Get plans
+  const plans = await dataSource.query(
+    'SELECT plan_id, int_plan_code FROM plans ORDER BY plan_id',
+  );
+
+  const rateBlocks = [
+    {
+      plan_code: 'RES001',
+      rate_block_name: 'Peak Rate Block',
+      description: 'Peak time energy consumption',
+      start_time: '07:00',
+      end_time: '22:00',
+      days_of_week: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'],
+      rate_per_kwh: 0.25,
+      supply_charge_per_day: 1.2,
+      rate_type: 'PEAK',
+      season: 'SUMMER',
+      effective_from: '2024-01-01',
+      effective_to: '2024-12-31',
+      priority: 1,
+    },
+    {
+      plan_code: 'RES001',
+      rate_block_name: 'Off-Peak Rate Block',
+      description: 'Off-peak time energy consumption',
+      start_time: '22:00',
+      end_time: '07:00',
+      days_of_week: [
+        'MONDAY',
+        'TUESDAY',
+        'WEDNESDAY',
+        'THURSDAY',
+        'FRIDAY',
+        'SATURDAY',
+        'SUNDAY',
+      ],
+      rate_per_kwh: 0.15,
+      supply_charge_per_day: 1.2,
+      rate_type: 'OFF_PEAK',
+      season: 'SUMMER',
+      effective_from: '2024-01-01',
+      effective_to: '2024-12-31',
+      priority: 2,
+    },
+    {
+      plan_code: 'RES002',
+      rate_block_name: 'Premium Peak Rate Block',
+      description: 'Premium peak time energy consumption',
+      start_time: '07:00',
+      end_time: '22:00',
+      days_of_week: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'],
+      rate_per_kwh: 0.22,
+      supply_charge_per_day: 1.0,
+      rate_type: 'PEAK',
+      season: 'SUMMER',
+      effective_from: '2024-01-01',
+      effective_to: '2024-12-31',
+      priority: 1,
+    },
+    {
+      plan_code: 'SOLAR001',
+      rate_block_name: 'Solar Feed-in Block',
+      description: 'Solar energy feed-in tariff',
+      start_time: '00:00',
+      end_time: '23:59',
+      days_of_week: [
+        'MONDAY',
+        'TUESDAY',
+        'WEDNESDAY',
+        'THURSDAY',
+        'FRIDAY',
+        'SATURDAY',
+        'SUNDAY',
+      ],
+      rate_per_kwh: 0.12,
+      supply_charge_per_day: 0.0,
+      rate_type: 'SOLAR_FIT',
+      season: 'ALL_YEAR',
+      effective_from: '2024-01-01',
+      effective_to: '2024-12-31',
+      priority: 1,
+    },
+  ];
+
+  for (const block of rateBlocks) {
+    const plan = plans.find((p) => p.int_plan_code === block.plan_code);
+    if (!plan) {
+      console.log(
+        `  - Plan not found: ${block.plan_code}, skipping rate block`,
+      );
+      continue;
+    }
+
+    const existing = await dataSource.query(
+      'SELECT * FROM rate_blocks WHERE plan_id = $1 AND rate_block_name = $2',
+      [plan.plan_id, block.rate_block_name],
+    );
+
+    if (existing.length === 0) {
+      await dataSource.query(
+        'INSERT INTO rate_blocks (plan_id, rate_block_name, description, start_time, end_time, days_of_week, rate_per_kwh, supply_charge_per_day, rate_type, season, effective_from, effective_to, priority, is_active, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, NOW(), NOW())',
+        [
+          plan.plan_id,
+          block.rate_block_name,
+          block.description,
+          block.start_time,
+          block.end_time,
+          JSON.stringify(block.days_of_week),
+          block.rate_per_kwh,
+          block.supply_charge_per_day,
+          block.rate_type,
+          block.season,
+          block.effective_from,
+          block.effective_to,
+          block.priority,
+          true,
+        ],
+      );
+      console.log(
+        `  ✓ Created rate block: ${block.rate_block_name} for plan ${block.plan_code}`,
+      );
+    } else {
+      console.log(
+        `  - Rate block already exists: ${block.rate_block_name} for plan ${block.plan_code}`,
+      );
+    }
+  }
+}
+
+async function seedRateTimings(dataSource: DataSource) {
+  // Get plans
+  const plans = await dataSource.query(
+    'SELECT plan_id, int_plan_code FROM plans ORDER BY plan_id',
+  );
+
+  const rateTimings = [
+    {
+      plan_code: 'RES001',
+      timing_name: 'Peak Hours',
+      description: 'Peak time hours for energy consumption',
+      start_time: '07:00',
+      end_time: '22:00',
+      days_of_week: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'],
+      season: 'SUMMER',
+    },
+    {
+      plan_code: 'RES001',
+      timing_name: 'Off-Peak Hours',
+      description: 'Off-peak time hours for energy consumption',
+      start_time: '22:00',
+      end_time: '07:00',
+      days_of_week: [
+        'MONDAY',
+        'TUESDAY',
+        'WEDNESDAY',
+        'THURSDAY',
+        'FRIDAY',
+        'SATURDAY',
+        'SUNDAY',
+      ],
+      season: 'SUMMER',
+    },
+    {
+      plan_code: 'RES002',
+      timing_name: 'Premium Peak Hours',
+      description: 'Premium peak time hours for energy consumption',
+      start_time: '07:00',
+      end_time: '22:00',
+      days_of_week: ['MONDAY', 'TUESDAY', 'WEDNESDAY', 'THURSDAY', 'FRIDAY'],
+      season: 'SUMMER',
+    },
+    {
+      plan_code: 'SOLAR001',
+      timing_name: 'Solar Generation Hours',
+      description: 'Hours when solar generation is active',
+      start_time: '06:00',
+      end_time: '18:00',
+      days_of_week: [
+        'MONDAY',
+        'TUESDAY',
+        'WEDNESDAY',
+        'THURSDAY',
+        'FRIDAY',
+        'SATURDAY',
+        'SUNDAY',
+      ],
+      season: 'ALL_YEAR',
+    },
+  ];
+
+  for (const timing of rateTimings) {
+    const plan = plans.find((p) => p.int_plan_code === timing.plan_code);
+    if (!plan) {
+      console.log(
+        `  - Plan not found: ${timing.plan_code}, skipping rate timing`,
+      );
+      continue;
+    }
+
+    const existing = await dataSource.query(
+      'SELECT * FROM rate_timings WHERE plan_id = $1 AND timing_name = $2',
+      [plan.plan_id, timing.timing_name],
+    );
+
+    if (existing.length === 0) {
+      await dataSource.query(
+        'INSERT INTO rate_timings (plan_id, timing_name, description, start_time, end_time, days_of_week, season, is_active, created_at, updated_at) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())',
+        [
+          plan.plan_id,
+          timing.timing_name,
+          timing.description,
+          timing.start_time,
+          timing.end_time,
+          JSON.stringify(timing.days_of_week),
+          timing.season,
+          true,
+        ],
+      );
+      console.log(
+        `  ✓ Created rate timing: ${timing.timing_name} for plan ${timing.plan_code}`,
+      );
+    } else {
+      console.log(
+        `  - Rate timing already exists: ${timing.timing_name} for plan ${timing.plan_code}`,
       );
     }
   }

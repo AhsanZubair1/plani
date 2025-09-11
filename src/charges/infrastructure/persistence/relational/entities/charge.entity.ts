@@ -8,46 +8,46 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
+import { PlanEntity } from '@src/plans/infrastructure/persistence/relational/entities/plan.entity';
+
 import { ChargeCategoryEntity } from './charge-category.entity';
 import { ChargeTermEntity } from './charge-term.entity';
 import { ChargeTypeEntity } from './charge-type.entity';
-import { PlanEntity } from '@src/plans/infrastructure/persistence/relational/entities/plan.entity';
 
 @Entity({ name: 'charges' })
 export class ChargeEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('increment')
   charge_id: number;
 
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ type: 'varchar', length: 50, nullable: false })
   charge_code: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 255, nullable: false })
   charge_description: string;
 
-  @Column({ type: 'decimal', precision: 10, scale: 4 })
-  charge_amount: number;
+  @Column({ type: 'decimal', precision: 10, scale: 4, nullable: true })
+  charge_amount: number | null;
 
-  @Column({ type: 'decimal', precision: 10, scale: 4 })
-  charge_perc: number;
+  @Column({ type: 'decimal', precision: 10, scale: 4, nullable: true })
+  charge_perc: number | null;
 
-  @Column({ type: 'decimal', precision: 10, scale: 4 })
-  greenpower_perc: number;
+  @Column({ type: 'decimal', precision: 10, scale: 4, nullable: true })
+  greenpower_perc: number | null;
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   reference_01: string;
 
-  // Foreign Key Columns
-  @Column({ type: 'int' })
+  @Column({ type: 'int', nullable: false })
   plan_id: number;
 
-  @Column({ type: 'int' })
-  charge_type_id: number;
+  @Column({ type: 'int', nullable: true })
+  charge_type_id: number | null;
 
-  @Column({ type: 'int' })
-  charge_category_id: number;
+  @Column({ type: 'int', nullable: true })
+  charge_category_id: number | null;
 
-  @Column({ type: 'int' })
-  charge_term_id: number;
+  @Column({ type: 'int', nullable: true })
+  charge_term_id: number | null;
 
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;
@@ -57,6 +57,7 @@ export class ChargeEntity {
 
   @ManyToOne(() => PlanEntity, (plan) => plan.charges, {
     onDelete: 'CASCADE',
+    nullable: false,
   })
   @JoinColumn({ name: 'plan_id' })
   plan: PlanEntity;
@@ -65,7 +66,7 @@ export class ChargeEntity {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'charge_type_id' })
-  chargeType: ChargeTypeEntity;
+  chargeType: ChargeTypeEntity | null;
 
   @ManyToOne(
     () => ChargeCategoryEntity,
@@ -75,11 +76,11 @@ export class ChargeEntity {
     },
   )
   @JoinColumn({ name: 'charge_category_id' })
-  chargeCategory: ChargeCategoryEntity;
+  chargeCategory: ChargeCategoryEntity | null;
 
   @ManyToOne(() => ChargeTermEntity, (chargeTerm) => chargeTerm.charges, {
     onDelete: 'CASCADE',
   })
   @JoinColumn({ name: 'charge_term_id' })
-  chargeTerm: ChargeTermEntity;
+  chargeTerm: ChargeTermEntity | null;
 }

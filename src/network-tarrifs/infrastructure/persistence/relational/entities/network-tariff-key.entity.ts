@@ -9,7 +9,7 @@ export class networkTariffKeyEntity {
   @PrimaryGeneratedColumn('increment')
   network_tariff_key_id: number;
 
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ type: 'varchar', length: 50, nullable: false })
   network_tariff_key_code: string;
 
   @OneToMany(

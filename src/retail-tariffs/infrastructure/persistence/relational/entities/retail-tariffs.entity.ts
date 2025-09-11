@@ -24,43 +24,43 @@ export class retailTariffsEntity extends EntityRelationalHelper {
   @PrimaryGeneratedColumn('increment')
   retail_tariff_id: number;
 
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ type: 'varchar', length: 50, nullable: false })
   retail_tariff_code: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 255, nullable: false })
   retail_tariff_name: string;
 
-  @Column({ type: 'boolean', default: false })
+  @Column({ type: 'boolean', default: false, nullable: false })
   sacl_flag: boolean;
 
-  @Column({ type: 'boolean', default: true })
+  @Column({ type: 'boolean', default: true, nullable: false })
   active: boolean;
+
+  @Column({ type: 'int', nullable: true })
+  distributor_id: number | null;
+
+  @Column({ type: 'int', nullable: true })
+  customer_type_id: number | null;
+
+  @CreateDateColumn({ name: 'created_at' })
+  created_at: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updated_at: Date;
 
   @ManyToOne(
     () => distributorEntity,
     (distributor) => distributor.retailTariffs,
   )
   @JoinColumn({ name: 'distributor_id' })
-  distributor: distributorEntity;
-
-  @Column({ type: 'int' })
-  distributor_id: number;
+  distributor: distributorEntity | null;
 
   @ManyToOne(
     () => customerTypeEntity,
     (customerType) => customerType.retailTariffs,
   )
   @JoinColumn({ name: 'customer_type_id' })
-  customer_type: customerTypeEntity;
-
-  @Column({ type: 'int' })
-  customer_type_id: number;
-
-  @CreateDateColumn()
-  created_at: Date;
-
-  @UpdateDateColumn()
-  updated_at: Date;
+  customer_type: customerTypeEntity | null;
 
   @OneToMany(
     () => retailNtcKeyRelnEntity,

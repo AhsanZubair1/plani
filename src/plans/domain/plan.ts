@@ -40,15 +40,17 @@ export class Plan {
     type: Date,
     example: '2024-12-31',
     description: 'Effective to date',
+    nullable: true,
   })
-  effectiveTo: Date;
+  effectiveTo: Date | null;
 
   @ApiProperty({
     type: Date,
     example: '2024-06-01',
     description: 'Review date',
+    nullable: true,
   })
-  reviewDate: Date;
+  reviewDate: Date | null;
 
   @ApiProperty({
     type: Boolean,
@@ -97,21 +99,31 @@ export class Plan {
     example: false,
     description: 'Intrinsic green',
   })
-  instrinctGreen: boolean;
+  intrinsicGreen: boolean;
+
+  @ApiProperty({
+    type: Boolean,
+    example: false,
+    description: 'Intrinsic GPP',
+    nullable: true,
+  })
+  intrinsicGpp: boolean | null;
 
   @ApiProperty({
     type: String,
     example: 'Residential customers only',
     description: 'Eligibility criteria',
+    nullable: true,
   })
-  eligibilityCriteria: string;
+  eligibilityCriteria: string | null;
 
   @ApiProperty({
     type: String,
     example: 'Price may vary based on market conditions',
     description: 'Price variation details',
+    nullable: true,
   })
-  priceVariationDetails: string;
+  priceVariationDetails: string | null;
 
   @ApiProperty({
     type: String,
@@ -124,30 +136,42 @@ export class Plan {
     type: String,
     example: 'Contract expires after 12 months',
     description: 'Contract expiry details',
+    nullable: true,
   })
-  contractExpiryDetails: string;
+  contractExpiryDetails: string | null;
 
   @ApiProperty({
     type: String,
     example: 'Fixed rates for 12 months',
     description: 'Fixed rates information',
+    nullable: true,
   })
-  fixedRates: string;
+  fixedRates: string | null;
 
   @ApiProperty({
     type: Number,
     example: 0.25,
     description: 'Lowest RPS (cents per kWh)',
+    nullable: true,
   })
-  lowestRps: number;
+  lowestRps: number | null;
 
-  // Foreign Key References
+  @ApiProperty({
+    type: String,
+    example: 'https://example.com/factsheet.pdf',
+    description: 'Factsheet URL',
+    nullable: true,
+  })
+  factsheetUrl: string | null;
+
+  // Foreign Key References (all nullable as per entity)
   @ApiProperty({
     type: Number,
     example: 1,
     description: 'Zone ID',
+    nullable: true,
   })
-  zoneId: number;
+  zoneId: number | null;
 
   @ApiProperty({
     type: Number,
@@ -159,16 +183,16 @@ export class Plan {
   @ApiProperty({
     type: Number,
     example: 1,
-    description: 'Customer type ID',
+    description: 'Distributor ID',
   })
-  customerTypeId: number;
+  distributorId: number;
 
   @ApiProperty({
     type: Number,
     example: 1,
-    description: 'Distributor ID',
+    description: 'Customer type ID',
   })
-  distributorId: number;
+  customerTypeId: number;
 
   @ApiProperty({
     type: Number,
@@ -181,13 +205,37 @@ export class Plan {
     type: Number,
     example: 1,
     description: 'Contract term ID',
+    nullable: true,
   })
-  contractTermId: number;
+  contractTermId: number | null;
+
+  @ApiProperty({
+    type: Number,
+    example: 1,
+    description: 'Retail tariff ID',
+    nullable: true,
+  })
+  retailTariffId: number | null;
 
   @ApiProperty({
     type: Number,
     example: 1,
     description: 'Bill frequency ID',
+    nullable: true,
   })
-  billFreqId: number;
+  billFreqId: number | null;
+
+  @ApiProperty({
+    type: Date,
+    example: '2024-01-01T00:00:00Z',
+    description: 'Created timestamp',
+  })
+  createdAt: Date;
+
+  @ApiProperty({
+    type: Date,
+    example: '2024-01-01T00:00:00Z',
+    description: 'Updated timestamp',
+  })
+  updatedAt: Date;
 }

@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
-import { ChargeAbstractRepository } from '@src/charges/infrastructure/persistence/charge.abstract.repository';
 import { Charge } from '@src/charges/domain/charge';
-import { ChargeEntity } from '../entities/charge.entity';
+import { ChargeAbstractRepository } from '@src/charges/infrastructure/persistence/charge.abstract.repository';
+import { ChargeEntity } from '@src/charges/infrastructure/persistence/relational/entities/charge.entity';
 
 @Injectable()
 export class ChargeRepository extends ChargeAbstractRepository {

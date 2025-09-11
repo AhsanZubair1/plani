@@ -7,7 +7,6 @@ export class TariffTypeMapper {
     domain.tariffTypeId = raw.tariff_type_id;
     domain.tariffTypeCode = raw.tariff_type_code;
     domain.tariffTypeName = raw.tariff_type_name;
-    domain.timeDefinition = raw.time_definition;
     domain.fuelTypeId = raw.fuel_type_id;
     return domain;
   }
@@ -17,7 +16,6 @@ export class TariffTypeMapper {
     entity.tariff_type_id = domain.tariffTypeId;
     entity.tariff_type_code = domain.tariffTypeCode;
     entity.tariff_type_name = domain.tariffTypeName;
-    entity.time_definition = domain.timeDefinition;
     entity.fuel_type_id = domain.fuelTypeId;
     return entity;
   }

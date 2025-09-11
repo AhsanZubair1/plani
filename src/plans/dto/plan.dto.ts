@@ -40,9 +40,10 @@ export class PlanDto {
   @ApiProperty({
     type: Date,
     example: '2024-12-31',
+    nullable: true,
   })
   @Expose()
-  effectiveTo: Date;
+  effectiveTo: Date | null;
 
   @ApiProperty({
     type: Date,

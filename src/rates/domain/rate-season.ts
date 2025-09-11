@@ -19,8 +19,9 @@ export class RateSeason {
     type: String,
     example: 'Summer Season',
     description: 'Season name',
+    nullable: true,
   })
-  seasonName: string;
+  seasonName: string | null;
 
   @ApiProperty({
     type: Date,
@@ -33,15 +34,17 @@ export class RateSeason {
     type: Date,
     example: '2024-08-31',
     description: 'Effective to date',
+    nullable: true,
   })
-  effectiveTo: Date;
+  effectiveTo: Date | null;
 
   @ApiProperty({
     type: Number,
     example: 1.25,
     description: 'Daily charge',
+    nullable: true,
   })
-  dailyCharge: number;
+  dailyCharge: number | null;
 
   @ApiProperty({
     type: Number,

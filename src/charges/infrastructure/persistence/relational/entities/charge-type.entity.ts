@@ -14,17 +14,17 @@ import { ChargeEntity } from './charge.entity';
 
 @Entity({ name: 'charge_types' })
 export class ChargeTypeEntity {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('increment')
   charge_type_id: number;
 
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ type: 'varchar', length: 50, nullable: false })
   charge_type_code: string;
 
-  @Column({ type: 'varchar', length: 100 })
+  @Column({ type: 'varchar', length: 100, nullable: false })
   charge_type_name: string;
 
-  @Column({ type: 'int' })
-  charge_class_id: number;
+  @Column({ type: 'int', nullable: true })
+  charge_class_id: number | null;
 
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;
@@ -37,10 +37,11 @@ export class ChargeTypeEntity {
     (chargeClass) => chargeClass.chargeTypes,
     {
       onDelete: 'CASCADE',
+      nullable: true,
     },
   )
   @JoinColumn({ name: 'charge_class_id' })
-  chargeClass: ChargeClassEntity;
+  chargeClass: ChargeClassEntity | null;
 
   @OneToMany(() => ChargeEntity, (charge) => charge.chargeType)
   charges: ChargeEntity[];

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
-import { ChargeAbstractRepository } from './infrastructure/persistence/charge.abstract.repository';
 import { Charge } from './domain/charge';
+import { ChargeAbstractRepository } from './infrastructure/persistence/charge.abstract.repository';
 
 @Injectable()
 export class ChargesService {

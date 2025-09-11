@@ -32,9 +32,14 @@ export class PlanMapping {
   minimumChargeAmount: string; // Changed from Number to string
 
   @ApiProperty({
-    type: [String], // Changed from Array to [String] and Date to String[]
-    description: 'Array of billing codes',
-    isArray: true,
+    type: String,
+    description: 'Billing code',
   })
-  billingCodes: string[]; // Changed from Date to string[]
+  billingCode: string;
+
+  @ApiProperty({
+    type: String,
+    description: 'Billing code type',
+  })
+  billingCodeType: string;
 }

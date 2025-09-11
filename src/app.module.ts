@@ -15,7 +15,6 @@ import { retailTariffsModule } from '@src/retail-tariffs/retail-tariffs.module';
 
 import { AuthModule } from './auth/auth.module';
 import authConfig from './auth/config/auth.config';
-import { BillingModule } from './billing/billing.module';
 import { ChargesModule } from './charges/charges.module';
 import appConfig from './config/app.config';
 import { AllConfigType } from './config/config.type';
@@ -99,7 +98,6 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
     networkTarrifsModule,
     retailTariffsModule,
     ChargesModule,
-    BillingModule,
     LoggingModule,
   ],
 })

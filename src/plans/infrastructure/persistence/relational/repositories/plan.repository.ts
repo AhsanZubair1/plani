@@ -194,13 +194,13 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
   private getPlanStatus(plan: Plan): string {
     const now = new Date();
 
-    if (plan.effectiveTo < now) {
+    if (plan.effectiveTo && plan.effectiveTo < now) {
       return 'Expired';
     }
 
     if (
       plan.effectiveFrom <= now &&
-      plan.effectiveTo >= now &&
+      (!plan.effectiveTo || plan.effectiveTo >= now) &&
       !plan.restricted
     ) {
       return 'Ready';
@@ -534,6 +534,7 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       state: string;
       distributor: string;
       effectiveTill: string;
+      Uploaded: string;
     }[]
   > {
     const plans = await this.plansRepository
@@ -543,21 +544,23 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       .leftJoinAndSelect('plan.planType', 'planType')
       .leftJoinAndSelect('plan.zone', 'zone')
       .leftJoinAndSelect('plan.distributor', 'distributor')
+      .leftJoinAndSelect('distributor.state', 'state')
       .leftJoinAndSelect('plan.customerType', 'customerType')
       .orderBy('plan.created_at', 'DESC')
       .getMany();
 
     return plans.map((plan) => ({
       planName: plan.plan_name || '',
-      planId: plan.int_plan_code || '',
+      planId: plan.int_plan_code || plan.ext_plan_code,
       tariff: plan.rateCard?.tariffType?.tariff_type_code || '',
       planType: plan.planType?.plan_type_name || '',
       customer: plan.customerType?.customer_type_code || '', // Now accessible
-      state: plan.zone?.zone_code || '',
+      state: plan.distributor?.state?.state_name || '',
       distributor: plan.distributor?.distributor_name || '', // Now accessible
       effectiveTill: plan.effective_to
         ? new Date(plan.effective_to).toLocaleDateString('en-GB')
         : '',
+      Uploaded: plan.created_at.toISOString(),
     }));
   }
 
@@ -568,31 +571,33 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       .leftJoinAndSelect('plan.customerType', 'customerType')
       .leftJoinAndSelect('plan.retailTariff', 'retailTariff')
       .leftJoinAndSelect('plan.charges', 'charges')
-      .leftJoinAndSelect('plan.billingCodes', 'billingCodes')
       .orderBy('plan.created_at', 'DESC')
       .getMany();
 
-    return plans.map((plan) => {
-      const minChargeAmount = Math.min(
-        ...plan.charges.map((charge: any) => Number(charge.charge_amount)),
+    return plans.map((plan: any) => {
+      // Get all charge amounts and find the minimum
+      const chargeAmounts = plan.charges.map(
+        (charge: any) => Number(charge.charge_amount) || 0,
       );
+      const minChargeAmount =
+        chargeAmounts.length > 0 ? Math.min(...chargeAmounts) : 0;
 
-      const billingCodesList =
-        plan.billingCodes
-          ?.map((bc) => bc.billing_code)
-          .filter((code) => code) || [];
+      // Get all charge codes as an array
+      const billingCodes = plan.charges.map(
+        (charge: any) => charge.charge_code || '',
+      );
 
       return {
         planId: plan.int_plan_code || '',
         distributer: plan.distributor?.distributor_name || '',
         retailTariffName: plan.retailTariff?.retail_tariff_name || '',
         customerType: plan.customerType?.customer_type_code || '',
-        minimumChargeAmount: minChargeAmount.toString(), // Convert number to string
-        billingCodes: billingCodesList,
+        minimumChargeAmount: minChargeAmount.toString(),
+        billingCode: billingCodes, // Now an array of all charge codes
+        billingCodeType: plan.billing_code_type || '',
       };
     });
   }
-
   async getPlanMappingStatusCounts(): Promise<{
     active: number;
     expired: number;

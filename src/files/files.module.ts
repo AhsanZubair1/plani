@@ -21,6 +21,10 @@ const infrastructureUploaderModule =
 @Module({
   imports: [infrastructurePersistenceModule, infrastructureUploaderModule],
   providers: [FilesService],
-  exports: [FilesService, infrastructurePersistenceModule, FilesS3Module],
+  exports: [
+    FilesService,
+    infrastructurePersistenceModule,
+    infrastructureUploaderModule,
+  ],
 })
 export class FilesModule {}

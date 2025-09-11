@@ -5,34 +5,37 @@ import { Repository } from 'typeorm';
 // Domain entities
 import { FuelType } from '@src/rates/domain/fuel-type';
 import { Rate } from '@src/rates/domain/rate';
+import { RateBlock } from '@src/rates/domain/rate-block';
 import { RateCard } from '@src/rates/domain/rate-card';
 import { RateCategory } from '@src/rates/domain/rate-category';
 import { RateClass } from '@src/rates/domain/rate-class';
 import { RateSeason } from '@src/rates/domain/rate-season';
+import { RateTiming } from '@src/rates/domain/rate-timing';
 import { RateType } from '@src/rates/domain/rate-type';
 import { TariffType } from '@src/rates/domain/tariff-type';
-
 // Database entities
 import { RatesAbstractRepository } from '@src/rates/infrastructure/persistence/rates.abstract.repository';
 import { FuelTypeEntity } from '@src/rates/infrastructure/persistence/relational/entities/fuel-type.entity';
+import { RateBlockEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-block.entity';
 import { RateCardEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-card.entity';
 import { RateCategoryEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-category.entity';
 import { RateClassEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-class.entity';
 import { RateSeasonEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-season.entity';
+import { RateTimingEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-timing.entity';
 import { RateTypeEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-type.entity';
 import { RateEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate.entity';
 import { TariffTypeEntity } from '@src/rates/infrastructure/persistence/relational/entities/tariff-type.entity';
-
 // Mappers
 import { FuelTypeMapper } from '@src/rates/infrastructure/persistence/relational/mappers/fuel-type.mapper';
+import { RateBlockMapper } from '@src/rates/infrastructure/persistence/relational/mappers/rate-block.mapper';
 import { RateCardMapper } from '@src/rates/infrastructure/persistence/relational/mappers/rate-card.mapper';
 import { RateCategoryMapper } from '@src/rates/infrastructure/persistence/relational/mappers/rate-category.mapper';
 import { RateClassMapper } from '@src/rates/infrastructure/persistence/relational/mappers/rate-class.mapper';
 import { RateSeasonMapper } from '@src/rates/infrastructure/persistence/relational/mappers/rate-season.mapper';
+import { RateTimingMapper } from '@src/rates/infrastructure/persistence/relational/mappers/rate-timing.mapper';
 import { RateTypeMapper } from '@src/rates/infrastructure/persistence/relational/mappers/rate-type.mapper';
 import { RateMapper } from '@src/rates/infrastructure/persistence/relational/mappers/rate.mapper';
 import { TariffTypeMapper } from '@src/rates/infrastructure/persistence/relational/mappers/tariff-type.mapper';
-
 // Abstract repository
 import { NullableType } from '@src/utils/types/nullable.type';
 
@@ -55,6 +58,10 @@ export class RatesRelationalRepository extends RatesAbstractRepository {
     private readonly ratesRepository: Repository<RateEntity>,
     @InjectRepository(RateSeasonEntity)
     private readonly rateSeasonsRepository: Repository<RateSeasonEntity>,
+    @InjectRepository(RateBlockEntity)
+    private readonly rateBlocksRepository: Repository<RateBlockEntity>,
+    @InjectRepository(RateTimingEntity)
+    private readonly rateTimingsRepository: Repository<RateTimingEntity>,
   ) {
     super();
   }
@@ -636,5 +643,103 @@ export class RatesRelationalRepository extends RatesAbstractRepository {
 
   async deleteRateSeason(id: RateSeason['rateSeasonId']): Promise<void> {
     await this.rateSeasonsRepository.delete(id);
+  }
+
+  // RateBlock methods
+  async findRateBlocksByPlanId(planId: number): Promise<RateBlock[]> {
+    const entities = await this.rateBlocksRepository.find({
+      where: { plan_id: planId },
+      order: { priority: 'ASC', created_at: 'ASC' },
+    });
+    return entities.map((entity) => RateBlockMapper.toDomain(entity));
+  }
+
+  async findActiveRateBlocksByPlanId(planId: number): Promise<RateBlock[]> {
+    const entities = await this.rateBlocksRepository.find({
+      where: { plan_id: planId, is_active: true },
+      order: { priority: 'ASC', created_at: 'ASC' },
+    });
+    return entities.map((entity) => RateBlockMapper.toDomain(entity));
+  }
+
+  async findRateBlocksByPlanIdAndType(
+    planId: number,
+    rateType: string,
+  ): Promise<RateBlock[]> {
+    const entities = await this.rateBlocksRepository.find({
+      where: { plan_id: planId, rate_type: rateType },
+      order: { priority: 'ASC', created_at: 'ASC' },
+    });
+    return entities.map((entity) => RateBlockMapper.toDomain(entity));
+  }
+
+  async findRateBlocksByPlanIdAndSeason(
+    planId: number,
+    season: string,
+  ): Promise<RateBlock[]> {
+    const entities = await this.rateBlocksRepository.find({
+      where: { plan_id: planId, season: season },
+      order: { priority: 'ASC', created_at: 'ASC' },
+    });
+    return entities.map((entity) => RateBlockMapper.toDomain(entity));
+  }
+
+  async findRateBlocksByTimeRange(
+    planId: number,
+    startTime: string,
+    endTime: string,
+  ): Promise<RateBlock[]> {
+    const entities = await this.rateBlocksRepository
+      .createQueryBuilder('rateBlock')
+      .where('rateBlock.plan_id = :planId', { planId })
+      .andWhere('rateBlock.is_active = :isActive', { isActive: true })
+      .andWhere(
+        '(rateBlock.start_time <= :startTime AND rateBlock.end_time >= :startTime) OR (rateBlock.start_time <= :endTime AND rateBlock.end_time >= :endTime) OR (rateBlock.start_time >= :startTime AND rateBlock.end_time <= :endTime)',
+        { startTime, endTime },
+      )
+      .orderBy('rateBlock.priority', 'ASC')
+      .addOrderBy('rateBlock.created_at', 'ASC')
+      .getMany();
+
+    return entities.map((entity) => RateBlockMapper.toDomain(entity));
+  }
+
+  // RateTiming methods
+  async findRateTimingsByPlanId(planId: number): Promise<RateTiming[]> {
+    const entities = await this.rateTimingsRepository.find({
+      where: { plan_id: planId },
+      order: { created_at: 'ASC' },
+    });
+    return entities.map((entity) => RateTimingMapper.toDomain(entity));
+  }
+
+  async findRateTimingsByPlanIdAndSeason(
+    planId: number,
+    season: string,
+  ): Promise<RateTiming[]> {
+    const entities = await this.rateTimingsRepository.find({
+      where: { plan_id: planId, season: season },
+      order: { created_at: 'ASC' },
+    });
+    return entities.map((entity) => RateTimingMapper.toDomain(entity));
+  }
+
+  async findRateTimingsByTimeRange(
+    planId: number,
+    startTime: string,
+    endTime: string,
+  ): Promise<RateTiming[]> {
+    const entities = await this.rateTimingsRepository
+      .createQueryBuilder('rateTiming')
+      .where('rateTiming.plan_id = :planId', { planId })
+      .andWhere('rateTiming.is_active = :isActive', { isActive: true })
+      .andWhere(
+        '(rateTiming.start_time <= :startTime AND rateTiming.end_time >= :startTime) OR (rateTiming.start_time <= :endTime AND rateTiming.end_time >= :endTime) OR (rateTiming.start_time >= :startTime AND rateTiming.end_time <= :endTime)',
+        { startTime, endTime },
+      )
+      .orderBy('rateTiming.created_at', 'ASC')
+      .getMany();
+
+    return entities.map((entity) => RateTimingMapper.toDomain(entity));
   }
 }

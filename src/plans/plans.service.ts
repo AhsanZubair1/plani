@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 
 import { PlanMapping } from '@src/plans/domain/plan-mapping';
+import { PlanRatesQueryService } from '@src/rates/services/plan-rates-query.service';
 import { NullableType } from '@src/utils/types/nullable.type';
 import { PaginationResponse } from '@src/utils/types/pagination-options';
 
@@ -12,7 +13,10 @@ import { PlanAbstractRepository } from './infrastructure/persistence/plan.abstra
 
 @Injectable()
 export class PlansService {
-  constructor(private readonly plansRepository: PlanAbstractRepository) {}
+  constructor(
+    private readonly plansRepository: PlanAbstractRepository,
+    private readonly planRatesQueryService: PlanRatesQueryService,
+  ) {}
 
   async create(createPlanDto: CreatePlanDto): Promise<Plan> {
     const plan = new Plan();
@@ -26,7 +30,7 @@ export class PlansService {
     plan.ebillingOnly = createPlanDto.ebillingOnly ?? false;
     plan.solarCustOnly = createPlanDto.solarCustOnly ?? false;
     plan.evOnly = createPlanDto.evOnly ?? false;
-    plan.instrinctGreen = createPlanDto.instrinctGreen ?? false;
+    plan.intrinsicGreen = createPlanDto.instrinctGreen ?? false;
 
     return this.plansRepository.create(plan);
   }

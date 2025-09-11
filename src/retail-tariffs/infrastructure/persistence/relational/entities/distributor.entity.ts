@@ -19,21 +19,21 @@ export class distributorEntity {
   @PrimaryGeneratedColumn('increment')
   distributor_id: number;
 
-  @Column({ type: 'varchar', length: 50 })
+  @Column({ type: 'varchar', length: 50, nullable: false })
   distributor_code: string;
 
-  @Column({ type: 'varchar', length: 255 })
+  @Column({ type: 'varchar', length: 255, nullable: false })
   distributor_name: string;
 
-  @Column({ type: 'varchar', length: 10 })
-  mirn_prefix: string;
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  mirn_prefix: string | null;
+
+  @Column({ type: 'int', nullable: true })
+  state_id: number | null;
 
   @ManyToOne(() => stateEntity, (state) => state.distributors)
   @JoinColumn({ name: 'state_id' })
-  state: stateEntity;
-
-  @Column({ type: 'int' })
-  state_id: number;
+  state: stateEntity | null;
 
   @OneToMany(
     () => retailTariffsEntity,
