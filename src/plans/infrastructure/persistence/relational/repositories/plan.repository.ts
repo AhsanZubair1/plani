@@ -534,6 +534,7 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       state: string;
       distributor: string;
       effectiveTill: string;
+      Uploaded: string;
     }[]
   > {
     const plans = await this.plansRepository
@@ -543,21 +544,23 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       .leftJoinAndSelect('plan.planType', 'planType')
       .leftJoinAndSelect('plan.zone', 'zone')
       .leftJoinAndSelect('plan.distributor', 'distributor')
+      .leftJoinAndSelect('distributor.state', 'state')
       .leftJoinAndSelect('plan.customerType', 'customerType')
       .orderBy('plan.created_at', 'DESC')
       .getMany();
 
     return plans.map((plan) => ({
       planName: plan.plan_name || '',
-      planId: plan.int_plan_code || '',
+      planId: plan.int_plan_code || plan.ext_plan_code,
       tariff: plan.rateCard?.tariffType?.tariff_type_code || '',
       planType: plan.planType?.plan_type_name || '',
       customer: plan.customerType?.customer_type_code || '', // Now accessible
-      state: plan.zone?.zone_code || '',
+      state: plan.distributor?.state?.state_name || '',
       distributor: plan.distributor?.distributor_name || '', // Now accessible
       effectiveTill: plan.effective_to
         ? new Date(plan.effective_to).toLocaleDateString('en-GB')
         : '',
+      Uploaded: plan.created_at.toISOString(),
     }));
   }
 
