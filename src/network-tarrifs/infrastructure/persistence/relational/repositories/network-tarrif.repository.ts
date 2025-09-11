@@ -8,6 +8,7 @@ import { networkTariffEntity } from '@src/network-tarrifs/infrastructure/persist
 import { networkTarrifMapper } from '@src/network-tarrifs/infrastructure/persistence/relational/mappers/network-tarrif.mapper';
 import { NullableType } from '@src/utils/types/nullable.type';
 import { IPaginationOptions } from '@src/utils/types/pagination-options';
+import { StatusCountNetworkTarrifsDto } from '@src/network-tarrifs/dto/status-count.dto';
 
 @Injectable()
 export class networkTarrifRelationalRepository
@@ -18,12 +19,77 @@ export class networkTarrifRelationalRepository
     private readonly networkTarrifRepository: Repository<networkTariffEntity>,
   ) {}
 
-  async create(data: networkTarrif): Promise<networkTarrif> {
-    const persistenceModel = networkTarrifMapper.toPersistence(data);
-    const newEntity = await this.networkTarrifRepository.save(
-      this.networkTarrifRepository.create(persistenceModel),
-    );
-    return networkTarrifMapper.toDomain(newEntity);
+  async getStatusCount(): Promise<StatusCountNetworkTarrifsDto> {
+    const networkTariffs = await this.networkTarrifRepository
+      .createQueryBuilder('network_tariff')
+      .leftJoinAndSelect('network_tariff.ntcRelations', 'ntc_reln')
+      .leftJoinAndSelect('ntc_reln.network_tariff_key', 'network_tariff_key')
+      .leftJoinAndSelect(
+        'network_tariff_key.retailNtcKeyRelations',
+        'retail_ntc_key_reln',
+      )
+      .leftJoinAndSelect('retail_ntc_key_reln.retail_tariff', 'retail_tariff')
+      .getMany();
+
+    let activeCount = 0;
+    let inactiveCount = 0;
+
+    networkTariffs.forEach((networkTariff) => {
+      networkTariff.ntcRelations?.forEach((ntcRelation) => {
+        ntcRelation.network_tariff_key?.retailNtcKeyRelations?.forEach(
+          (retailRelation) => {
+            if (retailRelation.retail_tariff?.active) {
+              activeCount++;
+            } else {
+              inactiveCount++;
+            }
+          },
+        );
+      });
+    });
+
+    return {
+      active: activeCount,
+      inActive: inactiveCount,
+    };
+  }
+
+  async getFilterOptions(): Promise<{
+    retailTarrifs: string[];
+    distributors: string[];
+    markets: string[];
+  }> {
+    const [retailTarrifs, distributors] = await Promise.all([
+      // Get unique retail tariffs through the relationship chain
+      this.networkTarrifRepository
+        .createQueryBuilder('network_tariff')
+        .leftJoin('network_tariff.ntcRelations', 'ntc_reln')
+        .leftJoin('ntc_reln.network_tariff_key', 'network_tariff_key')
+        .leftJoin(
+          'network_tariff_key.retailNtcKeyRelations',
+          'retail_ntc_key_reln',
+        )
+        .leftJoin('retail_ntc_key_reln.retail_tariff', 'retail_tariff')
+        .select('DISTINCT retail_tariff.retail_tariff_code', 'retailTariff')
+        .where('retail_tariff.retail_tariff_code IS NOT NULL')
+        .getRawMany()
+        .then((results) => results.map((r) => r.retailTariff)),
+
+      // Get unique distributors directly from network_tariff
+      this.networkTarrifRepository
+        .createQueryBuilder('network_tariff')
+        .leftJoin('network_tariff.distributor', 'distributor')
+        .select('DISTINCT distributor.distributor_name', 'distributor')
+        .where('distributor.distributor_name IS NOT NULL')
+        .getRawMany()
+        .then((results) => results.map((r) => r.distributor)),
+    ]);
+
+    return {
+      retailTarrifs: retailTarrifs.filter(Boolean),
+      distributors: distributors.filter(Boolean),
+      markets: [], // Always return empty array for markets
+    };
   }
 
   async findAllWithPagination({
@@ -37,41 +103,5 @@ export class networkTarrifRelationalRepository
     });
 
     return entities.map((entity) => networkTarrifMapper.toDomain(entity));
-  }
-
-  async findById(
-    id: networkTarrif['id'],
-  ): Promise<NullableType<networkTarrif>> {
-    const entity = await this.networkTarrifRepository.findOne({
-      where: { network_tariff_id: id },
-    });
-
-    return entity ? networkTarrifMapper.toDomain(entity) : null;
-  }
-
-  async update(
-    id: networkTarrif['id'],
-    payload: Partial<networkTarrif>,
-  ): Promise<networkTarrif | null> {
-    const entity = await this.networkTarrifRepository.findOne({
-      where: { network_tariff_id: id },
-    });
-
-    if (!entity) return null;
-
-    const updatedEntity = await this.networkTarrifRepository.save(
-      this.networkTarrifRepository.create(
-        networkTarrifMapper.toPersistence({
-          ...networkTarrifMapper.toDomain(entity),
-          ...payload,
-        }),
-      ),
-    );
-
-    return networkTarrifMapper.toDomain(updatedEntity);
-  }
-
-  async remove(id: networkTarrif['id']): Promise<void> {
-    await this.networkTarrifRepository.delete(id);
   }
 }

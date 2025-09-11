@@ -11,23 +11,22 @@ import {
 import {
   ApiCreatedResponse,
   ApiOkResponse,
+  ApiOperation,
   ApiParam,
+  ApiResponse,
   ApiTags,
 } from '@nestjs/swagger';
-
 import {
   InfinityPaginationResponse,
   InfinityPaginationResponseDto,
 } from '@src/utils/dto/infinity-pagination-response.dto';
 import { infinityPagination } from '@src/utils/infinity-pagination';
-
 import { networkTarrif } from './domain/network-tarrif';
-import { CreatenetworkTarrifDto } from './dto/create-network-tarrif.dto';
 import { FindAllnetworkTarrifsDto } from './dto/find-all-network-tarrifs.dto';
-import { UpdatenetworkTarrifDto } from './dto/update-network-tarrif.dto';
 import { networkTarrifsService } from './network-tarrifs.service';
+import { StatusCountNetworkTarrifsDto } from '@src/network-tarrifs/dto/status-count.dto';
 
-@ApiTags('Networktarrifs')
+@ApiTags('NetworkTarrifs')
 @Controller({
   path: 'network-tarrifs',
   version: '1',
@@ -35,17 +34,51 @@ import { networkTarrifsService } from './network-tarrifs.service';
 export class networkTarrifsController {
   constructor(private readonly networkTarrifsService: networkTarrifsService) {}
 
-  @Post()
-  @ApiCreatedResponse({
-    type: networkTarrif,
+  @Get('status/count')
+  @ApiOperation({
+    summary: 'Get network tarrifs status counts (active, inactive, solar)',
   })
-  create(@Body() createnetworkTarrifDto: CreatenetworkTarrifDto) {
-    return this.networkTarrifsService.create(createnetworkTarrifDto);
+  @ApiResponse({
+    status: 200,
+    description: 'Network tarrifs status counts retrieved successfully',
+    type: StatusCountNetworkTarrifsDto,
+  })
+  async getStatusCount(): Promise<StatusCountNetworkTarrifsDto> {
+    return await this.networkTarrifsService.getStatusCount();
+  }
+
+  @Get('filter/options')
+  @ApiOperation({
+    summary: 'Get network tarrifs filter options',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Network tarrifs filter options retrieved successfully',
+    schema: {
+      type: 'object',
+      properties: {
+        retailTarrifs: { type: 'array', items: { type: 'string' } },
+        distributors: { type: 'array', items: { type: 'string' } },
+        markets: { type: 'array', items: { type: 'string' } },
+      },
+    },
+  })
+  async getFilterOptions(): Promise<{
+    retailTarrifs: string[];
+    distributors: string[];
+    markets: string[];
+  }> {
+    return await this.networkTarrifsService.getFilterOptions();
   }
 
   @Get()
-  @ApiOkResponse({
-    type: InfinityPaginationResponse(networkTarrif),
+  @ApiOperation({
+    summary: 'Get network tarrifs status counts (active, inactive, solar)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Network tarrifs status counts retrieved successfully',
+    type: StatusCountNetworkTarrifsDto,
   })
   async findAll(
     @Query() query: FindAllnetworkTarrifsDto,
@@ -65,44 +98,5 @@ export class networkTarrifsController {
       }),
       { page, limit },
     );
-  }
-
-  @Get(':id')
-  @ApiParam({
-    name: 'id',
-    type: String,
-    required: true,
-  })
-  findOne(@Param('id') id: string) {
-    return this.networkTarrifsService.findOne(parseInt(id));
-  }
-
-  @Patch(':id')
-  @ApiParam({
-    name: 'id',
-    type: String,
-    required: true,
-  })
-  @ApiOkResponse({
-    type: networkTarrif,
-  })
-  update(
-    @Param('id') id: string,
-    @Body() updatenetworkTarrifDto: UpdatenetworkTarrifDto,
-  ) {
-    return this.networkTarrifsService.update(
-      parseInt(id),
-      updatenetworkTarrifDto,
-    );
-  }
-
-  @Delete(':id')
-  @ApiParam({
-    name: 'id',
-    type: String,
-    required: true,
-  })
-  remove(@Param('id') id: string) {
-    return this.networkTarrifsService.remove(parseInt(id));
   }
 }

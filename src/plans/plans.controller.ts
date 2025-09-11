@@ -14,11 +14,9 @@ import {
   ApiResponse,
   ApiBearerAuth,
 } from '@nestjs/swagger';
-
 import { PlanMapping } from '@src/plans/domain/plan-mapping';
 import { PlanMappingStatusCountsDto } from '@src/plans/dto/plan-mapping-status-counts.dto';
 import { PaginationResponse } from '@src/utils/types/pagination-options';
-
 import { Plan } from './domain/plan';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { PlanListDto } from './dto/plan-list.dto';
