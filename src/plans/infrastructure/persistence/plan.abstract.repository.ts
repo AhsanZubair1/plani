@@ -31,7 +31,13 @@ export abstract class PlanAbstractRepository {
     expired: number;
   }>;
 
-  abstract getPlanMapping(): Promise<PlanMapping[]>;
+  abstract getPlanMapping(query?: any): Promise<{
+    data: PlanMapping[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }>;
 
   // Additional methods for UI functionality
   abstract getFilterOptions(): Promise<{
@@ -70,8 +76,8 @@ export abstract class PlanAbstractRepository {
   ): Promise<string[]>;
 
   // Plan list with related data
-  abstract getPlanList(): Promise<
-    {
+  abstract getPlanList(query: QueryPlanDto): Promise<{
+    data: {
       planName: string;
       planId: string;
       tariff: string;
@@ -80,6 +86,13 @@ export abstract class PlanAbstractRepository {
       state: string;
       distributor: string;
       effectiveTill: string;
-    }[]
-  >;
+      assignedCampaigns: { name: string; status: string }[];
+      planStatus: string;
+      isHighlighted: boolean;
+    }[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }>;
 }

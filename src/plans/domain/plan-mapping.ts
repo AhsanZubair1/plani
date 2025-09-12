@@ -32,14 +32,16 @@ export class PlanMapping {
   minimumChargeAmount: string; // Changed from Number to string
 
   @ApiProperty({
-    type: String,
-    description: 'Billing code',
+    type: [Object],
+    description: 'Array of billing codes with their types',
+    example: [
+      { code: 'EVRMAY2025MR', type: 'PRODUCT', typeName: 'Product Code' },
+      { code: 'ABCD123', type: 'OFFERING', typeName: 'Offering Code' },
+    ],
   })
-  billingCode: string;
-
-  @ApiProperty({
-    type: String,
-    description: 'Billing code type',
-  })
-  billingCodeType: string;
+  billingCode: Array<{
+    code: string;
+    type: string;
+    typeName: string;
+  }>;
 }

@@ -3,36 +3,18 @@ import { Transform } from 'class-transformer';
 import {
   IsOptional,
   IsString,
-  IsBoolean,
   IsInt,
   Min,
   Max,
-  IsDateString,
-  IsEnum,
+  IsNumber,
 } from 'class-validator';
 
-import {
-  PlanStatus,
-  PlanType,
-  CustomerType,
-} from '@src/plans/enums/plan-status.enum';
-
-export class QueryPlanDto {
-  @ApiProperty({
-    type: String,
-    required: false,
-    example: 'Residential',
-    description: 'Filter by plan name',
-  })
-  @IsOptional()
-  @IsString()
-  planName?: string;
-
+export class PlanMappingQueryDto {
   @ApiProperty({
     type: String,
     required: false,
     example: 'DGU123456MR',
-    description: 'Filter by external plan ID',
+    description: 'Filter by plan ID',
   })
   @IsOptional()
   @IsString()
@@ -41,50 +23,8 @@ export class QueryPlanDto {
   @ApiProperty({
     type: String,
     required: false,
-    example: 'TOU',
-    description: 'Filter by tariff type',
-  })
-  @IsOptional()
-  @IsString()
-  tariff?: string;
-
-  @ApiProperty({
-    type: String,
-    required: false,
-    example: 'market',
-    enum: PlanType,
-    description: 'Filter by plan type',
-  })
-  @IsOptional()
-  @IsEnum(PlanType)
-  planType?: PlanType;
-
-  @ApiProperty({
-    type: String,
-    required: false,
-    example: 'res',
-    enum: CustomerType,
-    description: 'Filter by customer type',
-  })
-  @IsOptional()
-  @IsEnum(CustomerType)
-  customer?: CustomerType;
-
-  @ApiProperty({
-    type: String,
-    required: false,
-    example: 'VIC',
-    description: 'Filter by state',
-  })
-  @IsOptional()
-  @IsString()
-  state?: string;
-
-  @ApiProperty({
-    type: String,
-    required: false,
     example: 'Citipower',
-    description: 'Filter by distributor',
+    description: 'Filter by distributor name',
   })
   @IsOptional()
   @IsString()
@@ -93,22 +33,75 @@ export class QueryPlanDto {
   @ApiProperty({
     type: String,
     required: false,
-    example: '2024-12-12',
-    description: 'Filter by effective date',
+    example: 'Single rate',
+    description: 'Filter by retail tariff name',
   })
   @IsOptional()
-  @IsDateString()
-  effectiveDate?: string;
+  @IsString()
+  retailTariff?: string;
 
   @ApiProperty({
     type: String,
     required: false,
-    example: '2024-12-01',
-    description: 'Filter by uploaded date',
+    example: 'RES',
+    description: 'Filter by customer type',
   })
   @IsOptional()
-  @IsDateString()
-  uploadedDate?: string;
+  @IsString()
+  customer?: string;
+
+  @ApiProperty({
+    type: Number,
+    required: false,
+    example: 1000,
+    description: 'Filter by minimum lowest possible price',
+  })
+  @IsOptional()
+  @Transform(({ value }) => parseFloat(value))
+  @IsNumber()
+  minPrice?: number;
+
+  @ApiProperty({
+    type: Number,
+    required: false,
+    example: 2000,
+    description: 'Filter by maximum lowest possible price',
+  })
+  @IsOptional()
+  @Transform(({ value }) => parseFloat(value))
+  @IsNumber()
+  maxPrice?: number;
+
+  @ApiProperty({
+    type: String,
+    required: false,
+    example: 'EVRMAY2025MR',
+    description: 'Filter by billing code',
+  })
+  @IsOptional()
+  @IsString()
+  billingCode?: string;
+
+  @ApiProperty({
+    type: String,
+    required: false,
+    example: 'PRODUCT',
+    description: 'Filter by billing code type',
+  })
+  @IsOptional()
+  @IsString()
+  billingCodeType?: string;
+
+  @ApiProperty({
+    type: String,
+    required: false,
+    example: 'DGU123',
+    description:
+      'Search across plan ID, distributor, retail tariff, customer, and billing codes',
+  })
+  @IsOptional()
+  @IsString()
+  search?: string;
 
   @ApiProperty({
     type: Number,
@@ -138,19 +131,15 @@ export class QueryPlanDto {
   @ApiProperty({
     type: String,
     required: false,
-    example: 'planName',
+    example: 'planId',
     description:
-      'Field to sort by (planName, planId, tariff, planType, customer, state, distributor, effective, uploaded)',
+      'Field to sort by (planId, distributor, retailTariff, customer, lowestPossiblePrice)',
     enum: [
-      'planName',
       'planId',
-      'tariff',
-      'planType',
-      'customer',
-      'state',
       'distributor',
-      'effective',
-      'uploaded',
+      'retailTariff',
+      'customer',
+      'lowestPossiblePrice',
     ],
   })
   @IsOptional()
@@ -160,21 +149,11 @@ export class QueryPlanDto {
   @ApiProperty({
     type: String,
     required: false,
-    example: 'DESC',
+    example: 'ASC',
     description: 'Sort order (ASC or DESC)',
+    enum: ['ASC', 'DESC'],
   })
   @IsOptional()
   @IsString()
   sortOrder?: 'ASC' | 'DESC';
-
-  @ApiProperty({
-    type: String,
-    required: false,
-    example: 'Home Special',
-    description:
-      'Search term across plan name, plan ID, tariff, plan type, customer, state, distributor',
-  })
-  @IsOptional()
-  @IsString()
-  search?: string;
 }

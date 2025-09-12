@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import { Expose } from 'class-transformer';
+import { CampaignDto } from './campaign.dto';
 
 export class PlanListDto {
   @ApiProperty({
@@ -65,4 +66,31 @@ export class PlanListDto {
   })
   @Expose()
   effectiveTill: string;
+
+  @ApiProperty({
+    type: [CampaignDto],
+    example: [
+      { name: 'Summer Campaign', status: 'ACTIVE' },
+      { name: 'Winter Campaign', status: 'DRAFT' },
+    ],
+    description: 'Assigned Campaigns array with name and status',
+  })
+  @Expose()
+  assignedCampaigns: CampaignDto[];
+
+  @ApiProperty({
+    type: String,
+    example: 'Ready',
+    description: 'Plan Status (Ready, Incomplete/Draft, Expired)',
+  })
+  @Expose()
+  planStatus: string;
+
+  @ApiProperty({
+    type: Boolean,
+    example: false,
+    description: 'Whether the plan is highlighted (effective_from in future)',
+  })
+  @Expose()
+  isHighlighted: boolean;
 }

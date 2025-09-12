@@ -15,6 +15,7 @@ import { retailTariffsModule } from '@src/retail-tariffs/retail-tariffs.module';
 
 import { AuthModule } from './auth/auth.module';
 import authConfig from './auth/config/auth.config';
+import { CampaignsModule } from './campaigns/campaigns.module';
 import { ChargesModule } from './charges/charges.module';
 import appConfig from './config/app.config';
 import { AllConfigType } from './config/config.type';
@@ -94,6 +95,7 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
     AuthModule,
     SessionModule,
     PlansModule,
+    CampaignsModule,
     RatesModule,
     networkTarrifsModule,
     retailTariffsModule,

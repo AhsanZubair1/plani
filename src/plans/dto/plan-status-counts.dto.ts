@@ -1,24 +1,28 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Expose } from 'class-transformer';
 
 export class PlanStatusCountsDto {
   @ApiProperty({
     type: Number,
-    example: 1323,
+    example: 150,
     description: 'Number of ready plans',
   })
+  @Expose()
   ready: number;
 
   @ApiProperty({
     type: Number,
-    example: 48,
+    example: 25,
     description: 'Number of incomplete plans',
   })
+  @Expose()
   incomplete: number;
 
   @ApiProperty({
     type: Number,
-    example: 4559,
+    example: 10,
     description: 'Number of expired plans',
   })
+  @Expose()
   expired: number;
 }

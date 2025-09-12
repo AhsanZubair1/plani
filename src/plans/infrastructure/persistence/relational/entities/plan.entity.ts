@@ -9,7 +9,9 @@ import {
   OneToMany,
 } from 'typeorm';
 
+import { CampaignPlanRelnEntity } from '@src/campaigns/infrastructure/persistence/relational/entities/campaign-plan-reln.entity';
 import { ChargeEntity } from '@src/charges/infrastructure/persistence/relational/entities/charge.entity';
+import { BillingCode } from '@src/plans/infrastructure/persistence/relational/entities/billing-code.entity';
 import { PlanTypeEntity } from '@src/plans/infrastructure/persistence/relational/entities/plan-type.entity';
 import { ZoneEntity } from '@src/plans/infrastructure/persistence/relational/entities/zone.entity';
 import { RateCardEntity } from '@src/rates/infrastructure/persistence/relational/entities/rate-card.entity';
@@ -156,4 +158,10 @@ export class PlanEntity {
 
   @OneToMany(() => ChargeEntity, (charge) => charge.plan)
   charges: ChargeEntity[];
+
+  @OneToMany(() => CampaignPlanRelnEntity, (reln) => reln.plan)
+  campaignPlanRelns: CampaignPlanRelnEntity[];
+
+  @OneToMany(() => BillingCode, (billingCode) => billingCode.plan)
+  billingCodes: BillingCode[];
 }

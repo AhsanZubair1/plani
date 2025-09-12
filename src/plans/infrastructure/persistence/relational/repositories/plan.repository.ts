@@ -213,22 +213,38 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
     return 'Unknown';
   }
 
-  async getReadyPlansCount(): Promise<number> {
+  private getPlanStatusForList(plan: any): string {
     const now = new Date();
+
+    // Expired = Today's date is greater than the effective_to date
+    if (plan.effective_to && new Date(plan.effective_to) < now) {
+      return 'Expired';
+    }
+
+    // Ready = Plan has a populated retail_tariff_id OR zone_id
+    if (plan.retail_tariff_id || plan.zone_id) {
+      return 'Ready';
+    }
+
+    // Incomplete/Draft = Plan table has NULL for both retail_tariff_id and zone_id
+    if (!plan.retail_tariff_id && !plan.zone_id) {
+      return 'Incomplete/Draft';
+    }
+
+    return 'Unknown';
+  }
+
+  async getReadyPlansCount(): Promise<number> {
     return this.plansRepository
       .createQueryBuilder('plan')
-      .where('plan.effective_from <= :now', { now })
-      .andWhere('plan.effective_to >= :now', { now })
-      .andWhere('plan.restricted = false')
+      .where('(plan.retail_tariff_id IS NOT NULL OR plan.zone_id IS NOT NULL)')
       .getCount();
   }
 
   async getIncompletePlansCount(): Promise<number> {
     return this.plansRepository
       .createQueryBuilder('plan')
-      .where(
-        "(plan.plan_name IS NULL OR plan.plan_name = '' OR plan.eligibility_criteria IS NULL OR plan.eligibility_criteria = '')",
-      )
+      .where('plan.retail_tariff_id IS NULL AND plan.zone_id IS NULL')
       .getCount();
   }
 
@@ -254,188 +270,6 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
     return { ready, incomplete, expired };
   }
 
-  private applyFilters(
-    queryBuilder: SelectQueryBuilder<PlanEntity>,
-    query: QueryPlanDto,
-  ): void {
-    // Basic filters
-    if (query.intPlanCode) {
-      queryBuilder.andWhere('plan.int_plan_code = :intPlanCode', {
-        intPlanCode: query.intPlanCode,
-      });
-    }
-
-    if (query.extPlanCode) {
-      queryBuilder.andWhere('plan.ext_plan_code = :extPlanCode', {
-        extPlanCode: query.extPlanCode,
-      });
-    }
-
-    if (query.planName) {
-      queryBuilder.andWhere('plan.plan_name ILIKE :planName', {
-        planName: `%${query.planName}%`,
-      });
-    }
-
-    if (query.zoneId) {
-      queryBuilder.andWhere('plan.zone_id = :zoneId', { zoneId: query.zoneId });
-    }
-
-    if (query.planTypeId) {
-      queryBuilder.andWhere('plan.plan_type_id = :planTypeId', {
-        planTypeId: query.planTypeId,
-      });
-    }
-
-    if (query.customerTypeId) {
-      queryBuilder.andWhere('plan.customer_type_id = :customerTypeId', {
-        customerTypeId: query.customerTypeId,
-      });
-    }
-
-    if (query.distributorId) {
-      queryBuilder.andWhere('plan.distributor_id = :distributorId', {
-        distributorId: query.distributorId,
-      });
-    }
-
-    if (query.rateCardId) {
-      queryBuilder.andWhere('plan.rate_card_id = :rateCardId', {
-        rateCardId: query.rateCardId,
-      });
-    }
-
-    if (query.restricted !== undefined) {
-      queryBuilder.andWhere('plan.restricted = :restricted', {
-        restricted: query.restricted,
-      });
-    }
-
-    if (query.contingent !== undefined) {
-      queryBuilder.andWhere('plan.contingent = :contingent', {
-        contingent: query.contingent,
-      });
-    }
-
-    if (query.effectiveFrom) {
-      queryBuilder.andWhere('plan.effective_from >= :effectiveFrom', {
-        effectiveFrom: query.effectiveFrom,
-      });
-    }
-
-    if (query.effectiveTo) {
-      queryBuilder.andWhere('plan.effective_to <= :effectiveTo', {
-        effectiveTo: query.effectiveTo,
-      });
-    }
-
-    // Additional UI filters
-    if (query.planId) {
-      queryBuilder.andWhere('plan.int_plan_code ILIKE :planId', {
-        planId: `%${query.planId}%`,
-      });
-    }
-
-    if (query.tariff) {
-      queryBuilder
-        .leftJoin('rate_cards', 'rc', 'plan.rate_card_id = rc.rate_card_id')
-        .leftJoin('tariff_types', 'tt', 'rc.tariff_type_id = tt.tariff_type_id')
-        .andWhere('tt.tariff_type_code ILIKE :tariff', {
-          tariff: `%${query.tariff}%`,
-        });
-    }
-
-    if (query.planType) {
-      queryBuilder
-        .leftJoin('plan_types', 'pt', 'plan.plan_type_id = pt.plan_type_id')
-        .andWhere('pt.plan_type_code = :planType', {
-          planType: query.planType,
-        });
-    }
-
-    if (query.customer) {
-      queryBuilder
-        .leftJoin(
-          'customer_types',
-          'ct',
-          'plan.customer_type_id = ct.customer_type_id',
-        )
-        .andWhere('ct.customer_type_code = :customer', {
-          customer: query.customer,
-        });
-    }
-
-    if (query.state) {
-      queryBuilder
-        .leftJoin('zones', 'z', 'plan.zone_id = z.zone_id')
-        .andWhere('z.zone_code = :state', {
-          state: query.state,
-        });
-    }
-
-    if (query.distributor) {
-      queryBuilder
-        .leftJoin('distributors', 'd', 'plan.distributor_id = d.distributor_id')
-        .andWhere('d.distributor_name ILIKE :distributor', {
-          distributor: `%${query.distributor}%`,
-        });
-    }
-
-    if (query.effectiveDate) {
-      queryBuilder.andWhere('DATE(plan.effective_from) = :effectiveDate', {
-        effectiveDate: query.effectiveDate,
-      });
-    }
-
-    if (query.uploadedDate) {
-      queryBuilder.andWhere('DATE(plan.created_at) = :uploadedDate', {
-        uploadedDate: query.uploadedDate,
-      });
-    }
-
-    if (query.assignedCampaigns) {
-      // This would need to join with campaigns table
-      queryBuilder
-        .leftJoin('plan_campaigns', 'pc', 'plan.plan_id = pc.plan_id')
-        .leftJoin('campaigns', 'c', 'pc.campaign_id = c.campaign_id')
-        .andWhere('c.campaign_name ILIKE :assignedCampaigns', {
-          assignedCampaigns: `%${query.assignedCampaigns}%`,
-        });
-    }
-
-    // Plan status filtering
-    if (query.status) {
-      const now = new Date();
-      switch (query.status) {
-        case 'ready':
-          queryBuilder.andWhere(
-            'plan.effective_from <= :now AND plan.effective_to >= :now AND plan.restricted = false',
-            {
-              now,
-            },
-          );
-          break;
-        case 'incomplete':
-          queryBuilder.andWhere(
-            "(plan.plan_name IS NULL OR plan.plan_name = '' OR plan.eligibility_criteria IS NULL OR plan.eligibility_criteria = '')",
-            {},
-          );
-          break;
-        case 'expired':
-          queryBuilder.andWhere('plan.effective_to < :now', { now });
-          break;
-      }
-    }
-
-    // Global search
-    if (query.search) {
-      queryBuilder.andWhere(
-        '(plan.plan_name ILIKE :search OR plan.int_plan_code ILIKE :search OR plan.ext_plan_code ILIKE :search)',
-        { search: `%${query.search}%` },
-      );
-    }
-  }
-
   private applySorting(
     queryBuilder: SelectQueryBuilder<PlanEntity>,
     query: QueryPlanDto,
@@ -443,7 +277,41 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
     const sortBy = query.sortBy ?? 'created_at';
     const sortOrder = query.sortOrder ?? 'DESC';
 
-    queryBuilder.orderBy(`plan.${sortBy}`, sortOrder);
+    // Map sort fields to actual database columns
+    let orderField: string;
+    switch (sortBy) {
+      case 'planName':
+        orderField = 'plan.plan_name';
+        break;
+      case 'planId':
+        orderField = 'plan.ext_plan_code';
+        break;
+      case 'tariff':
+        orderField = 'tariffType.tariff_type_code';
+        break;
+      case 'planType':
+        orderField = 'planType.plan_type_code';
+        break;
+      case 'customer':
+        orderField = 'customerType.customer_type_code';
+        break;
+      case 'state':
+        orderField = 'state.state_code';
+        break;
+      case 'distributor':
+        orderField = 'distributor.distributor_name';
+        break;
+      case 'effective':
+        orderField = 'plan.effective_from';
+        break;
+      case 'uploaded':
+        orderField = 'plan.created_at';
+        break;
+      default:
+        orderField = 'plan.created_at';
+    }
+
+    queryBuilder.orderBy(orderField, sortOrder);
   }
 
   // Additional methods for UI functionality
@@ -524,8 +392,87 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
     };
   }
 
-  async getPlanList(): Promise<
-    {
+  private applyFilters(
+    queryBuilder: SelectQueryBuilder<any>,
+    query: QueryPlanDto,
+  ): void {
+    // Plan name filter
+    if (query.planName) {
+      queryBuilder.andWhere('plan.plan_name ILIKE :planName', {
+        planName: `%${query.planName}%`,
+      });
+    }
+
+    // Plan ID filter (External)
+    if (query.planId) {
+      queryBuilder.andWhere('plan.ext_plan_code ILIKE :planId', {
+        planId: `%${query.planId}%`,
+      });
+    }
+
+    // Tariff filter
+    if (query.tariff) {
+      queryBuilder.andWhere('tariffType.tariff_type_code = :tariff', {
+        tariff: query.tariff,
+      });
+    }
+
+    // Plan type filter
+    if (query.planType) {
+      queryBuilder.andWhere('planType.plan_type_code = :planType', {
+        planType: query.planType,
+      });
+    }
+
+    // Customer type filter
+    if (query.customer) {
+      queryBuilder.andWhere('customerType.customer_type_code = :customer', {
+        customer: query.customer,
+      });
+    }
+
+    // State filter
+    if (query.state) {
+      queryBuilder.andWhere('state.state_code = :state', {
+        state: query.state,
+      });
+    }
+
+    // Distributor filter
+    if (query.distributor) {
+      queryBuilder.andWhere('distributor.distributor_name ILIKE :distributor', {
+        distributor: `%${query.distributor}%`,
+      });
+    }
+
+    // Effective date filter
+    if (query.effectiveDate) {
+      queryBuilder.andWhere(
+        'plan.effective_from <= :effectiveDate AND (plan.effective_to IS NULL OR plan.effective_to >= :effectiveDate)',
+        {
+          effectiveDate: query.effectiveDate,
+        },
+      );
+    }
+
+    // Uploaded date filter
+    if (query.uploadedDate) {
+      queryBuilder.andWhere('DATE(plan.created_at) = :uploadedDate', {
+        uploadedDate: query.uploadedDate,
+      });
+    }
+
+    // Search filter (general search across specified fields only)
+    if (query.search) {
+      queryBuilder.andWhere(
+        '(plan.plan_name ILIKE :search OR plan.ext_plan_code ILIKE :search OR tariffType.tariff_type_code ILIKE :search OR planType.plan_type_code ILIKE :search OR customerType.customer_type_code ILIKE :search OR state.state_code ILIKE :search OR distributor.distributor_name ILIKE :search)',
+        { search: `%${query.search}%` },
+      );
+    }
+  }
+
+  async getPlanList(query: QueryPlanDto): Promise<{
+    data: {
       planName: string;
       planId: string;
       tariff: string;
@@ -534,10 +481,16 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       state: string;
       distributor: string;
       effectiveTill: string;
-      Uploaded: string;
-    }[]
-  > {
-    const plans = await this.plansRepository
+      assignedCampaigns: { name: string; status: string }[];
+      planStatus: string;
+      isHighlighted: boolean;
+    }[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const queryBuilder = this.plansRepository
       .createQueryBuilder('plan')
       .leftJoinAndSelect('plan.rateCard', 'rateCard')
       .leftJoinAndSelect('rateCard.tariffType', 'tariffType')
@@ -546,57 +499,249 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       .leftJoinAndSelect('plan.distributor', 'distributor')
       .leftJoinAndSelect('distributor.state', 'state')
       .leftJoinAndSelect('plan.customerType', 'customerType')
-      .orderBy('plan.created_at', 'DESC')
-      .getMany();
+      .leftJoinAndSelect('plan.campaignPlanRelns', 'campaignPlanRelns')
+      .leftJoinAndSelect('campaignPlanRelns.campaign', 'campaign')
+      .leftJoinAndSelect('campaign.campaignStatus', 'campaignStatus');
 
-    return plans.map((plan) => ({
-      planName: plan.plan_name || '',
-      planId: plan.int_plan_code || plan.ext_plan_code,
-      tariff: plan.rateCard?.tariffType?.tariff_type_code || '',
-      planType: plan.planType?.plan_type_name || '',
-      customer: plan.customerType?.customer_type_code || '', // Now accessible
-      state: plan.distributor?.state?.state_name || '',
-      distributor: plan.distributor?.distributor_name || '', // Now accessible
-      effectiveTill: plan.effective_to
-        ? new Date(plan.effective_to).toLocaleDateString('en-GB')
-        : '',
-      Uploaded: plan.created_at.toISOString(),
-    }));
+    // Apply filters
+    this.applyFilters(queryBuilder, query);
+
+    // Get total count for pagination
+    const total = await queryBuilder.getCount();
+
+    // Apply pagination
+    const page = query.page || 1;
+    const limit = query.limit || 10;
+    const skip = (page - 1) * limit;
+
+    queryBuilder.skip(skip).take(limit);
+
+    // Apply sorting
+    this.applySorting(queryBuilder, query);
+
+    const plans = await queryBuilder.getMany();
+
+    const data = plans.map((plan) => {
+      // Get assigned campaigns as array of objects with name and status
+      const assignedCampaigns =
+        plan.campaignPlanRelns
+          ?.map((reln) => {
+            const campaign = reln.campaign;
+            if (!campaign) return null;
+
+            const status =
+              campaign.campaignStatus?.campaign_status_code || 'UNKNOWN';
+            const campaignName = campaign.campaign_name;
+
+            return {
+              name: campaignName,
+              status: status,
+            };
+          })
+          .filter(
+            (campaign): campaign is { name: string; status: string } =>
+              campaign !== null,
+          ) || [];
+
+      // Determine plan status
+      const planStatus = this.getPlanStatusForList(plan);
+
+      // Check if plan should be highlighted (effective_from in future)
+      const now = new Date();
+      const isHighlighted = plan.effective_from > now;
+
+      return {
+        planName: plan.plan_name || '',
+        planId: plan.int_plan_code || plan.ext_plan_code,
+        tariff: plan.rateCard?.tariffType?.tariff_type_code || '',
+        planType: plan.planType?.plan_type_code || '',
+        customer: plan.customerType?.customer_type_code || '',
+        state: plan.distributor?.state?.state_code || '',
+        distributor: plan.distributor?.distributor_name || '',
+        effectiveTill: plan.effective_to
+          ? new Date(plan.effective_to).toLocaleDateString('en-GB')
+          : '',
+        assignedCampaigns,
+        planStatus,
+        isHighlighted,
+      };
+    });
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
   }
 
-  async getPlanMapping(): Promise<PlanMapping[]> {
-    const plans = await this.plansRepository
+  async getPlanMapping(query?: any): Promise<{
+    data: PlanMapping[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const queryBuilder = this.plansRepository
       .createQueryBuilder('plan')
       .leftJoinAndSelect('plan.distributor', 'distributor')
       .leftJoinAndSelect('plan.customerType', 'customerType')
       .leftJoinAndSelect('plan.retailTariff', 'retailTariff')
       .leftJoinAndSelect('plan.charges', 'charges')
-      .orderBy('plan.created_at', 'DESC')
-      .getMany();
+      .leftJoinAndSelect('plan.billingCodes', 'billingCodes')
+      .leftJoinAndSelect('billingCodes.billingCodeType', 'billingCodeType');
 
-    return plans.map((plan: any) => {
-      // Get all charge amounts and find the minimum
-      const chargeAmounts = plan.charges.map(
-        (charge: any) => Number(charge.charge_amount) || 0,
-      );
-      const minChargeAmount =
-        chargeAmounts.length > 0 ? Math.min(...chargeAmounts) : 0;
+    // Apply filters
+    if (query) {
+      this.applyPlanMappingFilters(queryBuilder, query);
+    }
 
-      // Get all charge codes as an array
-      const billingCodes = plan.charges.map(
-        (charge: any) => charge.charge_code || '',
-      );
+    // Get total count for pagination
+    const total = await queryBuilder.getCount();
+
+    // Apply pagination
+    const page = query?.page || 1;
+    const limit = query?.limit || 10;
+    const skip = (page - 1) * limit;
+
+    queryBuilder.skip(skip).take(limit);
+
+    // Apply sorting
+    this.applyPlanMappingSorting(queryBuilder, query);
+
+    const plans = await queryBuilder.getMany();
+
+    const data = plans.map((plan: any) => {
+      // Get all billing codes with their types
+      const billingCodes =
+        plan.billingCodes?.map((billingCode: any) => ({
+          code: billingCode.billing_code || '',
+          type: billingCode.billingCodeType?.billing_code_type || '',
+          typeName: billingCode.billingCodeType?.billing_code_type_name || '',
+        })) || [];
 
       return {
         planId: plan.int_plan_code || '',
         distributer: plan.distributor?.distributor_name || '',
         retailTariffName: plan.retailTariff?.retail_tariff_name || '',
         customerType: plan.customerType?.customer_type_code || '',
-        minimumChargeAmount: minChargeAmount.toString(),
-        billingCode: billingCodes, // Now an array of all charge codes
-        billingCodeType: plan.billing_code_type || '',
+        minimumChargeAmount: plan.lowest_rps || '',
+        billingCode: billingCodes, // Now an array of billing code objects
       };
     });
+
+    const totalPages = Math.ceil(total / limit);
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
+  }
+
+  private applyPlanMappingFilters(queryBuilder: any, query: any): void {
+    // Plan ID filter
+    if (query.planId) {
+      queryBuilder.andWhere('plan.int_plan_code ILIKE :planId', {
+        planId: `%${query.planId}%`,
+      });
+    }
+
+    // Distributor filter
+    if (query.distributor) {
+      queryBuilder.andWhere('distributor.distributor_name ILIKE :distributor', {
+        distributor: `%${query.distributor}%`,
+      });
+    }
+
+    // Retail tariff filter
+    if (query.retailTariff) {
+      queryBuilder.andWhere(
+        'retailTariff.retail_tariff_name ILIKE :retailTariff',
+        {
+          retailTariff: `%${query.retailTariff}%`,
+        },
+      );
+    }
+
+    // Customer type filter
+    if (query.customer) {
+      queryBuilder.andWhere('customerType.customer_type_code ILIKE :customer', {
+        customer: `%${query.customer}%`,
+      });
+    }
+
+    // Price range filters
+    if (query.minPrice !== undefined) {
+      queryBuilder.andWhere('plan.lowest_rps >= :minPrice', {
+        minPrice: query.minPrice,
+      });
+    }
+
+    if (query.maxPrice !== undefined) {
+      queryBuilder.andWhere('plan.lowest_rps <= :maxPrice', {
+        maxPrice: query.maxPrice,
+      });
+    }
+
+    // Billing code filter
+    if (query.billingCode) {
+      queryBuilder.andWhere('billingCodes.billing_code ILIKE :billingCode', {
+        billingCode: `%${query.billingCode}%`,
+      });
+    }
+
+    // Billing code type filter
+    if (query.billingCodeType) {
+      queryBuilder.andWhere(
+        'billingCodeType.billing_code_type ILIKE :billingCodeType',
+        {
+          billingCodeType: `%${query.billingCodeType}%`,
+        },
+      );
+    }
+
+    // General search across multiple fields
+    if (query.search) {
+      queryBuilder.andWhere(
+        '(plan.int_plan_code ILIKE :search OR distributor.distributor_name ILIKE :search OR retailTariff.retail_tariff_name ILIKE :search OR customerType.customer_type_code ILIKE :search OR billingCodes.billing_code ILIKE :search)',
+        { search: `%${query.search}%` },
+      );
+    }
+  }
+
+  private applyPlanMappingSorting(queryBuilder: any, query: any): void {
+    const sortBy = query?.sortBy || 'planId';
+    const sortOrder = query?.sortOrder || 'ASC';
+
+    // Map sort fields to actual database columns
+    let orderField: string;
+    switch (sortBy) {
+      case 'planId':
+        orderField = 'plan.int_plan_code';
+        break;
+      case 'distributor':
+        orderField = 'distributor.distributor_name';
+        break;
+      case 'retailTariff':
+        orderField = 'retailTariff.retail_tariff_name';
+        break;
+      case 'customer':
+        orderField = 'customerType.customer_type_code';
+        break;
+      case 'lowestPossiblePrice':
+        orderField = 'plan.lowest_rps';
+        break;
+      default:
+        orderField = 'plan.int_plan_code';
+    }
+
+    queryBuilder.orderBy(orderField, sortOrder);
   }
   async getPlanMappingStatusCounts(): Promise<{
     active: number;

@@ -3,6 +3,10 @@ import { DataSource } from 'typeorm';
 
 import { AppModule } from '@src/app.module';
 
+import { seedBillingCodeTypes } from './billing-code-type.seed';
+import { seedBillingCodes } from './billing-code.seed';
+import { seedCampaignData } from './campaign.seed';
+
 async function runSeeds() {
   const app = await NestFactory.createApplicationContext(AppModule);
   const dataSource = app.get(DataSource);
@@ -85,6 +89,18 @@ async function runSeeds() {
     // Seed Charges
     console.log('📊 Seeding Charges...');
     await seedCharges(dataSource);
+
+    // Seed Campaign Data
+    console.log('📊 Seeding Campaign Data...');
+    await seedCampaignData(dataSource);
+
+    // Seed Billing Code Types
+    console.log('📊 Seeding Billing Code Types...');
+    await seedBillingCodeTypes(dataSource);
+
+    // Seed Billing Codes
+    console.log('📊 Seeding Billing Codes...');
+    await seedBillingCodes(dataSource);
 
     // Seed Rate Seasons
     console.log('📊 Seeding Rate Seasons...');
@@ -931,45 +947,45 @@ async function seedPlans(dataSource: DataSource) {
   }
 }
 
-async function seedBillingCodeTypes(dataSource: DataSource) {
-  const billingCodeTypes = [
-    {
-      billing_code_type: 'PRODUCT',
-      billing_code_type_name: 'Product Code',
-    },
-    {
-      billing_code_type: 'OFFERING',
-      billing_code_type_name: 'Offering Code',
-    },
-    {
-      billing_code_type: 'PRICING',
-      billing_code_type_name: 'Pricing Tag',
-    },
-  ];
+// async function seedBillingCodeTypes(dataSource: DataSource) {
+//   const billingCodeTypes = [
+//     {
+//       billing_code_type: 'PRODUCT',
+//       billing_code_type_name: 'Product Code',
+//     },
+//     {
+//       billing_code_type: 'OFFERING',
+//       billing_code_type_name: 'Offering Code',
+//     },
+//     {
+//       billing_code_type: 'PRICING',
+//       billing_code_type_name: 'Pricing Tag',
+//     },
+//   ];
 
-  for (const codeType of billingCodeTypes) {
-    const existing = await dataSource.query(
-      'SELECT * FROM billing_code_types WHERE billing_code_type = $1',
-      [codeType.billing_code_type],
-    );
+//   for (const codeType of billingCodeTypes) {
+//     const existing = await dataSource.query(
+//       'SELECT * FROM billing_code_types WHERE billing_code_type = $1',
+//       [codeType.billing_code_type],
+//     );
 
-    if (existing.length === 0) {
-      await dataSource.query(
-        `INSERT INTO billing_code_types (
-          billing_code_type, billing_code_type_name, created_at, updated_at
-        ) VALUES ($1, $2, NOW(), NOW())`,
-        [codeType.billing_code_type, codeType.billing_code_type_name],
-      );
-      console.log(
-        `  ✓ Created billing code type: ${codeType.billing_code_type_name}`,
-      );
-    } else {
-      console.log(
-        `  - Billing code type already exists: ${codeType.billing_code_type_name}`,
-      );
-    }
-  }
-}
+//     if (existing.length === 0) {
+//       await dataSource.query(
+//         `INSERT INTO billing_code_types (
+//           billing_code_type, billing_code_type_name, created_at, updated_at
+//         ) VALUES ($1, $2, NOW(), NOW())`,
+//         [codeType.billing_code_type, codeType.billing_code_type_name],
+//       );
+//       console.log(
+//         `  ✓ Created billing code type: ${codeType.billing_code_type_name}`,
+//       );
+//     } else {
+//       console.log(
+//         `  - Billing code type already exists: ${codeType.billing_code_type_name}`,
+//       );
+//     }
+//   }
+// }
 
 async function seedChargeClasses(dataSource: DataSource) {
   const chargeClasses = [
@@ -1238,81 +1254,81 @@ async function seedChargeTerms(dataSource: DataSource) {
   }
 }
 
-async function seedBillingCodes(dataSource: DataSource) {
-  // Get actual plan IDs from the database
-  const plans = await dataSource.query(
-    'SELECT plan_id, int_plan_code FROM plans ORDER BY plan_id',
-  );
+// async function seedBillingCodes(dataSource: DataSource) {
+//   // Get actual plan IDs from the database
+//   const plans = await dataSource.query(
+//     'SELECT plan_id, int_plan_code FROM plans ORDER BY plan_id',
+//   );
 
-  const billingCodes = [
-    {
-      billing_code: 'EVRMAY2025MR',
-      billing_code_type_id: 1,
-      plan_code: 'VE_3RD_UN_PDC',
-    },
-    {
-      billing_code: 'ABCD123',
-      billing_code_type_id: 2,
-      plan_code: 'VE_3RD_UN_PDC',
-    },
-    {
-      billing_code: 'ZZZ334R',
-      billing_code_type_id: 3,
-      plan_code: 'VE_3RD_UN_PDC',
-    },
-    {
-      billing_code: 'EVRMAY2025MR',
-      billing_code_type_id: 1,
-      plan_code: 'VE_3RD_TR_PKO',
-    },
-    {
-      billing_code: 'ABCD123',
-      billing_code_type_id: 2,
-      plan_code: 'VE_3RD_TR_PKO',
-    },
-    {
-      billing_code: 'ZZZ334R',
-      billing_code_type_id: 3,
-      plan_code: 'VE_3RD_TR_PKO',
-    },
-  ];
+//   const billingCodes = [
+//     {
+//       billing_code: 'EVRMAY2025MR',
+//       billing_code_type_id: 1,
+//       plan_code: 'VE_3RD_UN_PDC',
+//     },
+//     {
+//       billing_code: 'ABCD123',
+//       billing_code_type_id: 2,
+//       plan_code: 'VE_3RD_UN_PDC',
+//     },
+//     {
+//       billing_code: 'ZZZ334R',
+//       billing_code_type_id: 3,
+//       plan_code: 'VE_3RD_UN_PDC',
+//     },
+//     {
+//       billing_code: 'EVRMAY2025MR',
+//       billing_code_type_id: 1,
+//       plan_code: 'VE_3RD_TR_PKO',
+//     },
+//     {
+//       billing_code: 'ABCD123',
+//       billing_code_type_id: 2,
+//       plan_code: 'VE_3RD_TR_PKO',
+//     },
+//     {
+//       billing_code: 'ZZZ334R',
+//       billing_code_type_id: 3,
+//       plan_code: 'VE_3RD_TR_PKO',
+//     },
+//   ];
 
-  for (const billingCode of billingCodes) {
-    // Find the plan ID by plan code
-    const plan = plans.find((p) => p.int_plan_code === billingCode.plan_code);
-    if (!plan) {
-      console.log(
-        `  - Plan not found: ${billingCode.plan_code}, skipping billing code: ${billingCode.billing_code}`,
-      );
-      continue;
-    }
+//   for (const billingCode of billingCodes) {
+//     // Find the plan ID by plan code
+//     const plan = plans.find((p) => p.int_plan_code === billingCode.plan_code);
+//     if (!plan) {
+//       console.log(
+//         `  - Plan not found: ${billingCode.plan_code}, skipping billing code: ${billingCode.billing_code}`,
+//       );
+//       continue;
+//     }
 
-    const existing = await dataSource.query(
-      'SELECT * FROM billing_codes WHERE billing_code = $1 AND plan_id = $2',
-      [billingCode.billing_code, plan.plan_id],
-    );
+//     const existing = await dataSource.query(
+//       'SELECT * FROM billing_codes WHERE billing_code = $1 AND plan_id = $2',
+//       [billingCode.billing_code, plan.plan_id],
+//     );
 
-    if (existing.length === 0) {
-      await dataSource.query(
-        `INSERT INTO billing_codes (
-          billing_code, billing_code_type_id, plan_id, created_at, updated_at
-        ) VALUES ($1, $2, $3, NOW(), NOW())`,
-        [
-          billingCode.billing_code,
-          billingCode.billing_code_type_id,
-          plan.plan_id,
-        ],
-      );
-      console.log(
-        `  ✓ Created billing code: ${billingCode.billing_code} for plan ${billingCode.plan_code} (ID: ${plan.plan_id})`,
-      );
-    } else {
-      console.log(
-        `  - Billing code already exists: ${billingCode.billing_code} for plan ${billingCode.plan_code}`,
-      );
-    }
-  }
-}
+//     if (existing.length === 0) {
+//       await dataSource.query(
+//         `INSERT INTO billing_codes (
+//           billing_code, billing_code_type_id, plan_id, created_at, updated_at
+//         ) VALUES ($1, $2, $3, NOW(), NOW())`,
+//         [
+//           billingCode.billing_code,
+//           billingCode.billing_code_type_id,
+//           plan.plan_id,
+//         ],
+//       );
+//       console.log(
+//         `  ✓ Created billing code: ${billingCode.billing_code} for plan ${billingCode.plan_code} (ID: ${plan.plan_id})`,
+//       );
+//     } else {
+//       console.log(
+//         `  - Billing code already exists: ${billingCode.billing_code} for plan ${billingCode.plan_code}`,
+//       );
+//     }
+//   }
+// }
 
 async function seedCharges(dataSource: DataSource) {
   // Get actual plan IDs from the database

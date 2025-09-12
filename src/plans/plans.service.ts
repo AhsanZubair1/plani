@@ -39,8 +39,14 @@ export class PlansService {
     return this.plansRepository.findMany(query);
   }
 
-  async getPlanMapping(): Promise<PlanMapping[]> {
-    return this.plansRepository.getPlanMapping();
+  async getPlanMapping(query?: any): Promise<{
+    data: PlanMapping[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    return this.plansRepository.getPlanMapping(query);
   }
 
   async findOne(id: number): Promise<NullableType<Plan>> {
@@ -157,8 +163,8 @@ export class PlansService {
     return this.plansRepository.getSearchSuggestions(query, limit);
   }
 
-  getPlanList(): Promise<
-    {
+  getPlanList(query: QueryPlanDto): Promise<{
+    data: {
       planName: string;
       planId: string;
       tariff: string;
@@ -167,8 +173,15 @@ export class PlansService {
       state: string;
       distributor: string;
       effectiveTill: string;
-    }[]
-  > {
-    return this.plansRepository.getPlanList();
+      assignedCampaigns: { name: string; status: string }[];
+      planStatus: string;
+      isHighlighted: boolean;
+    }[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    return this.plansRepository.getPlanList(query);
   }
 }

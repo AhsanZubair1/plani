@@ -7,22 +7,17 @@ import {
   HttpCode,
   HttpStatus,
 } from '@nestjs/common';
-import { AuthGuard } from '@nestjs/passport';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiBearerAuth,
-} from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 import { PlanMapping } from '@src/plans/domain/plan-mapping';
+import { PlanMappingQueryDto } from '@src/plans/dto/plan-mapping-query.dto';
 import { PlanMappingStatusCountsDto } from '@src/plans/dto/plan-mapping-status-counts.dto';
+import { PlanStatusCountsDto } from '@src/plans/dto/plan-status-counts.dto';
 import { PaginationResponse } from '@src/utils/types/pagination-options';
 
 import { Plan } from './domain/plan';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { PlanListDto } from './dto/plan-list.dto';
-import { PlanWithRatesDto } from './dto/plan-with-rates.dto';
 import { PlanDto } from './dto/plan.dto';
 import { QueryPlanDto } from './dto/query-plan.dto';
 import { UpdatePlanDto } from './dto/update-plan.dto';
@@ -135,8 +130,14 @@ export class PlansController {
     description: 'Plans list retrieved successfully',
     type: [PlanListDto],
   })
-  getPlanList(): Promise<PlanListDto[]> {
-    return this.plansService.getPlanList();
+  getPlanList(@Query() query: QueryPlanDto): Promise<{
+    data: PlanListDto[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    return this.plansService.getPlanList(query);
   }
 
   @Get('filters/options')
@@ -165,17 +166,52 @@ export class PlansController {
     return this.plansService.getFilterOptions();
   }
 
+  @Get('status/counts')
+  @ApiOperation({
+    summary: 'Get plan status counts (ready, incomplete, expired)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: 'Plan status counts retrieved successfully',
+    type: PlanStatusCountsDto,
+  })
+  async getPlanStatusCounts(): Promise<{
+    ready: number;
+    incomplete: number;
+    expired: number;
+  }> {
+    return this.plansService.getPlanStatusCounts();
+  }
+
   @Get('mapping')
   @ApiOperation({
-    summary: 'Get all plan mapping with pagination and filters',
+    summary: 'Get all plan mapping with pagination, filters, and search',
   })
   @ApiResponse({
     status: 200,
     description: 'Plan mappings retrieved successfully',
-    type: PlanMapping,
+    schema: {
+      type: 'object',
+      properties: {
+        data: {
+          type: 'array',
+          items: { $ref: '#/components/schemas/PlanMapping' },
+        },
+        total: { type: 'number', description: 'Total number of records' },
+        page: { type: 'number', description: 'Current page number' },
+        limit: { type: 'number', description: 'Number of items per page' },
+        totalPages: { type: 'number', description: 'Total number of pages' },
+      },
+    },
   })
-  async getPlanMapping(): Promise<PlanMapping[]> {
-    return this.plansService.getPlanMapping();
+  async getPlanMapping(@Query() query: PlanMappingQueryDto): Promise<{
+    data: PlanMapping[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    return this.plansService.getPlanMapping(query);
   }
 
   @Get('mapping/status/counts')
