@@ -3,7 +3,6 @@ import { Transform } from 'class-transformer';
 import {
   IsOptional,
   IsString,
-  IsBoolean,
   IsInt,
   Min,
   Max,
@@ -11,11 +10,7 @@ import {
   IsEnum,
 } from 'class-validator';
 
-import {
-  PlanStatus,
-  PlanType,
-  CustomerType,
-} from '@src/plans/enums/plan-status.enum';
+import { PlanType, CustomerType } from '@src/plans/enums/plan-status.enum';
 
 export class QueryPlanDto {
   @ApiProperty({
@@ -51,7 +46,7 @@ export class QueryPlanDto {
   @ApiProperty({
     type: String,
     required: false,
-    example: 'market',
+    example: PlanType.MARKET,
     enum: PlanType,
     description: 'Filter by plan type',
   })
@@ -62,7 +57,7 @@ export class QueryPlanDto {
   @ApiProperty({
     type: String,
     required: false,
-    example: 'res',
+    example: CustomerType.BUS,
     enum: CustomerType,
     description: 'Filter by customer type',
   })
@@ -177,4 +172,15 @@ export class QueryPlanDto {
   @IsOptional()
   @IsString()
   search?: string;
+
+  @ApiProperty({
+    type: String,
+    required: false,
+    example: 'ready',
+    enum: ['ready', 'incomplete', 'expired'],
+    description: 'Filter by computed status bucket. Defaults to ready.',
+  })
+  @IsOptional()
+  @IsString()
+  status?: 'ready' | 'incomplete' | 'expired';
 }

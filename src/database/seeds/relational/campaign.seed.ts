@@ -1,10 +1,10 @@
 import { DataSource } from 'typeorm';
 
-import { CampaignEntity } from '@src/campaigns/infrastructure/persistence/relational/entities/campaign.entity';
-import { CampaignStatusEntity } from '@src/campaigns/infrastructure/persistence/relational/entities/campaign-status.entity';
-import { ChannelEntity } from '@src/campaigns/infrastructure/persistence/relational/entities/channel.entity';
 import { CampaignChannelRelnEntity } from '@src/campaigns/infrastructure/persistence/relational/entities/campaign-channel-reln.entity';
 import { CampaignPlanRelnEntity } from '@src/campaigns/infrastructure/persistence/relational/entities/campaign-plan-reln.entity';
+import { CampaignStatusEntity } from '@src/campaigns/infrastructure/persistence/relational/entities/campaign-status.entity';
+import { CampaignEntity } from '@src/campaigns/infrastructure/persistence/relational/entities/campaign.entity';
+import { ChannelEntity } from '@src/campaigns/infrastructure/persistence/relational/entities/channel.entity';
 
 export async function seedCampaignData(dataSource: DataSource): Promise<void> {
   const campaignStatusRepository =

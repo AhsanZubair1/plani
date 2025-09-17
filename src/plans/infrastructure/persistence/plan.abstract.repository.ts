@@ -1,5 +1,6 @@
 import { Plan } from '@src/plans/domain/plan';
 import { PlanMapping } from '@src/plans/domain/plan-mapping';
+import { ExpirePlansResponseDto } from '@src/plans/dto/expire-plans-response.dto';
 import { QueryPlanDto } from '@src/plans/dto/query-plan.dto';
 import { UpdatePlanDto } from '@src/plans/dto/update-plan.dto';
 import { NullableType } from '@src/utils/types/nullable.type';
@@ -57,6 +58,11 @@ export abstract class PlanAbstractRepository {
     updates: Partial<UpdatePlanDto>,
   ): Promise<{ updated: number; failed: number }>;
 
+  abstract expirePlans(
+    planIds: number[],
+    effectiveTo?: Date,
+  ): Promise<ExpirePlansResponseDto>;
+
   abstract getDashboardSummary(): Promise<{
     totalPlans: number;
     readyPlans: number;
@@ -86,7 +92,8 @@ export abstract class PlanAbstractRepository {
       state: string;
       distributor: string;
       effectiveTill: string;
-      assignedCampaigns: { name: string; status: string }[];
+      assignedCampaigns: string; // Comma-separated string
+      assignedCampaignsWithStatus: { name: string; status: string }[]; // For frontend styling
       planStatus: string;
       isHighlighted: boolean;
     }[];

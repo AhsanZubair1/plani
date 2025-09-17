@@ -4,6 +4,7 @@ import { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
 
 import { Plan } from '@src/plans/domain/plan';
 import { PlanMapping } from '@src/plans/domain/plan-mapping';
+import { ExpirePlansResponseDto } from '@src/plans/dto/expire-plans-response.dto';
 import { QueryPlanDto } from '@src/plans/dto/query-plan.dto';
 import { UpdatePlanDto } from '@src/plans/dto/update-plan.dto';
 import { PlanAbstractRepository } from '@src/plans/infrastructure/persistence/plan.abstract.repository';
@@ -100,6 +101,72 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
     }
 
     return { updated, failed };
+  }
+
+  async expirePlans(
+    planIds: number[],
+    effectiveTo?: Date,
+  ): Promise<ExpirePlansResponseDto> {
+    // Use a transaction to ensure all-or-nothing behavior
+    return await this.dataSource.transaction(async (manager) => {
+      // First, validate all plans exist and get their effective_from dates
+      const plans = await manager
+        .createQueryBuilder(PlanEntity, 'plan')
+        .select(['plan.plan_id', 'plan.effective_from', 'plan.plan_name'])
+        .where('plan.plan_id IN (:...planIds)', { planIds })
+        .getMany();
+
+      if (plans.length !== planIds.length) {
+        const foundIds = plans.map((p) => p.plan_id);
+        const missingIds = planIds.filter((id) => !foundIds.includes(id));
+        throw new Error(`Plans not found: ${missingIds.join(', ')}`);
+      }
+
+      // If effectiveTo is provided, validate it's not less than any plan's effective_from
+      if (effectiveTo) {
+        const invalidPlans = plans.filter(
+          (plan) => effectiveTo < plan.effective_from,
+        );
+        if (invalidPlans.length > 0) {
+          const invalidPlanNames = invalidPlans
+            .map((p) => p.plan_name)
+            .join(', ');
+          throw new Error(
+            `Effective to date cannot be less than effective from date for plans: ${invalidPlanNames}`,
+          );
+        }
+      }
+
+      // Get the EXPIRED plan status ID
+      const expiredStatus = await manager
+        .createQueryBuilder()
+        .select('plan_status_id')
+        .from('plan_status', 'ps')
+        .where('ps.plan_status_code = :code', { code: 'EXPIRED' })
+        .getRawOne();
+
+      if (!expiredStatus) {
+        throw new Error('EXPIRED plan status not found in database');
+      }
+
+      // Update all plans in a single query
+      const updateResult = await manager
+        .createQueryBuilder()
+        .update(PlanEntity)
+        .set({
+          plan_status_id: expiredStatus.plan_status_id,
+          effective_to: effectiveTo || new Date(),
+          updated_at: new Date(),
+        })
+        .where('plan_id IN (:...planIds)', { planIds })
+        .execute();
+
+      return {
+        success: true,
+        message: `Successfully expired ${updateResult.affected} plan(s)`,
+        expiredCount: updateResult.affected || 0,
+      };
+    });
   }
 
   async getDashboardSummary(): Promise<{
@@ -214,20 +281,28 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
   }
 
   private getPlanStatusForList(plan: any): string {
-    const now = new Date();
+    // Get plan status from plan_status table
+    const planStatusCode = plan.planStatus?.plan_status_desc;
 
-    // Expired = Today's date is greater than the effective_to date
-    if (plan.effective_to && new Date(plan.effective_to) < now) {
+    // Expired = Plan has a status of EXPIRED
+    if (planStatusCode === 'EXPIRED') {
       return 'Expired';
     }
 
-    // Ready = Plan has a populated retail_tariff_id OR zone_id
-    if (plan.retail_tariff_id || plan.zone_id) {
+    // Ready = (Plan has a status of PUBLISHED or PARKED) AND (either retail_tariff_id or zone_id is populated)
+    if (
+      (planStatusCode === 'PUBLISHED' || planStatusCode === 'PARKED') &&
+      (plan.retail_tariff_id || plan.zone_id)
+    ) {
       return 'Ready';
     }
 
-    // Incomplete/Draft = Plan table has NULL for both retail_tariff_id and zone_id
-    if (!plan.retail_tariff_id && !plan.zone_id) {
+    // Incomplete/Draft = (Plan has a status of PUBLISHED or PARKED) AND (both retail_tariff_id and zone_id are NULL)
+    if (
+      (planStatusCode === 'PUBLISHED' || planStatusCode === 'PARKED') &&
+      !plan.retail_tariff_id &&
+      !plan.zone_id
+    ) {
       return 'Incomplete/Draft';
     }
 
@@ -237,22 +312,38 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
   async getReadyPlansCount(): Promise<number> {
     return this.plansRepository
       .createQueryBuilder('plan')
-      .where('(plan.retail_tariff_id IS NOT NULL OR plan.zone_id IS NOT NULL)')
+      .leftJoin('plan.planStatus', 'planStatus')
+      .where(
+        '(planStatus.plan_status_code = :published OR planStatus.plan_status_code = :parked) AND (plan.retail_tariff_id IS NOT NULL OR plan.zone_id IS NOT NULL)',
+        {
+          published: 'Published',
+          parked: 'Parked',
+        },
+      )
       .getCount();
   }
 
   async getIncompletePlansCount(): Promise<number> {
     return this.plansRepository
       .createQueryBuilder('plan')
-      .where('plan.retail_tariff_id IS NULL AND plan.zone_id IS NULL')
+      .leftJoin('plan.planStatus', 'planStatus')
+      .where(
+        '(planStatus.plan_status_code = :published OR planStatus.plan_status_code = :parked) AND plan.retail_tariff_id IS NULL AND plan.zone_id IS NULL',
+        {
+          published: 'Published',
+          parked: 'Parked',
+        },
+      )
       .getCount();
   }
 
   async getExpiredPlansCount(): Promise<number> {
-    const now = new Date();
     return this.plansRepository
       .createQueryBuilder('plan')
-      .where('plan.effective_to < :now', { now })
+      .leftJoin('plan.planStatus', 'planStatus')
+      .where('planStatus.plan_status_code = :expired', {
+        expired: 'Expired',
+      })
       .getCount();
   }
 
@@ -360,12 +451,13 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
           .getRawMany()
           .then((results) => results.map((r) => r.customer)),
 
-        // Get unique states
+        // Get unique states via distributor -> state relation
         this.plansRepository
           .createQueryBuilder('plan')
-          .leftJoin('zones', 'z', 'plan.zone_id = z.zone_id')
-          .select('DISTINCT z.zone_code', 'state')
-          .where('z.zone_code IS NOT NULL')
+          .leftJoin('plan.distributor', 'distributor')
+          .leftJoin('distributor.state', 'state')
+          .select('DISTINCT state.state_code', 'state')
+          .where('state.state_code IS NOT NULL')
           .getRawMany()
           .then((results) => results.map((r) => r.state)),
 
@@ -481,7 +573,8 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       state: string;
       distributor: string;
       effectiveTill: string;
-      assignedCampaigns: { name: string; status: string }[];
+      assignedCampaigns: string; // Comma-separated string
+      assignedCampaignsWithStatus: { name: string; status: string }[]; // For frontend styling
       planStatus: string;
       isHighlighted: boolean;
     }[];
@@ -499,12 +592,32 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       .leftJoinAndSelect('plan.distributor', 'distributor')
       .leftJoinAndSelect('distributor.state', 'state')
       .leftJoinAndSelect('plan.customerType', 'customerType')
+      .leftJoinAndSelect('plan.planStatus', 'planStatus')
       .leftJoinAndSelect('plan.campaignPlanRelns', 'campaignPlanRelns')
       .leftJoinAndSelect('campaignPlanRelns.campaign', 'campaign')
       .leftJoinAndSelect('campaign.campaignStatus', 'campaignStatus');
 
     // Apply filters
     this.applyFilters(queryBuilder, query);
+
+    // Apply status bucket filter only when provided (no default)
+    const status = query.status?.toLowerCase();
+    if (status === 'ready') {
+      queryBuilder.andWhere(
+        '((planStatus.plan_status_code = :published OR planStatus.plan_status_code = :parked) OR planStatus.plan_status_code IS NULL) AND (plan.retail_tariff_id IS NOT NULL OR plan.zone_id IS NOT NULL)',
+        { published: 'Published', parked: 'Parked' },
+      );
+    } else if (status === 'incomplete') {
+      queryBuilder.andWhere(
+        '((planStatus.plan_status_code = :published OR planStatus.plan_status_code = :parked) OR planStatus.plan_status_code IS NULL) AND plan.retail_tariff_id IS NULL AND plan.zone_id IS NULL',
+        { published: 'Published', parked: 'Parked' },
+      );
+    } else if (status === 'expired') {
+      queryBuilder.andWhere(
+        '(planStatus.plan_status_code = :expired OR plan.effective_to < NOW())',
+        { expired: 'Expired' },
+      );
+    }
 
     // Get total count for pagination
     const total = await queryBuilder.getCount();
@@ -522,8 +635,8 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
     const plans = await queryBuilder.getMany();
 
     const data = plans.map((plan) => {
-      // Get assigned campaigns as array of objects with name and status
-      const assignedCampaigns =
+      // Get assigned campaigns with status for frontend styling
+      const assignedCampaignsWithStatus =
         plan.campaignPlanRelns
           ?.map((reln) => {
             const campaign = reln.campaign;
@@ -543,7 +656,12 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
               campaign !== null,
           ) || [];
 
-      // Determine plan status
+      // Get assigned campaigns as comma-separated string
+      const assignedCampaigns = assignedCampaignsWithStatus
+        .map((campaign) => campaign.name)
+        .join(', ');
+
+      // Determine plan status using the new logic
       const planStatus = this.getPlanStatusForList(plan);
 
       // Check if plan should be highlighted (effective_from in future)
@@ -551,6 +669,7 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       const isHighlighted = plan.effective_from > now;
 
       return {
+        id: plan.plan_id,
         planName: plan.plan_name || '',
         planId: plan.int_plan_code || plan.ext_plan_code,
         tariff: plan.rateCard?.tariffType?.tariff_type_code || '',
@@ -562,6 +681,7 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
           ? new Date(plan.effective_to).toLocaleDateString('en-GB')
           : '',
         assignedCampaigns,
+        assignedCampaignsWithStatus,
         planStatus,
         isHighlighted,
       };

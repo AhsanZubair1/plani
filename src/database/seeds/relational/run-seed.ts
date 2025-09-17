@@ -58,6 +58,17 @@ async function runSeeds() {
     console.log('📊 Seeding Retail Tariffs...');
     await seedRetailTariffs(dataSource);
 
+    // Seed Plan Status
+    console.log('📊 Seeding Plan Status...');
+    await seedPlanStatus(dataSource);
+
+    // Seed Network Tariffs and relations
+    console.log('📊 Seeding Network Tariffs and relations...');
+    await seedNetworkTariffs(dataSource);
+    await seedNetworkTariffKeys(dataSource);
+    await seedNtcRelns(dataSource);
+    await seedRetailNtcRelns(dataSource);
+
     // Seed Plans
     console.log('📊 Seeding Plans...');
     await seedPlans(dataSource);
@@ -117,6 +128,28 @@ async function runSeeds() {
     // Seed Rate Periods
     console.log('📊 Seeding Rate Periods...');
     await seedRatePeriods(dataSource);
+
+    // Seed Rate Categories and Rates
+    console.log('📊 Seeding Rate Categories...');
+    await seedRateCategories(dataSource);
+    console.log('📊 Seeding Rates...');
+    await seedRates(dataSource);
+    console.log('📊 Seeding Rate Seasons...');
+    await seedRateSeasonsFull(dataSource);
+    console.log('📊 Seeding Rate Items (from dataset)...');
+    await seedRateItemsFull(dataSource);
+    console.log('📊 Seeding Rate Item Timings (from dataset)...');
+    await seedRateItemTimingsFull(dataSource);
+    console.log('📊 Seeding Rate Item Blocks (from dataset)...');
+    await seedRateItemBlocksFull(dataSource);
+    console.log('📊 Seeding Rate Item Demands (from dataset)...');
+    await seedRateItemDemandsFull(dataSource);
+
+    // Seed Retailers and Plan Bundles (optional, if tables exist)
+    console.log('📊 Seeding Retailers...');
+    await seedRetailersIfTableExists(dataSource);
+    console.log('📊 Seeding Plan Bundles...');
+    await seedPlanBundlesIfTableExists(dataSource);
 
     // Seed Rate Items
     console.log('📊 Seeding Rate Items...');
@@ -492,6 +525,7 @@ async function seedPlanTypes(dataSource: DataSource) {
   const planTypes = [
     { plan_type_code: 'STANDING', plan_type_name: 'Standing Offer' },
     { plan_type_code: 'MARKET', plan_type_name: 'Market Offer' },
+    { plan_type_code: 'REGULATED', plan_type_name: 'Regulated Offer' },
   ];
 
   for (const planType of planTypes) {
@@ -672,6 +706,558 @@ async function seedRetailTariffs(dataSource: DataSource) {
       );
     }
   }
+}
+
+async function seedPlanStatus(dataSource: DataSource) {
+  const statuses = [
+    { plan_status_code: 'PUBLISHED', plan_status_desc: 'Published' },
+    { plan_status_code: 'PARKED', plan_status_desc: 'Parked' },
+    { plan_status_code: 'EXPIRED', plan_status_desc: 'Expired' },
+  ];
+  for (const s of statuses) {
+    const existing = await dataSource.query(
+      'SELECT 1 FROM plan_status WHERE plan_status_code = $1',
+      [s.plan_status_code],
+    );
+    if (existing.length === 0) {
+      await dataSource.query(
+        'INSERT INTO plan_status (plan_status_code, plan_status_desc) VALUES ($1, $2)',
+        [s.plan_status_code, s.plan_status_desc],
+      );
+      console.log(`  ✓ Created plan status: ${s.plan_status_desc}`);
+    }
+  }
+}
+
+async function seedNetworkTariffs(dataSource: DataSource) {
+  const rows = [
+    {
+      network_tariff_id: 1,
+      network_tariff_code: 'EA010',
+      usage: true,
+      demand: false,
+      controlled_load: false,
+      solar: false,
+      distributor_id: 9,
+    },
+    {
+      network_tariff_id: 2,
+      network_tariff_code: 'EA030',
+      usage: false,
+      demand: false,
+      controlled_load: true,
+      solar: false,
+      distributor_id: 9,
+    },
+    {
+      network_tariff_id: 3,
+      network_tariff_code: 'EA040',
+      usage: true,
+      demand: false,
+      controlled_load: false,
+      solar: false,
+      distributor_id: 9,
+    },
+    {
+      network_tariff_id: 4,
+      network_tariff_code: 'EA250',
+      usage: true,
+      demand: true,
+      controlled_load: false,
+      solar: false,
+      distributor_id: 9,
+    },
+    {
+      network_tariff_id: 5,
+      network_tariff_code: 'GENR',
+      usage: false,
+      demand: false,
+      controlled_load: false,
+      solar: true,
+      distributor_id: 13,
+    },
+    {
+      network_tariff_id: 6,
+      network_tariff_code: 'A20D',
+      usage: true,
+      demand: true,
+      controlled_load: false,
+      solar: true,
+      distributor_id: 10,
+    },
+    {
+      network_tariff_id: 7,
+      network_tariff_code: 'RSR',
+      usage: true,
+      demand: false,
+      controlled_load: true,
+      solar: false,
+      distributor_id: 6,
+    },
+    {
+      network_tariff_id: 8,
+      network_tariff_code: 'EA020',
+      usage: true,
+      demand: false,
+      controlled_load: false,
+      solar: false,
+      distributor_id: 9,
+    },
+  ];
+  for (const r of rows) {
+    const exists = await dataSource.query(
+      'SELECT 1 FROM network_tariffs WHERE network_tariff_code=$1',
+      [r.network_tariff_code],
+    );
+    if (exists.length === 0) {
+      await dataSource.query(
+        'INSERT INTO network_tariffs (network_tariff_code, usage, demand, controlled_load, solar, distributor_id, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,NOW(),NOW())',
+        [
+          r.network_tariff_code,
+          r.usage,
+          r.demand,
+          r.controlled_load,
+          r.solar,
+          r.distributor_id,
+        ],
+      );
+      console.log(`  ✓ Created network tariff: ${r.network_tariff_code}`);
+    }
+  }
+}
+
+async function seedNetworkTariffKeys(dataSource: DataSource) {
+  const keys = [
+    { network_tariff_key_id: 1, network_tariff_key_code: 'EA010 + EA040' },
+    {
+      network_tariff_key_id: 2,
+      network_tariff_key_code: 'EA010 + EA030 + EA040',
+    },
+    { network_tariff_key_id: 3, network_tariff_key_code: 'RSR' },
+    {
+      network_tariff_key_id: 4,
+      network_tariff_key_code: 'EA010 + EA020 + EA040',
+    },
+  ];
+  for (const k of keys) {
+    const exists = await dataSource.query(
+      'SELECT 1 FROM network_tariff_keys WHERE network_tariff_key_code=$1',
+      [k.network_tariff_key_code],
+    );
+    if (exists.length === 0) {
+      await dataSource.query(
+        'INSERT INTO network_tariff_keys (network_tariff_key_code) VALUES ($1)',
+        [k.network_tariff_key_code],
+      );
+      console.log(
+        `  ✓ Created network tariff key: ${k.network_tariff_key_code}`,
+      );
+    }
+  }
+}
+
+async function seedNtcRelns(dataSource: DataSource) {
+  const relns = [
+    { network_tariff_key_id: 1, network_tariff_id: 1 },
+    { network_tariff_key_id: 1, network_tariff_id: 3 },
+    { network_tariff_key_id: 2, network_tariff_id: 1 },
+    { network_tariff_key_id: 2, network_tariff_id: 2 },
+    { network_tariff_key_id: 2, network_tariff_id: 3 },
+    { network_tariff_key_id: 3, network_tariff_id: 7 },
+    { network_tariff_key_id: 4, network_tariff_id: 1 },
+    { network_tariff_key_id: 4, network_tariff_id: 3 },
+    { network_tariff_key_id: 4, network_tariff_id: 8 },
+  ];
+  for (const r of relns) {
+    const exists = await dataSource.query(
+      'SELECT 1 FROM ntc_relns WHERE network_tariff_key_id=$1 AND network_tariff_id=$2',
+      [r.network_tariff_key_id, r.network_tariff_id],
+    );
+    if (exists.length === 0) {
+      await dataSource.query(
+        'INSERT INTO ntc_relns (network_tariff_key_id, network_tariff_id) VALUES ($1,$2)',
+        [r.network_tariff_key_id, r.network_tariff_id],
+      );
+    }
+  }
+}
+
+async function seedRetailNtcRelns(dataSource: DataSource) {
+  const relns = [
+    { retail_tariff_id: 1, network_tariff_key_id: 1 },
+    { retail_tariff_id: 1, network_tariff_key_id: 4 },
+    { retail_tariff_id: 2, network_tariff_key_id: 2 },
+    { retail_tariff_id: 3, network_tariff_key_id: 3 },
+    { retail_tariff_id: 4, network_tariff_key_id: 3 },
+  ];
+  for (const r of relns) {
+    const exists = await dataSource.query(
+      'SELECT 1 FROM retail_ntc_key_relns WHERE retail_tariff_id=$1 AND network_tariff_key_id=$2',
+      [r.retail_tariff_id, r.network_tariff_key_id],
+    );
+    if (exists.length === 0) {
+      await dataSource.query(
+        'INSERT INTO retail_ntc_key_relns (retail_tariff_id, network_tariff_key_id) VALUES ($1,$2)',
+        [r.retail_tariff_id, r.network_tariff_key_id],
+      );
+    }
+  }
+}
+
+async function seedRateCategories(dataSource: DataSource) {
+  const rows = [
+    {
+      rate_category_code: 'CONS',
+      rate_category_name: 'Consumption and Demand',
+      allow_multi_seasons: true,
+    },
+    {
+      rate_category_code: 'SOLAR',
+      rate_category_name: 'Solar',
+      allow_multi_seasons: false,
+    },
+    {
+      rate_category_code: 'CL',
+      rate_category_name: 'Controlled Load',
+      allow_multi_seasons: false,
+    },
+  ];
+  for (const r of rows) {
+    const exists = await dataSource.query(
+      'SELECT 1 FROM rate_categories WHERE rate_category_code=$1',
+      [r.rate_category_code],
+    );
+    if (exists.length === 0) {
+      await dataSource.query(
+        'INSERT INTO rate_categories (rate_category_code, rate_category_name, allow_multi_seasons, created_at, updated_at) VALUES ($1,$2,$3,NOW(),NOW())',
+        [r.rate_category_code, r.rate_category_name, r.allow_multi_seasons],
+      );
+    }
+  }
+}
+
+async function seedRates(dataSource: DataSource) {
+  const rows = [
+    {
+      rate_code: 'TRU556579SR_RC_CONS',
+      rate_name: 'Usage',
+      rate_category_code: 'CONS',
+      rate_card_name: 'TRU556579SR_RC',
+    },
+    {
+      rate_code: 'TRU566093MR_RC_CONS',
+      rate_name: 'Usage',
+      rate_category_code: 'CONS',
+      rate_card_name: 'TRU566093MR_RC',
+    },
+    {
+      rate_code: 'TRU566094MR_RC_CONS',
+      rate_name: 'Usage',
+      rate_category_code: 'CONS',
+      rate_card_name: 'TRU566094MR_RC',
+    },
+    {
+      rate_code: 'TRU556433MR_RC_CONS',
+      rate_name: 'Usage',
+      rate_category_code: 'CONS',
+      rate_card_name: 'TRU556433MR_RC',
+    },
+    {
+      rate_code: 'TRU556443SR_RC_CONS',
+      rate_name: 'Usage',
+      rate_category_code: 'CONS',
+      rate_card_name: 'TRU556443SR_RC',
+    },
+  ];
+  for (const r of rows) {
+    const category = await dataSource.query(
+      'SELECT rate_category_id FROM rate_categories WHERE rate_category_code=$1',
+      [r.rate_category_code],
+    );
+    const card = await dataSource.query(
+      'SELECT rate_card_id FROM rate_cards WHERE rate_card_name=$1',
+      [r.rate_card_name],
+    );
+    if (category.length === 0 || card.length === 0) continue;
+    const exists = await dataSource.query(
+      'SELECT 1 FROM rates WHERE rate_code=$1',
+      [r.rate_code],
+    );
+    if (exists.length === 0) {
+      try {
+        await dataSource.query(
+          'INSERT INTO rates (rate_code, rate_name, rate_category_id, rate_card_id, created_at, updated_at) VALUES ($1,$2,$3,$4,NOW(),NOW())',
+          [
+            r.rate_code,
+            r.rate_name,
+            category[0].rate_category_id,
+            card[0].rate_card_id,
+          ],
+        );
+        console.log(`  ✓ Created rate: ${r.rate_code}`);
+      } catch (error) {
+        console.log(
+          `  - Rate already exists or constraint violation: ${r.rate_code}`,
+        );
+      }
+    }
+  }
+}
+
+async function seedRateSeasonsFull(dataSource: DataSource) {
+  const rows = [
+    {
+      season_code: 'TRU556579SR_RC_S1',
+      season_name: null,
+      effective_from: '2025-07-01',
+      effective_to: null,
+      daily_charge: 106.118,
+      rate_code: 'TRU556579SR_RC_CONS',
+    },
+  ];
+  for (const r of rows) {
+    const rate = await dataSource.query(
+      'SELECT rate_id FROM rates WHERE rate_code=$1',
+      [r.rate_code],
+    );
+    if (rate.length === 0) continue;
+    const exists = await dataSource.query(
+      'SELECT 1 FROM rate_seasons WHERE season_code=$1',
+      [r.season_code],
+    );
+    if (exists.length === 0) {
+      await dataSource.query(
+        'INSERT INTO rate_seasons (season_code, season_name, effective_from, effective_to, daily_charge, rate_id, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,NOW(),NOW())',
+        [
+          r.season_code,
+          r.season_name,
+          r.effective_from,
+          r.effective_to,
+          r.daily_charge,
+          rate[0].rate_id,
+        ],
+      );
+    }
+  }
+}
+
+async function seedRateItemsFull(dataSource: DataSource) {
+  // Example seeds minimal to unblock UI; extend similarly for all rows if needed
+  const season = await dataSource.query(
+    'SELECT rate_season_id FROM rate_seasons WHERE season_code=$1',
+    ['TRU556579SR_RC_S1'],
+  );
+  if (season.length === 0) return;
+  const singleType = await dataSource.query(
+    "SELECT rate_type_id FROM rate_types WHERE rate_type_code='SINGLE' AND rate_class_id=1",
+  );
+  const naPeriod = await dataSource.query(
+    "SELECT rate_period_id FROM rate_periods WHERE rate_period_code='NA'",
+  );
+  if (singleType.length === 0 || naPeriod.length === 0) return;
+  const exists = await dataSource.query(
+    'SELECT 1 FROM rate_items WHERE rate_item_name=$1',
+    ['TRU556579SR_RC_S1_SR'],
+  );
+  if (exists.length === 0) {
+    await dataSource.query(
+      'INSERT INTO rate_items (rate_item_name, rate_item_details, rate_season_id, rate_type_id, rate_period_id, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,NOW(),NOW())',
+      [
+        'TRU556579SR_RC_S1_SR',
+        null,
+        season[0].rate_season_id,
+        singleType[0].rate_type_id,
+        naPeriod[0].rate_period_id,
+      ],
+    );
+  }
+}
+
+async function seedRateItemTimingsFull(dataSource: DataSource) {
+  const rows = [
+    {
+      rate_item_name: 'TRU556433MR_RC_S1_PK',
+      time_band_start: '15:00:00',
+      time_band_end: '21:00:00',
+      weekdays: true,
+      weekend_sat: true,
+      weekend_sun: true,
+    },
+    {
+      rate_item_name: 'TRU556433MR_RC_S1_OP',
+      time_band_start: '00:00:00',
+      time_band_end: '15:00:00',
+      weekdays: true,
+      weekend_sat: true,
+      weekend_sun: true,
+    },
+    {
+      rate_item_name: 'TRU556433MR_RC_S1_OP',
+      time_band_start: '21:00:00',
+      time_band_end: '00:00:00',
+      weekdays: true,
+      weekend_sat: true,
+      weekend_sun: true,
+    },
+    {
+      rate_item_name: 'TRU556443SR_RC_S1_PK',
+      time_band_start: '15:00:00',
+      time_band_end: '21:00:00',
+      weekdays: true,
+      weekend_sat: true,
+      weekend_sun: true,
+    },
+    {
+      rate_item_name: 'TRU556443SR_RC_S1_OP',
+      time_band_start: '00:00:00',
+      time_band_end: '15:00:00',
+      weekdays: true,
+      weekend_sat: true,
+      weekend_sun: true,
+    },
+    {
+      rate_item_name: 'TRU556443SR_RC_S1_OP',
+      time_band_start: '21:00:00',
+      time_band_end: '00:00:00',
+      weekdays: true,
+      weekend_sat: true,
+      weekend_sun: true,
+    },
+    {
+      rate_item_name: 'TRU556443SR_RC_S1_DMD',
+      time_band_start: '13:00:00',
+      time_band_end: '16:00:00',
+      weekdays: true,
+      weekend_sat: true,
+      weekend_sun: true,
+    },
+  ];
+  for (const r of rows) {
+    const item = await dataSource.query(
+      'SELECT rate_item_id FROM rate_items WHERE rate_item_name=$1',
+      [r.rate_item_name],
+    );
+    if (item.length === 0) continue;
+    const exists = await dataSource.query(
+      'SELECT 1 FROM rate_item_timings WHERE rate_item_id=$1 AND time_band_start=$2',
+      [item[0].rate_item_id, r.time_band_start],
+    );
+    if (exists.length === 0) {
+      await dataSource.query(
+        'INSERT INTO rate_item_timings (rate_item_id, time_band_start, time_band_end, weekdays, weekend_sat, weekend_sun, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,$6,NOW(),NOW())',
+        [
+          item[0].rate_item_id,
+          r.time_band_start,
+          r.time_band_end,
+          r.weekdays,
+          r.weekend_sat,
+          r.weekend_sun,
+        ],
+      );
+    }
+  }
+}
+
+async function seedRateItemBlocksFull(dataSource: DataSource) {
+  const rows = [
+    {
+      rate_item_name: 'TRU556579SR_RC_S1_SR',
+      block_number: 1,
+      block_rate: 23.409,
+      block_consumption: null,
+    },
+  ];
+  for (const r of rows) {
+    const item = await dataSource.query(
+      'SELECT rate_item_id FROM rate_items WHERE rate_item_name=$1',
+      [r.rate_item_name],
+    );
+    if (item.length === 0) continue;
+    const exists = await dataSource.query(
+      'SELECT 1 FROM rate_item_blocks WHERE rate_item_id=$1 AND block_number=$2',
+      [item[0].rate_item_id, r.block_number],
+    );
+    if (exists.length === 0) {
+      await dataSource.query(
+        'INSERT INTO rate_item_blocks (rate_item_id, block_number, block_consumption, block_rate, created_at, updated_at) VALUES ($1,$2,$3,$4,NOW(),NOW())',
+        [
+          item[0].rate_item_id,
+          r.block_number,
+          r.block_consumption,
+          r.block_rate,
+        ],
+      );
+    }
+  }
+}
+
+async function seedRateItemDemandsFull(dataSource: DataSource) {
+  const rows = [
+    {
+      rate_item_name: 'TRU556443SR_RC_S1_DMD',
+      min_kw: 12,
+      max_kw: null,
+      charge: 1.4563,
+      measurement_period_code: 'SEASON',
+    },
+  ];
+  for (const r of rows) {
+    const item = await dataSource.query(
+      'SELECT rate_item_id FROM rate_items WHERE rate_item_name=$1',
+      [r.rate_item_name],
+    );
+    if (item.length === 0) continue;
+    const period = await dataSource.query(
+      'SELECT rate_period_id FROM rate_periods WHERE rate_period_code=$1',
+      [r.measurement_period_code],
+    );
+    if (period.length === 0) continue;
+    const exists = await dataSource.query(
+      'SELECT 1 FROM rate_item_demands WHERE rate_item_id=$1 AND min_kw=$2',
+      [item[0].rate_item_id, r.min_kw],
+    );
+    if (exists.length === 0) {
+      await dataSource.query(
+        'INSERT INTO rate_item_demands (rate_item_id, min_kw, max_kw, charge, measurement_period_id, created_at, updated_at) VALUES ($1,$2,$3,$4,$5,NOW(),NOW())',
+        [
+          item[0].rate_item_id,
+          r.min_kw,
+          r.max_kw,
+          r.charge,
+          period[0].rate_period_id,
+        ],
+      );
+    }
+  }
+}
+
+async function seedRetailersIfTableExists(dataSource: DataSource) {
+  const reg = await dataSource.query("SELECT to_regclass('retailer') AS t");
+  if (!reg?.[0]?.t) return;
+  const rows = [
+    { retailer_code: 'EA', retailer_name: 'Energy Australia' },
+    { retailer_code: 'ORIGIN', retailer_name: 'Origin Energy' },
+    { retailer_code: 'TANGO', retailer_name: 'Tango Energy' },
+    { retailer_code: 'PB', retailer_name: 'Pacific Blue' },
+  ];
+  for (const r of rows) {
+    const exists = await dataSource.query(
+      'SELECT 1 FROM retailer WHERE retailer_code=$1',
+      [r.retailer_code],
+    );
+    if (exists.length === 0) {
+      await dataSource.query(
+        'INSERT INTO retailer (retailer_code, retailer_name, created_at, updated_at) VALUES ($1,$2,NOW(),NOW())',
+        [r.retailer_code, r.retailer_name],
+      );
+    }
+  }
+}
+
+async function seedPlanBundlesIfTableExists(dataSource: DataSource) {
+  const reg = await dataSource.query("SELECT to_regclass('plan_bundle') AS t");
+  if (!reg?.[0]?.t) return;
+  // no concrete rows provided; keep function for future
 }
 
 async function seedPlans(dataSource: DataSource) {

@@ -7,6 +7,7 @@ import { PaginationResponse } from '@src/utils/types/pagination-options';
 
 import { Plan } from './domain/plan';
 import { CreatePlanDto } from './dto/create-plan.dto';
+import { ExpirePlansResponseDto } from './dto/expire-plans-response.dto';
 import { QueryPlanDto } from './dto/query-plan.dto';
 import { UpdatePlanDto } from './dto/update-plan.dto';
 import { PlanAbstractRepository } from './infrastructure/persistence/plan.abstract.repository';
@@ -140,6 +141,13 @@ export class PlansService {
     return this.plansRepository.bulkUpdate(planIds, updates);
   }
 
+  expirePlans(
+    planIds: number[],
+    effectiveTo?: Date,
+  ): Promise<ExpirePlansResponseDto> {
+    return this.plansRepository.expirePlans(planIds, effectiveTo);
+  }
+
   getDashboardSummary(): Promise<{
     totalPlans: number;
     readyPlans: number;
@@ -173,7 +181,8 @@ export class PlansService {
       state: string;
       distributor: string;
       effectiveTill: string;
-      assignedCampaigns: { name: string; status: string }[];
+      assignedCampaigns: string; // Comma-separated string
+      assignedCampaignsWithStatus: { name: string; status: string }[]; // For frontend styling
       planStatus: string;
       isHighlighted: boolean;
     }[];

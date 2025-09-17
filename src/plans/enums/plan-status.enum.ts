@@ -5,11 +5,11 @@ export enum PlanStatus {
 }
 
 export enum PlanType {
-  MARKET = 'market',
-  STANDING = 'standing',
+  MARKET = 'MARKET',
+  STANDING = 'STANDING',
 }
 
 export enum CustomerType {
-  RESIDENTIAL = 'res',
-  SME = 'sme',
+  RESI = 'RESI',
+  BUS = 'BUS',
 }

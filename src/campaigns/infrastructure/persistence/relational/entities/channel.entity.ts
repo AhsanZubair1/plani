@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 
 import { CampaignChannelRelnEntity } from './campaign-channel-reln.entity';
+import { PlanEntity } from '@src/plans/infrastructure/persistence/relational/entities/plan.entity';
 
 @Entity({ name: 'channel' })
 export class ChannelEntity {
@@ -31,4 +32,8 @@ export class ChannelEntity {
 
   @OneToMany(() => CampaignChannelRelnEntity, (reln) => reln.channel)
   campaignChannelRelns: CampaignChannelRelnEntity[];
+
+  // Optional inverse for plan.exclusiveChannel relation
+  @OneToMany(() => PlanEntity, (plan) => plan.exclusiveChannel)
+  exclusivePlans: PlanEntity[];
 }

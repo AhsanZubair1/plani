@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class Initial21757535054161 implements MigrationInterface {
-  name = 'Initial21757535054161';
+export class Init11758037136193 implements MigrationInterface {
+  name = 'Init11758037136193';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
@@ -12,6 +12,21 @@ export class Initial21757535054161 implements MigrationInterface {
     );
     await queryRunner.query(
       `CREATE INDEX "IDX_30e98e8746699fb9af235410af" ON "session" ("user_id") `,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "campaign_status" ("campaign_status_id" SERIAL NOT NULL, "campaign_status_code" character varying(50) NOT NULL, "campaign_status_name" character varying(100) NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_e4b0468ff969b926798a0a04abb" PRIMARY KEY ("campaign_status_id"))`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "channel" ("channel_id" SERIAL NOT NULL, "channel_code" character varying(50) NOT NULL, "channel_name" character varying(100) NOT NULL, "active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_161c95ba32beeb8aa68267b54ae" PRIMARY KEY ("channel_id"))`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "campaign_channel_reln" ("campaign_channel_reln_id" SERIAL NOT NULL, "campaign_id" integer NOT NULL, "channel_id" integer NOT NULL, "effective_from" date NOT NULL, "effective_to" date, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_f815061ad1b9af9bed0c837db25" PRIMARY KEY ("campaign_channel_reln_id"))`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "campaign" ("campaign_id" SERIAL NOT NULL, "campaign_code" character varying(50) NOT NULL, "campaign_name" character varying(255) NOT NULL, "campaign_desc" text, "effective_from" date NOT NULL, "effective_to" date, "campaign_status_id" integer NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_aa671c3359d0359082a84ecb801" PRIMARY KEY ("campaign_id"))`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "campaign_plan_reln" ("campaign_plan_id" SERIAL NOT NULL, "campaign_id" integer NOT NULL, "plan_id" integer NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_504fee2663eae4c7f6f252d8d29" PRIMARY KEY ("campaign_plan_id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "charge_terms" ("charge_term_id" SERIAL NOT NULL, "charge_term_code" character varying(50) NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_b936714a4f868817df25e2b318d" PRIMARY KEY ("charge_term_id"))`,
@@ -30,6 +45,12 @@ export class Initial21757535054161 implements MigrationInterface {
     );
     await queryRunner.query(
       `CREATE TABLE "charges" ("charge_id" SERIAL NOT NULL, "charge_code" character varying(50) NOT NULL, "charge_description" character varying(255) NOT NULL, "charge_amount" numeric(10,4), "charge_perc" numeric(10,4), "greenpower_perc" numeric(10,4), "reference_01" character varying(100), "plan_id" integer NOT NULL, "charge_type_id" integer, "charge_category_id" integer, "charge_term_id" integer, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_7162114fae098bae48474a13b2e" PRIMARY KEY ("charge_id"))`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "billing_code_type" ("billing_code_type_id" SERIAL NOT NULL, "billing_code_type" character varying(255) NOT NULL, "billing_code_type_name" character varying(255) NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_3820589defac674907fd3c04cde" PRIMARY KEY ("billing_code_type_id"))`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "billing_code" ("billing_code_id" SERIAL NOT NULL, "billing_code" character varying(255) NOT NULL, "billing_code_type_id" integer, "plan_id" integer, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_f1abfc399f6ac6495bec607a309" PRIMARY KEY ("billing_code_id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "plan_types" ("plan_type_id" SERIAL NOT NULL, "plan_type_code" character varying(50) NOT NULL, "plan_type_name" character varying(100) NOT NULL, CONSTRAINT "PK_efa08be4d37d5bab42b2da3ceaa" PRIMARY KEY ("plan_type_id"))`,
@@ -80,7 +101,16 @@ export class Initial21757535054161 implements MigrationInterface {
       `CREATE TABLE "customer_types" ("customer_type_id" SERIAL NOT NULL, "customer_type_code" character varying(50) NOT NULL, "customer_type_name" character varying(255) NOT NULL, CONSTRAINT "PK_23d467ed391efb085b339347d7e" PRIMARY KEY ("customer_type_id"))`,
     );
     await queryRunner.query(
-      `CREATE TABLE "plans" ("plan_id" SERIAL NOT NULL, "int_plan_code" character varying(50) NOT NULL, "ext_plan_code" character varying(50) NOT NULL, "plan_name" character varying(255) NOT NULL, "effective_from" date NOT NULL, "effective_to" date, "review_date" date, "restricted" boolean NOT NULL DEFAULT false, "contingent" boolean NOT NULL DEFAULT false, "direct_debit_only" boolean NOT NULL DEFAULT false, "ebilling_only" boolean NOT NULL DEFAULT false, "solar_cust_only" boolean NOT NULL DEFAULT false, "ev_only" boolean NOT NULL DEFAULT false, "intrinsic_green" boolean NOT NULL DEFAULT false, "intrinsic_gpp" boolean DEFAULT false, "eligibility_criteria" character varying(500), "price_variation_details" character varying(500), "terms_and_conditions" text NOT NULL, "contract_expiry_details" character varying(500), "fixed_rates" character varying(500), "lowest_rps" numeric(10,2), "factsheet_url" text, "zone_id" integer, "plan_type_id" integer NOT NULL, "distributor_id" integer NOT NULL, "customer_type_id" integer NOT NULL, "rate_card_id" integer NOT NULL, "contract_term_id" integer, "retail_tariff_id" integer, "bill_freq_id" integer, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_084714de33798c5b96f12725f7e" PRIMARY KEY ("plan_id"))`,
+      `CREATE TABLE "plan_bundle" ("plan_bundle_id" SERIAL NOT NULL, "plan_bundle_code" character varying(50) NOT NULL, "plan_bundle_name" character varying(255) NOT NULL, CONSTRAINT "PK_9fee770c4883851e97d2e52129a" PRIMARY KEY ("plan_bundle_id"))`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "plan_status" ("plan_status_id" SERIAL NOT NULL, "plan_status_desc" character varying(100) NOT NULL, "plan_status_code" character varying(50) NOT NULL, CONSTRAINT "PK_d0264e75b46fabf65445daf7be9" PRIMARY KEY ("plan_status_id"))`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "retailer" ("retailer_id" SERIAL NOT NULL, "retailer_code" character varying(50) NOT NULL, "retailer_name" character varying(255) NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_4054b0fef7a8dfc3e3e1923053a" PRIMARY KEY ("retailer_id"))`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "plans" ("plan_id" SERIAL NOT NULL, "int_plan_code" character varying(50) NOT NULL, "ext_plan_code" character varying(50) NOT NULL, "plan_name" character varying(255) NOT NULL, "effective_from" date NOT NULL, "effective_to" date, "review_date" date, "restricted" boolean NOT NULL DEFAULT false, "contingent" boolean NOT NULL DEFAULT false, "direct_debit_only" boolean NOT NULL DEFAULT false, "ebilling_only" boolean NOT NULL DEFAULT false, "solar_cust_only" boolean NOT NULL DEFAULT false, "ev_only" boolean NOT NULL DEFAULT false, "intrinsic_green" boolean NOT NULL DEFAULT false, "intrinsic_gpp" boolean DEFAULT false, "eligibility_criteria" character varying(500), "price_variation_details" character varying(500), "terms_and_conditions" text NOT NULL, "contract_expiry_details" character varying(500), "fixed_rates" character varying(500), "lowest_rps" numeric(10,2), "factsheet_url" text, "cooling_off_bd" integer, "zone_id" integer, "plan_type_id" integer NOT NULL, "distributor_id" integer NOT NULL, "customer_type_id" integer NOT NULL, "rate_card_id" integer NOT NULL, "contract_term_id" integer, "retail_tariff_id" integer, "bill_freq_id" integer, "retailer_id" integer, "plan_bundle_id" integer, "plan_status_id" integer, "exclusive_channel_id" integer, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_084714de33798c5b96f12725f7e" PRIMARY KEY ("plan_id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "retail_tariffs" ("retail_tariff_id" SERIAL NOT NULL, "retail_tariff_code" character varying(50) NOT NULL, "retail_tariff_name" character varying(255) NOT NULL, "sacl_flag" boolean NOT NULL DEFAULT false, "active" boolean NOT NULL DEFAULT true, "distributor_id" integer, "customer_type_id" integer, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_9abb7c5ad24ce9578525dde8eb0" PRIMARY KEY ("retail_tariff_id"))`,
@@ -104,10 +134,16 @@ export class Initial21757535054161 implements MigrationInterface {
       `CREATE TABLE "state" ("state_id" SERIAL NOT NULL, "state_code" character varying(10) NOT NULL, "state_name" character varying(100) NOT NULL, CONSTRAINT "PK_c6c635621335b860a10c0763e78" PRIMARY KEY ("state_id"))`,
     );
     await queryRunner.query(
+      `CREATE TABLE "reference_price_template" ("ref_price_template_id" SERIAL NOT NULL, "vdo_statement" text, "dmo_statement" text, "active" boolean NOT NULL DEFAULT true, CONSTRAINT "PK_6bb5f7dff829a8cbcac92ddfaf8" PRIMARY KEY ("ref_price_template_id"))`,
+    );
+    await queryRunner.query(
       `CREATE TABLE "rate_timings" ("rate_timing_id" SERIAL NOT NULL, "timing_name" character varying(100) NOT NULL, "description" text, "start_time" character varying(5) NOT NULL, "end_time" character varying(5) NOT NULL, "days_of_week" json NOT NULL, "season" character varying(50) NOT NULL, "plan_id" integer NOT NULL, "is_active" boolean NOT NULL DEFAULT true, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_373d655edee177b7475bb668caa" PRIMARY KEY ("rate_timing_id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "rate_blocks" ("rate_block_id" SERIAL NOT NULL, "rate_block_name" character varying(100) NOT NULL, "description" text, "start_time" character varying(5) NOT NULL, "end_time" character varying(5) NOT NULL, "days_of_week" json NOT NULL, "rate_per_kwh" numeric(10,4) NOT NULL, "supply_charge_per_day" numeric(10,4) NOT NULL, "rate_type" character varying(50) NOT NULL, "season" character varying(50) NOT NULL, "effective_from" date NOT NULL, "effective_to" date NOT NULL, "priority" integer NOT NULL DEFAULT '1', "is_active" boolean NOT NULL DEFAULT true, "plan_id" integer NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_3235ef40ef7fb31e372c3174266" PRIMARY KEY ("rate_block_id"))`,
+    );
+    await queryRunner.query(
+      `CREATE TABLE "plan_status_history" ("plan_status_history_id" SERIAL NOT NULL, "start_date" TIMESTAMP NOT NULL, "end_date" TIMESTAMP, "plan_status_id" integer NOT NULL, "plan_id" integer NOT NULL, CONSTRAINT "PK_4b30e56cbadd697194d86d075b3" PRIMARY KEY ("plan_status_history_id"))`,
     );
     await queryRunner.query(
       `CREATE TABLE "file" ("id" uuid NOT NULL DEFAULT uuid_generate_v4(), "path" character varying NOT NULL, "type" character varying NOT NULL, "user_id" uuid, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), CONSTRAINT "PK_36b46d232307066b3a2c9ea3a1d" PRIMARY KEY ("id"))`,
@@ -125,7 +161,25 @@ export class Initial21757535054161 implements MigrationInterface {
       `CREATE INDEX "IDX_728a0edcc49219ad69e8d0312b" ON "api_logs" ("method", "url") `,
     );
     await queryRunner.query(
+      `CREATE TABLE "benchmark_data" ("benchmark_data_id" SERIAL NOT NULL, "year" integer NOT NULL, "usage" numeric(12,0) NOT NULL, "price" numeric(12,2) NOT NULL, "customer_type_id" integer NOT NULL, "distributor_id" integer NOT NULL, "tariff_type_id" integer NOT NULL, CONSTRAINT "PK_b388e5919dc4312cb344d7a1ab7" PRIMARY KEY ("benchmark_data_id"))`,
+    );
+    await queryRunner.query(
       `ALTER TABLE "session" ADD CONSTRAINT "FK_30e98e8746699fb9af235410aff" FOREIGN KEY ("user_id") REFERENCES "gc_cms_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "campaign_channel_reln" ADD CONSTRAINT "FK_39f1414847e6d4920227a9ad123" FOREIGN KEY ("campaign_id") REFERENCES "campaign"("campaign_id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "campaign_channel_reln" ADD CONSTRAINT "FK_c8afc321ebce7978aed2542d05f" FOREIGN KEY ("channel_id") REFERENCES "channel"("channel_id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "campaign" ADD CONSTRAINT "FK_e362e45d79cbd24546aac62b927" FOREIGN KEY ("campaign_status_id") REFERENCES "campaign_status"("campaign_status_id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "campaign_plan_reln" ADD CONSTRAINT "FK_6d6427c9e25146536c047cc7129" FOREIGN KEY ("campaign_id") REFERENCES "campaign"("campaign_id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "campaign_plan_reln" ADD CONSTRAINT "FK_a86a31f6149305eee68fd6f999d" FOREIGN KEY ("plan_id") REFERENCES "plans"("plan_id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
       `ALTER TABLE "charge_term_names" ADD CONSTRAINT "FK_18bcb5fdd1ee1be22c7320d25f0" FOREIGN KEY ("charge_term_id") REFERENCES "charge_terms"("charge_term_id") ON DELETE CASCADE ON UPDATE NO ACTION`,
@@ -150,6 +204,12 @@ export class Initial21757535054161 implements MigrationInterface {
     );
     await queryRunner.query(
       `ALTER TABLE "charges" ADD CONSTRAINT "FK_0532420a065efcacc536506ef32" FOREIGN KEY ("charge_term_id") REFERENCES "charge_terms"("charge_term_id") ON DELETE CASCADE ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "billing_code" ADD CONSTRAINT "FK_5c945d357d53ab4b798d49e3921" FOREIGN KEY ("billing_code_type_id") REFERENCES "billing_code_type"("billing_code_type_id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "billing_code" ADD CONSTRAINT "FK_6e04d958551c434288d77dc1ca0" FOREIGN KEY ("plan_id") REFERENCES "plans"("plan_id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
       `ALTER TABLE "tariff_types" ADD CONSTRAINT "FK_7362c18d296c332e4b0cb886384" FOREIGN KEY ("fuel_type_id") REFERENCES "fuel_types"("fuel_type_id") ON DELETE SET NULL ON UPDATE NO ACTION`,
@@ -209,6 +269,18 @@ export class Initial21757535054161 implements MigrationInterface {
       `ALTER TABLE "plans" ADD CONSTRAINT "FK_2032c1a72ab5ac9330bb39e7599" FOREIGN KEY ("retail_tariff_id") REFERENCES "retail_tariffs"("retail_tariff_id") ON DELETE SET NULL ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
+      `ALTER TABLE "plans" ADD CONSTRAINT "FK_957f4eb4cffc345e54df15241b4" FOREIGN KEY ("retailer_id") REFERENCES "retailer"("retailer_id") ON DELETE SET NULL ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "plans" ADD CONSTRAINT "FK_c140cbe020a1f2ab12481e1fe4d" FOREIGN KEY ("plan_bundle_id") REFERENCES "plan_bundle"("plan_bundle_id") ON DELETE SET NULL ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "plans" ADD CONSTRAINT "FK_d0f69140c0169cdd4636c99a456" FOREIGN KEY ("plan_status_id") REFERENCES "plan_status"("plan_status_id") ON DELETE SET NULL ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "plans" ADD CONSTRAINT "FK_a2ce17ea52992a246671f44bf9f" FOREIGN KEY ("exclusive_channel_id") REFERENCES "channel"("channel_id") ON DELETE SET NULL ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
       `ALTER TABLE "retail_tariffs" ADD CONSTRAINT "FK_28268ce38ae7d936e7626318e52" FOREIGN KEY ("distributor_id") REFERENCES "distributors"("distributor_id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
@@ -239,6 +311,12 @@ export class Initial21757535054161 implements MigrationInterface {
       `ALTER TABLE "rate_blocks" ADD CONSTRAINT "FK_747b694fbccf26335adfc802a1d" FOREIGN KEY ("plan_id") REFERENCES "plans"("plan_id") ON DELETE CASCADE ON UPDATE NO ACTION`,
     );
     await queryRunner.query(
+      `ALTER TABLE "plan_status_history" ADD CONSTRAINT "FK_c8b7b9c29225230f42efed0f5b6" FOREIGN KEY ("plan_status_id") REFERENCES "plan_status"("plan_status_id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "plan_status_history" ADD CONSTRAINT "FK_1b8d593268ff0bda637e889f16a" FOREIGN KEY ("plan_id") REFERENCES "plans"("plan_id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
+    );
+    await queryRunner.query(
       `ALTER TABLE "file" ADD CONSTRAINT "FK_516f1cf15166fd07b732b4b6ab0" FOREIGN KEY ("user_id") REFERENCES "gc_cms_users"("id") ON DELETE NO ACTION ON UPDATE NO ACTION`,
     );
   }
@@ -246,6 +324,12 @@ export class Initial21757535054161 implements MigrationInterface {
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
       `ALTER TABLE "file" DROP CONSTRAINT "FK_516f1cf15166fd07b732b4b6ab0"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "plan_status_history" DROP CONSTRAINT "FK_1b8d593268ff0bda637e889f16a"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "plan_status_history" DROP CONSTRAINT "FK_c8b7b9c29225230f42efed0f5b6"`,
     );
     await queryRunner.query(
       `ALTER TABLE "rate_blocks" DROP CONSTRAINT "FK_747b694fbccf26335adfc802a1d"`,
@@ -276,6 +360,18 @@ export class Initial21757535054161 implements MigrationInterface {
     );
     await queryRunner.query(
       `ALTER TABLE "retail_tariffs" DROP CONSTRAINT "FK_28268ce38ae7d936e7626318e52"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "plans" DROP CONSTRAINT "FK_a2ce17ea52992a246671f44bf9f"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "plans" DROP CONSTRAINT "FK_d0f69140c0169cdd4636c99a456"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "plans" DROP CONSTRAINT "FK_c140cbe020a1f2ab12481e1fe4d"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "plans" DROP CONSTRAINT "FK_957f4eb4cffc345e54df15241b4"`,
     );
     await queryRunner.query(
       `ALTER TABLE "plans" DROP CONSTRAINT "FK_2032c1a72ab5ac9330bb39e7599"`,
@@ -335,6 +431,12 @@ export class Initial21757535054161 implements MigrationInterface {
       `ALTER TABLE "tariff_types" DROP CONSTRAINT "FK_7362c18d296c332e4b0cb886384"`,
     );
     await queryRunner.query(
+      `ALTER TABLE "billing_code" DROP CONSTRAINT "FK_6e04d958551c434288d77dc1ca0"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "billing_code" DROP CONSTRAINT "FK_5c945d357d53ab4b798d49e3921"`,
+    );
+    await queryRunner.query(
       `ALTER TABLE "charges" DROP CONSTRAINT "FK_0532420a065efcacc536506ef32"`,
     );
     await queryRunner.query(
@@ -359,8 +461,24 @@ export class Initial21757535054161 implements MigrationInterface {
       `ALTER TABLE "charge_term_names" DROP CONSTRAINT "FK_18bcb5fdd1ee1be22c7320d25f0"`,
     );
     await queryRunner.query(
+      `ALTER TABLE "campaign_plan_reln" DROP CONSTRAINT "FK_a86a31f6149305eee68fd6f999d"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "campaign_plan_reln" DROP CONSTRAINT "FK_6d6427c9e25146536c047cc7129"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "campaign" DROP CONSTRAINT "FK_e362e45d79cbd24546aac62b927"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "campaign_channel_reln" DROP CONSTRAINT "FK_c8afc321ebce7978aed2542d05f"`,
+    );
+    await queryRunner.query(
+      `ALTER TABLE "campaign_channel_reln" DROP CONSTRAINT "FK_39f1414847e6d4920227a9ad123"`,
+    );
+    await queryRunner.query(
       `ALTER TABLE "session" DROP CONSTRAINT "FK_30e98e8746699fb9af235410aff"`,
     );
+    await queryRunner.query(`DROP TABLE "benchmark_data"`);
     await queryRunner.query(
       `DROP INDEX "public"."IDX_728a0edcc49219ad69e8d0312b"`,
     );
@@ -372,8 +490,10 @@ export class Initial21757535054161 implements MigrationInterface {
     );
     await queryRunner.query(`DROP TABLE "api_logs"`);
     await queryRunner.query(`DROP TABLE "file"`);
+    await queryRunner.query(`DROP TABLE "plan_status_history"`);
     await queryRunner.query(`DROP TABLE "rate_blocks"`);
     await queryRunner.query(`DROP TABLE "rate_timings"`);
+    await queryRunner.query(`DROP TABLE "reference_price_template"`);
     await queryRunner.query(`DROP TABLE "state"`);
     await queryRunner.query(`DROP TABLE "distributors"`);
     await queryRunner.query(`DROP TABLE "network_tariffs"`);
@@ -382,6 +502,9 @@ export class Initial21757535054161 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE "retail_ntc_key_relns"`);
     await queryRunner.query(`DROP TABLE "retail_tariffs"`);
     await queryRunner.query(`DROP TABLE "plans"`);
+    await queryRunner.query(`DROP TABLE "retailer"`);
+    await queryRunner.query(`DROP TABLE "plan_status"`);
+    await queryRunner.query(`DROP TABLE "plan_bundle"`);
     await queryRunner.query(`DROP TABLE "customer_types"`);
     await queryRunner.query(`DROP TABLE "rate_cards"`);
     await queryRunner.query(`DROP TABLE "rates"`);
@@ -398,12 +521,19 @@ export class Initial21757535054161 implements MigrationInterface {
     await queryRunner.query(`DROP TABLE "fuel_types"`);
     await queryRunner.query(`DROP TABLE "zones"`);
     await queryRunner.query(`DROP TABLE "plan_types"`);
+    await queryRunner.query(`DROP TABLE "billing_code"`);
+    await queryRunner.query(`DROP TABLE "billing_code_type"`);
     await queryRunner.query(`DROP TABLE "charges"`);
     await queryRunner.query(`DROP TABLE "charge_categories"`);
     await queryRunner.query(`DROP TABLE "charge_classes"`);
     await queryRunner.query(`DROP TABLE "charge_types"`);
     await queryRunner.query(`DROP TABLE "charge_term_names"`);
     await queryRunner.query(`DROP TABLE "charge_terms"`);
+    await queryRunner.query(`DROP TABLE "campaign_plan_reln"`);
+    await queryRunner.query(`DROP TABLE "campaign"`);
+    await queryRunner.query(`DROP TABLE "campaign_channel_reln"`);
+    await queryRunner.query(`DROP TABLE "channel"`);
+    await queryRunner.query(`DROP TABLE "campaign_status"`);
     await queryRunner.query(
       `DROP INDEX "public"."IDX_30e98e8746699fb9af235410af"`,
     );

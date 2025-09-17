@@ -31,6 +31,15 @@ export class PlanMapper {
     domain.rateCardId = raw.rate_card_id;
     domain.contractTermId = raw.contract_term_id;
     domain.billFreqId = raw.bill_freq_id;
+    // new relations
+    // @ts-ignore Optional new fields on domain
+    domain.retailerId = raw.retailer_id ?? null;
+    // @ts-ignore
+    domain.planBundleId = raw.plan_bundle_id ?? null;
+    // @ts-ignore
+    domain.planStatusId = raw.plan_status_id ?? null;
+    // @ts-ignore
+    domain.exclusiveChannelId = raw.exclusive_channel_id ?? null;
 
     return domain;
   }
@@ -64,6 +73,15 @@ export class PlanMapper {
     entity.rate_card_id = domain.rateCardId;
     entity.contract_term_id = domain.contractTermId;
     entity.bill_freq_id = domain.billFreqId;
+    // new relations
+    // @ts-ignore Optional new fields on domain
+    entity.retailer_id = (domain as any).retailerId ?? null;
+    // @ts-ignore
+    entity.plan_bundle_id = (domain as any).planBundleId ?? null;
+    // @ts-ignore
+    entity.plan_status_id = (domain as any).planStatusId ?? null;
+    // @ts-ignore
+    entity.exclusive_channel_id = (domain as any).exclusiveChannelId ?? null;
 
     return entity;
   }

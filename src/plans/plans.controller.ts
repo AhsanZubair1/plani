@@ -17,6 +17,8 @@ import { PaginationResponse } from '@src/utils/types/pagination-options';
 
 import { Plan } from './domain/plan';
 import { CreatePlanDto } from './dto/create-plan.dto';
+import { ExpirePlansResponseDto } from './dto/expire-plans-response.dto';
+import { ExpirePlansDto } from './dto/expire-plans.dto';
 import { PlanListDto } from './dto/plan-list.dto';
 import { PlanDto } from './dto/plan.dto';
 import { QueryPlanDto } from './dto/query-plan.dto';
@@ -89,6 +91,25 @@ export class PlansController {
     @Body() body: { planIds: number[]; updates: Partial<UpdatePlanDto> },
   ): Promise<{ updated: number; failed: number }> {
     return this.plansService.bulkUpdate(body.planIds, body.updates);
+  }
+
+  @Post('expire')
+  @ApiOperation({ summary: 'Expire selected plans' })
+  @ApiResponse({
+    status: 200,
+    description: 'Plans expired successfully',
+    type: ExpirePlansResponseDto,
+  })
+  @ApiResponse({ status: 400, description: 'Bad request - validation error' })
+  @ApiResponse({ status: 404, description: 'One or more plans not found' })
+  async expirePlans(
+    @Body() expirePlansDto: ExpirePlansDto,
+  ): Promise<ExpirePlansResponseDto> {
+    const effectiveTo = expirePlansDto.effectiveTo
+      ? new Date(expirePlansDto.effectiveTo)
+      : undefined;
+
+    return this.plansService.expirePlans(expirePlansDto.planIds, effectiveTo);
   }
 
   @Get('expiring-soon')

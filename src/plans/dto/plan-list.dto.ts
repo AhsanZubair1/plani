@@ -68,15 +68,24 @@ export class PlanListDto {
   effectiveTill: string;
 
   @ApiProperty({
+    type: String,
+    example: 'Summer Campaign, Winter Campaign',
+    description: 'Assigned Campaigns as comma-separated string',
+  })
+  @Expose()
+  assignedCampaigns: string;
+
+  @ApiProperty({
     type: [CampaignDto],
     example: [
       { name: 'Summer Campaign', status: 'ACTIVE' },
       { name: 'Winter Campaign', status: 'DRAFT' },
     ],
-    description: 'Assigned Campaigns array with name and status',
+    description:
+      'Assigned Campaigns array with name and status for frontend styling',
   })
   @Expose()
-  assignedCampaigns: CampaignDto[];
+  assignedCampaignsWithStatus: CampaignDto[];
 
   @ApiProperty({
     type: String,

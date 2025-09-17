@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 
 import { CampaignPlanRelnEntity } from '@src/campaigns/infrastructure/persistence/relational/entities/campaign-plan-reln.entity';
+import { ChannelEntity } from '@src/campaigns/infrastructure/persistence/relational/entities/channel.entity';
 import { ChargeEntity } from '@src/charges/infrastructure/persistence/relational/entities/charge.entity';
 import { BillingCode } from '@src/plans/infrastructure/persistence/relational/entities/billing-code.entity';
 import { PlanTypeEntity } from '@src/plans/infrastructure/persistence/relational/entities/plan-type.entity';
@@ -18,6 +19,10 @@ import { RateCardEntity } from '@src/rates/infrastructure/persistence/relational
 import { customerTypeEntity } from '@src/retail-tariffs/infrastructure/persistence/relational/entities/customer-type.entity';
 import { distributorEntity } from '@src/retail-tariffs/infrastructure/persistence/relational/entities/distributor.entity';
 import { retailTariffsEntity } from '@src/retail-tariffs/infrastructure/persistence/relational/entities/retail-tariffs.entity';
+
+import { PlanBundleEntity } from './plan-bundle.entity';
+import { PlanStatusEntity } from './plan-status.entity';
+import { RetailerEntity } from './retailer.entity';
 
 @Entity({ name: 'plans' })
 export class PlanEntity {
@@ -88,6 +93,9 @@ export class PlanEntity {
   factsheet_url: string | null;
 
   @Column({ type: 'int', nullable: true })
+  cooling_off_bd: number | null;
+
+  @Column({ type: 'int', nullable: true })
   zone_id: number | null;
 
   @Column({ type: 'int', nullable: false })
@@ -110,6 +118,18 @@ export class PlanEntity {
 
   @Column({ type: 'int', nullable: true })
   bill_freq_id: number | null;
+
+  @Column({ type: 'int', nullable: true })
+  retailer_id: number | null;
+
+  @Column({ type: 'int', nullable: true })
+  plan_bundle_id: number | null;
+
+  @Column({ type: 'int', nullable: true })
+  plan_status_id: number | null;
+
+  @Column({ type: 'int', nullable: true })
+  exclusive_channel_id: number | null;
 
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;
@@ -164,4 +184,29 @@ export class PlanEntity {
 
   @OneToMany(() => BillingCode, (billingCode) => billingCode.plan)
   billingCodes: BillingCode[];
+
+  @ManyToOne(() => RetailerEntity, (retailer) => retailer.plans, {
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
+  @JoinColumn({ name: 'retailer_id' })
+  retailer: RetailerEntity | null;
+
+  @ManyToOne(() => PlanBundleEntity, (bundle) => bundle.plans, {
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
+  @JoinColumn({ name: 'plan_bundle_id' })
+  planBundle: PlanBundleEntity | null;
+
+  @ManyToOne(() => PlanStatusEntity, (status) => status.plans, {
+    onDelete: 'SET NULL',
+    nullable: true,
+  })
+  @JoinColumn({ name: 'plan_status_id' })
+  planStatus: PlanStatusEntity | null;
+
+  @ManyToOne(() => ChannelEntity, { onDelete: 'SET NULL', nullable: true })
+  @JoinColumn({ name: 'exclusive_channel_id' })
+  exclusiveChannel: ChannelEntity | null;
 }

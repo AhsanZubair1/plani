@@ -225,6 +225,19 @@ export class Plan {
   })
   billFreqId: number | null;
 
+  // Optional new relations
+  @ApiProperty({ type: Number, nullable: true })
+  retailerId?: number | null;
+
+  @ApiProperty({ type: Number, nullable: true })
+  planBundleId?: number | null;
+
+  @ApiProperty({ type: Number, nullable: true })
+  planStatusId?: number | null;
+
+  @ApiProperty({ type: Number, nullable: true })
+  exclusiveChannelId?: number | null;
+
   @ApiProperty({
     type: Date,
     example: '2024-01-01T00:00:00Z',
