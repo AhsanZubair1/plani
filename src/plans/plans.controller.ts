@@ -245,7 +245,8 @@ export class PlansController {
     type: PlanMappingStatusCountsDto,
   })
   async getPlanMappingStatusCounts(): Promise<{
-    active: number;
+    ready: number;
+    incomplete: number;
     expired: number;
   }> {
     return this.plansService.getPlanMappingStatusCounts();

@@ -109,7 +109,8 @@ export class PlansService {
   }
 
   getPlanMappingStatusCounts(): Promise<{
-    active: number;
+    ready: number;
+    incomplete: number;
     expired: number;
   }> {
     return this.plansRepository.getPlanMappingStatusCounts();

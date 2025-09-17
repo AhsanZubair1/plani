@@ -712,11 +712,33 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       .leftJoinAndSelect('plan.retailTariff', 'retailTariff')
       .leftJoinAndSelect('plan.charges', 'charges')
       .leftJoinAndSelect('plan.billingCodes', 'billingCodes')
-      .leftJoinAndSelect('billingCodes.billingCodeType', 'billingCodeType');
+      .leftJoinAndSelect('billingCodes.billingCodeType', 'billingCodeType')
+      .leftJoinAndSelect('plan.planStatus', 'planStatus');
 
     // Apply filters
     if (query) {
       this.applyPlanMappingFilters(queryBuilder, query);
+    }
+
+    // Apply status bucket filter only when provided (no default)
+    if (query?.status) {
+      const status = query.status.toLowerCase();
+      if (status === 'ready') {
+        queryBuilder.andWhere(
+          '((planStatus.plan_status_code = :published OR planStatus.plan_status_code = :parked) OR planStatus.plan_status_code IS NULL) AND (plan.retail_tariff_id IS NOT NULL OR plan.zone_id IS NOT NULL)',
+          { published: 'Published', parked: 'Parked' },
+        );
+      } else if (status === 'incomplete') {
+        queryBuilder.andWhere(
+          '((planStatus.plan_status_code = :published OR planStatus.plan_status_code = :parked) OR planStatus.plan_status_code IS NULL) AND plan.retail_tariff_id IS NULL AND plan.zone_id IS NULL',
+          { published: 'Published', parked: 'Parked' },
+        );
+      } else if (status === 'expired') {
+        queryBuilder.andWhere(
+          '(planStatus.plan_status_code = :expired OR plan.effective_to < NOW())',
+          { expired: 'Expired' },
+        );
+      }
     }
 
     // Get total count for pagination
@@ -833,6 +855,27 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
         { search: `%${query.search}%` },
       );
     }
+
+    // Status filter
+    if (query.status) {
+      const status = query.status.toLowerCase();
+      if (status === 'ready') {
+        queryBuilder.andWhere(
+          '((planStatus.plan_status_code = :published OR planStatus.plan_status_code = :parked) OR planStatus.plan_status_code IS NULL) AND (plan.retail_tariff_id IS NOT NULL OR plan.zone_id IS NOT NULL)',
+          { published: 'Published', parked: 'Parked' },
+        );
+      } else if (status === 'incomplete') {
+        queryBuilder.andWhere(
+          '((planStatus.plan_status_code = :published OR planStatus.plan_status_code = :parked) OR planStatus.plan_status_code IS NULL) AND plan.retail_tariff_id IS NULL AND plan.zone_id IS NULL',
+          { published: 'Published', parked: 'Parked' },
+        );
+      } else if (status === 'expired') {
+        queryBuilder.andWhere(
+          '(planStatus.plan_status_code = :expired OR plan.effective_to < NOW())',
+          { expired: 'Expired' },
+        );
+      }
+    }
   }
 
   private applyPlanMappingSorting(queryBuilder: any, query: any): void {
@@ -864,16 +907,17 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
     queryBuilder.orderBy(orderField, sortOrder);
   }
   async getPlanMappingStatusCounts(): Promise<{
-    active: number;
+    ready: number;
+    incomplete: number;
     expired: number;
   }> {
-    const [active, expired] = await Promise.all([
+    const [ready, incomplete, expired] = await Promise.all([
       this.getReadyPlansCount(),
       this.getIncompletePlansCount(),
       this.getExpiredPlansCount(),
     ]);
 
-    return { active, expired };
+    return { ready, incomplete, expired };
   }
 
   async findMany(query: QueryPlanDto): Promise<PaginationResponse<Plan>> {

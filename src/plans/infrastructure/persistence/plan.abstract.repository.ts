@@ -28,7 +28,8 @@ export abstract class PlanAbstractRepository {
 
   // plan mapping
   abstract getPlanMappingStatusCounts(): Promise<{
-    active: number;
+    ready: number;
+    incomplete: number;
     expired: number;
   }>;
 

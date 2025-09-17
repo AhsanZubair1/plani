@@ -7,7 +7,10 @@ import {
   Min,
   Max,
   IsNumber,
+  IsEnum,
 } from 'class-validator';
+
+import { PlanStatus } from '@src/plans/enums/plan-status.enum';
 
 export class PlanMappingQueryDto {
   @ApiProperty({
@@ -156,4 +159,15 @@ export class PlanMappingQueryDto {
   @IsOptional()
   @IsString()
   sortOrder?: 'ASC' | 'DESC';
+
+  @ApiProperty({
+    type: String,
+    required: false,
+    example: PlanStatus.READY,
+    enum: PlanStatus,
+    description: 'Filter by plan list status (Ready, Incomplete, Expired)',
+  })
+  @IsOptional()
+  @IsEnum(PlanStatus)
+  status?: PlanStatus;
 }
