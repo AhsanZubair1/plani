@@ -7,6 +7,7 @@ import { PlanMapping } from '@src/plans/domain/plan-mapping';
 import { ExpirePlansResponseDto } from '@src/plans/dto/expire-plans-response.dto';
 import { QueryPlanDto } from '@src/plans/dto/query-plan.dto';
 import { UpdatePlanDto } from '@src/plans/dto/update-plan.dto';
+import { PlanStatus } from '@src/plans/enums/plan-status.enum';
 import { PlanAbstractRepository } from '@src/plans/infrastructure/persistence/plan.abstract.repository';
 import { PlanEntity } from '@src/plans/infrastructure/persistence/relational/entities/plan.entity';
 import { PlanMapper } from '@src/plans/infrastructure/persistence/relational/mappers/plan.mapper';
@@ -142,7 +143,7 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
         .createQueryBuilder()
         .select('plan_status_id')
         .from('plan_status', 'ps')
-        .where('ps.plan_status_code = :code', { code: 'EXPIRED' })
+        .where('ps.plan_status_code = :code', { code: 'Expired' })
         .getRawOne();
 
       if (!expiredStatus) {
@@ -671,15 +672,20 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       return {
         id: plan.plan_id,
         planName: plan.plan_name || '',
-        planId: plan.int_plan_code || plan.ext_plan_code,
+        planId: plan.ext_plan_code || '',
         tariff: plan.rateCard?.tariffType?.tariff_type_code || '',
         planType: plan.planType?.plan_type_code || '',
         customer: plan.customerType?.customer_type_code || '',
         state: plan.distributor?.state?.state_code || '',
         distributor: plan.distributor?.distributor_name || '',
-        effectiveTill: plan.effective_to
-          ? new Date(plan.effective_to).toLocaleDateString('en-GB')
-          : '',
+        effectiveTill:
+          planStatus === PlanStatus.EXPIRED
+            ? plan.effective_to
+              ? new Date(plan.effective_to).toLocaleDateString('en-GB')
+              : 'N/A'
+            : plan.effective_from
+              ? new Date(plan.effective_from).toLocaleDateString('en-GB')
+              : 'N/A',
         assignedCampaigns,
         assignedCampaignsWithStatus,
         planStatus,
