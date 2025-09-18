@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 
+import { AuditModule } from '@src/audit/audit.module';
 import { RatesModule } from '@src/rates/rates.module';
 
 import { RelationalPlanPersistenceModule } from './infrastructure/persistence/relational/relational-persistence.module';
@@ -7,7 +8,7 @@ import { PlansController } from './plans.controller';
 import { PlansService } from './plans.service';
 
 @Module({
-  imports: [RelationalPlanPersistenceModule, RatesModule],
+  imports: [RelationalPlanPersistenceModule, RatesModule, AuditModule],
   controllers: [PlansController],
   providers: [PlansService],
   exports: [PlansService, RelationalPlanPersistenceModule],

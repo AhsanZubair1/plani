@@ -107,6 +107,7 @@
     "swagger-ui-express": "5.0.1",
     "tesseract.js": "^6.0.0",
     "typeorm": "0.3.20",
+    "uuid": "^13.0.0",
     "winston": "^3.17.0",
     "winston-cloudwatch": "^6.3.0"
   },
@@ -130,6 +131,7 @@
     "@types/passport-anonymous": "1.0.5",
     "@types/passport-jwt": "4.0.1",
     "@types/supertest": "6.0.2",
+    "@types/uuid": "^10.0.0",
     "@typescript-eslint/eslint-plugin": "7.16.1",
     "@typescript-eslint/parser": "7.16.1",
     "env-cmd": "^10.1.0",
