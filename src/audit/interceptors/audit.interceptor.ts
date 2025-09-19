@@ -11,9 +11,9 @@ import { Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { v4 as uuidv4 } from 'uuid';
 
-import { AuditService } from '../audit.service';
-import { AuditOptions, AUDIT_KEY } from '../decorators/audit.decorator';
-import { AuditAction, AuditLevel } from '../domain/audit-log';
+import { AuditService } from '@src/audit/audit.service';
+import { AuditOptions, AUDIT_KEY } from '@src/audit/decorators/audit.decorator';
+import { AuditAction, AuditLevel } from '@src/audit/domain/audit-log';
 
 @Injectable()
 export class AuditInterceptor implements NestInterceptor {

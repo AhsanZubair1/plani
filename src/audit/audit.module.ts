@@ -5,26 +5,38 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { AuditService } from './audit.service';
 import { AuditController } from './audit.controller';
 import { TestAuditController } from './test-audit.controller';
+import { AuditAnalyticsController } from './controllers/audit-analytics.controller';
 import { AuditSubscriber } from './subscribers/audit.subscriber';
 import { AuditCleanupTask } from './tasks/audit-cleanup.task';
 import { RelationalAuditPersistenceModule } from './infrastructure/persistence/relational/relational-audit-persistence.module';
 import { BulkAuditService } from './services/bulk-audit.service';
 import { SqlAuditService } from './services/sql-audit.service';
+import { AuditStatisticsService } from './services/audit-statistics.service';
+import { DatabaseAuditInterceptor } from './interceptors/database-audit.interceptor';
+import { AuditLogEntity } from './infrastructure/persistence/relational/entities/audit-log.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([]),
+    TypeOrmModule.forFeature([AuditLogEntity]),
     ScheduleModule.forRoot(),
     RelationalAuditPersistenceModule,
   ],
-  controllers: [AuditController, TestAuditController],
+  controllers: [AuditController, TestAuditController, AuditAnalyticsController],
   providers: [
     AuditService,
     AuditSubscriber,
     AuditCleanupTask,
     BulkAuditService,
     SqlAuditService,
+    AuditStatisticsService,
+    DatabaseAuditInterceptor,
   ],
-  exports: [AuditService, BulkAuditService, SqlAuditService],
+  exports: [
+    AuditService,
+    BulkAuditService,
+    SqlAuditService,
+    AuditStatisticsService,
+    DatabaseAuditInterceptor,
+  ],
 })
 export class AuditModule {}

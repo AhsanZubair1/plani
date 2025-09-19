@@ -24,4 +24,9 @@ export class CampaignsService {
   async getCampaignsByStatus(statusCode: string): Promise<Campaign[]> {
     return this.campaignsRepository.findByStatus(statusCode);
   }
+
+  // Simple Channel API
+  async getChannelsWithCampaigns(): Promise<any> {
+    return this.campaignsRepository.getChannelsWithCampaigns();
+  }
 }

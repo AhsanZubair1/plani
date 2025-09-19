@@ -1,15 +1,9 @@
-import { Controller, Get, Param, ParseIntPipe, Query } from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiResponse,
-  ApiParam,
-  ApiQuery,
-} from '@nestjs/swagger';
+import { Controller, Get, Param, ParseIntPipe } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 
+import { CampaignsService } from './campaigns.service';
 import { Campaign } from './domain/campaign';
 import { CampaignDto } from './dto/campaign.dto';
-import { CampaignsService } from './campaigns.service';
 
 @ApiTags('Campaigns')
 @Controller({

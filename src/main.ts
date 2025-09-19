@@ -18,6 +18,7 @@ import { LoggingInterceptor } from './logging/interceptors/logging.interceptor';
 import { LoggingService } from './logging/logging.service';
 import { ResolvePromisesInterceptor } from './utils/serializer.interceptor';
 import validationOptions from './utils/validation-options';
+import { DatabaseAuditInterceptor } from './audit/interceptors/database-audit.interceptor';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
@@ -50,10 +51,12 @@ async function bootstrap() {
   app.useGlobalPipes(new ValidationPipe(validationOptions));
   app.useGlobalFilters(new HttpExceptionFilter());
   const loggingService = app.get(LoggingService);
+  const databaseAuditInterceptor = app.get(DatabaseAuditInterceptor);
   app.useGlobalInterceptors(
     new ResolvePromisesInterceptor(),
     new ClassSerializerInterceptor(app.get(Reflector)),
     new LoggingInterceptor(loggingService),
+    databaseAuditInterceptor,
   );
 
   const options = new DocumentBuilder()
