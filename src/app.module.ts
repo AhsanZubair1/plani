@@ -13,6 +13,7 @@ import { HomeModule } from '@src/home/home.module';
 import { networkTarrifsModule } from '@src/network-tarrifs/network-tarrifs.module';
 import { retailTariffsModule } from '@src/retail-tariffs/retail-tariffs.module';
 
+import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
 import authConfig from './auth/config/auth.config';
 import { CampaignsModule } from './campaigns/campaigns.module';
@@ -94,6 +95,7 @@ const infrastructureDatabaseModule = TypeOrmModule.forRootAsync({
     FilesModule,
     AuthModule,
     SessionModule,
+    AuditModule,
     PlansModule,
     CampaignsModule,
     RatesModule,

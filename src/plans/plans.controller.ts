@@ -8,6 +8,8 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { AuditService } from '@src/audit/audit.service';
+import { AuditAction } from '@src/audit/domain/audit-log';
 
 import { PlanMapping } from '@src/plans/domain/plan-mapping';
 import { PlanMappingQueryDto } from '@src/plans/dto/plan-mapping-query.dto';
@@ -33,7 +35,10 @@ import { PlansService } from './plans.service';
   version: '1',
 })
 export class PlansController {
-  constructor(private readonly plansService: PlansService) {}
+  constructor(
+    private readonly plansService: PlansService,
+    private readonly auditService: AuditService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new plan' })
@@ -151,14 +156,42 @@ export class PlansController {
     description: 'Plans list retrieved successfully',
     type: [PlanListDto],
   })
-  getPlanList(@Query() query: QueryPlanDto): Promise<{
+  async getPlanList(@Query() query: QueryPlanDto): Promise<{
     data: PlanListDto[];
     total: number;
     page: number;
     limit: number;
     totalPages: number;
   }> {
-    return this.plansService.getPlanList(query);
+    const result = await this.plansService.getPlanList(query);
+
+    // Log the read operation
+    try {
+      await this.auditService.log(
+        AuditAction.READ,
+        'plans',
+        `Retrieved plans list with ${result.data.length} records`,
+        {
+          userId: 'system', // You can get this from request context
+          userName: 'System User',
+          userEmail: 'system@example.com',
+        },
+        {
+          resourceId: `list_page_${query.page || 1}`,
+          newValues: {
+            totalRecords: result.total,
+            page: result.page,
+            limit: result.limit,
+            status: query.status || 'all',
+          },
+        },
+      );
+    } catch (error) {
+      // Don't fail the request if audit logging fails
+      console.error('Failed to log plan list read operation:', error);
+    }
+
+    return result;
   }
 
   @Get('filters/options')

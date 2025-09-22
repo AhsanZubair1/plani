@@ -5,4 +5,10 @@ export abstract class CampaignAbstractRepository {
   abstract findById(id: number): Promise<Campaign | null>;
   abstract findByPlanId(planId: number): Promise<Campaign[]>;
   abstract findByStatus(statusCode: string): Promise<Campaign[]>;
+  abstract getChannelsWithCampaigns(): Promise<any>;
+  abstract getChannelTimeBasedStats(
+    channelId: number,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<any>;
 }
