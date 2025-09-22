@@ -613,17 +613,17 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
     if (status === 'ready') {
       queryBuilder.andWhere(
         '((planStatus.plan_status_code = :published OR planStatus.plan_status_code = :parked) OR planStatus.plan_status_code IS NULL) AND (plan.retail_tariff_id IS NOT NULL OR plan.zone_id IS NOT NULL)',
-        { published: 'Published', parked: 'Parked' },
+        { published: 'PUBLISHED', parked: 'PARKED' },
       );
     } else if (status === 'incomplete') {
       queryBuilder.andWhere(
         '((planStatus.plan_status_code = :published OR planStatus.plan_status_code = :parked) OR planStatus.plan_status_code IS NULL) AND plan.retail_tariff_id IS NULL AND plan.zone_id IS NULL',
-        { published: 'Published', parked: 'Parked' },
+        { published: 'PUBLISHED', parked: 'PARKED' },
       );
     } else if (status === 'expired') {
       queryBuilder.andWhere(
         '(planStatus.plan_status_code = :expired OR plan.effective_to < NOW())',
-        { expired: 'Expired' },
+        { expired: 'EXPIRED' },
       );
     }
 
