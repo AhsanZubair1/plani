@@ -576,6 +576,13 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       effectiveTill: string;
       assignedCampaigns: string; // Comma-separated string
       assignedCampaignsWithStatus: { name: string; status: string }[]; // For frontend styling
+      campaignSummary: {
+        total: number;
+        displayed: number;
+        hasMore: boolean;
+        moreCount: number;
+        showExpired: boolean;
+      };
       planStatus: string;
       isHighlighted: boolean;
     }[];
@@ -637,11 +644,27 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
 
     const data = plans.map((plan) => {
       // Get assigned campaigns with status for frontend styling
-      const assignedCampaignsWithStatus =
+      const now = new Date();
+      const showExpired = query.showExpiredCampaigns || false;
+      const campaignLimit = query.campaignLimit || 5;
+
+      // Filter campaigns based on showExpired flag and apply limit
+      const filteredCampaigns =
         plan.campaignPlanRelns
           ?.map((reln) => {
             const campaign = reln.campaign;
             if (!campaign) return null;
+
+            const effectiveFrom = new Date(campaign.effective_from);
+            const effectiveTo = campaign.effective_to
+              ? new Date(campaign.effective_to)
+              : null;
+            const isExpired = effectiveTo && effectiveTo < now;
+
+            // Filter out expired campaigns if showExpired is false
+            if (!showExpired && isExpired) {
+              return null;
+            }
 
             const status =
               campaign.campaignStatus?.campaign_status_code || 'UNKNOWN';
@@ -650,23 +673,49 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
             return {
               name: campaignName,
               status: status,
+              isExpired: isExpired,
+              effectiveFrom: effectiveFrom,
+              effectiveTo: effectiveTo,
             };
           })
           .filter(
-            (campaign): campaign is { name: string; status: string } =>
-              campaign !== null,
+            (
+              campaign,
+            ): campaign is {
+              name: string;
+              status: string;
+              isExpired: boolean;
+              effectiveFrom: Date;
+              effectiveTo: Date | null;
+            } => campaign !== null,
           ) || [];
 
+      // Sort campaigns by effective_from date (most recent first)
+      filteredCampaigns.sort(
+        (a, b) => b.effectiveFrom.getTime() - a.effectiveFrom.getTime(),
+      );
+
+      // Apply limit and get more count
+      const totalCampaigns = plan.campaignPlanRelns?.length || 0;
+      const limitedCampaigns = filteredCampaigns.slice(0, campaignLimit);
+      const hasMore = filteredCampaigns.length > campaignLimit;
+      const moreCount = filteredCampaigns.length - campaignLimit;
+
       // Get assigned campaigns as comma-separated string
-      const assignedCampaigns = assignedCampaignsWithStatus
+      const assignedCampaigns = limitedCampaigns
         .map((campaign) => campaign.name)
         .join(', ');
+
+      // Create the assigned campaigns with status array
+      const assignedCampaignsWithStatus = limitedCampaigns.map((campaign) => ({
+        name: campaign.name,
+        status: campaign.status,
+      }));
 
       // Determine plan status using the new logic
       const planStatus = this.getPlanStatusForList(plan);
 
       // Check if plan should be highlighted (effective_from in future)
-      const now = new Date();
       const isHighlighted = plan.effective_from > now;
 
       return {
@@ -688,6 +737,13 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
               : 'N/A',
         assignedCampaigns,
         assignedCampaignsWithStatus,
+        campaignSummary: {
+          total: totalCampaigns,
+          displayed: limitedCampaigns.length,
+          hasMore: hasMore,
+          moreCount: moreCount,
+          showExpired: showExpired,
+        },
         planStatus,
         isHighlighted,
       };

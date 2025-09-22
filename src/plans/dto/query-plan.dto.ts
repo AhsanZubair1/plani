@@ -183,4 +183,25 @@ export class QueryPlanDto {
   @IsOptional()
   @IsString()
   status?: 'ready' | 'incomplete' | 'expired';
+
+  // Campaign filtering options
+  @ApiProperty({
+    type: Boolean,
+    required: false,
+    example: false,
+    description: 'Include expired campaigns in results',
+  })
+  @IsOptional()
+  @Transform(({ value }) => value === 'true' || value === true)
+  showExpiredCampaigns?: boolean;
+
+  @ApiProperty({
+    type: Number,
+    required: false,
+    example: 5,
+    description: 'Maximum number of campaigns to show per plan',
+  })
+  @IsOptional()
+  @Transform(({ value }) => parseInt(value, 10))
+  campaignLimit?: number;
 }
