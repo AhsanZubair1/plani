@@ -31,7 +31,9 @@ GET /api/v1/plans/list
 
 ## Response Format
 
-The response now includes a `campaignSummary` object for each plan:
+The response now includes both `effectiveTill` and `effectiveTo` fields for each plan:
+
+### Active/Ready Plan Example
 
 ```json
 {
@@ -46,6 +48,7 @@ The response now includes a `campaignSummary` object for each plan:
       "state": "VIC",
       "distributor": "Citipower",
       "effectiveTill": "31/12/2024",
+      "effectiveTo": "31/12/2025",
       "assignedCampaigns": "Summer Special, Winter Discount, Spring Promo",
       "assignedCampaignsWithStatus": [
         {
@@ -61,13 +64,6 @@ The response now includes a `campaignSummary` object for each plan:
           "status": "FUTURE"
         }
       ],
-      "campaignSummary": {
-        "total": 8,
-        "displayed": 3,
-        "hasMore": true,
-        "moreCount": 5,
-        "showExpired": false
-      },
       "planStatus": "ready",
       "isHighlighted": false
     }
@@ -79,15 +75,58 @@ The response now includes a `campaignSummary` object for each plan:
 }
 ```
 
-## Campaign Summary Fields
+### Expired Plan Example
 
-- **`total`**: Total number of campaigns linked to this plan
-- **`displayed`**: Number of campaigns currently displayed
-- **`hasMore`**: Boolean indicating if there are more campaigns to show
-- **`moreCount`**: Number of additional campaigns not displayed
-- **`showExpired`**: Boolean indicating if expired campaigns are included
+For expired plans, campaign information is excluded and `effectiveTill` shows the `effective_to` date:
 
-## Campaign Status Logic
+```json
+{
+  "data": [
+    {
+      "id": 2,
+      "planName": "Old Residential Plan",
+      "planId": "PLAN002",
+      "tariff": "TOU",
+      "planType": "MARKET",
+      "customer": "BUS",
+      "state": "VIC",
+      "distributor": "Citipower",
+      "effectiveTill": "15/11/2024",
+      "effectiveTo": "15/11/2024",
+      "assignedCampaigns": "",
+      "assignedCampaignsWithStatus": [],
+      "planStatus": "EXPIRED",
+      "isHighlighted": false
+    }
+  ],
+  "total": 1,
+  "page": 1,
+  "limit": 10,
+  "totalPages": 1
+}
+```
+
+## Response Fields
+
+- **`effectiveTill`**: Shows `effective_from` for active plans, `effective_to` for expired plans
+- **`effectiveTo`**: Always shows the plan's `effective_to` date (or 'N/A' if null)
+- **`assignedCampaigns`**: Comma-separated string of campaign names (empty for expired plans)
+- **`assignedCampaignsWithStatus`**: Array of campaign objects with name and status (empty for expired plans)
+
+## Plan Status Logic
+
+### Plan Status Determination
+
+- **EXPIRED**: Plan status is 'EXPIRED' OR `effective_to < now`
+- **READY**: Plan has required data (retail_tariff_id or zone_id) and status is 'PUBLISHED', 'PARKED', or NULL
+- **INCOMPLETE**: Plan lacks required data (retail_tariff_id and zone_id are both NULL) and status is 'PUBLISHED', 'PARKED', or NULL
+
+### Campaign Information
+
+- **For EXPIRED plans**: No campaign information is included (empty arrays and zero counts)
+- **For non-EXPIRED plans**: Campaign information is processed normally
+
+### Campaign Status Logic
 
 Campaigns are categorized based on their effective dates:
 

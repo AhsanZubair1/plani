@@ -20,3 +20,4 @@ export class PlanCampaignFilterDto {
   @Transform(({ value }) => parseInt(value, 10))
   campaignLimit?: number;
 }
+

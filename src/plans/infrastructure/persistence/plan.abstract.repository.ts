@@ -93,15 +93,9 @@ export abstract class PlanAbstractRepository {
       state: string;
       distributor: string;
       effectiveTill: string;
+      effectiveTo: string;
       assignedCampaigns: string; // Comma-separated string
       assignedCampaignsWithStatus: { name: string; status: string }[]; // For frontend styling
-      campaignSummary: {
-        total: number;
-        displayed: number;
-        hasMore: boolean;
-        moreCount: number;
-        showExpired: boolean;
-      };
       planStatus: string;
       isHighlighted: boolean;
     }[];

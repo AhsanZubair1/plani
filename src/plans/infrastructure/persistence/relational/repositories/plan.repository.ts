@@ -143,7 +143,7 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
         .createQueryBuilder()
         .select('plan_status_id')
         .from('plan_status', 'ps')
-        .where('ps.plan_status_code = :code', { code: 'Expired' })
+        .where('ps.plan_status_code = :code', { code: 'EXPIRED' })
         .getRawOne();
 
       if (!expiredStatus) {
@@ -283,7 +283,7 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
 
   private getPlanStatusForList(plan: any): string {
     // Get plan status from plan_status table
-    const planStatusCode = plan.planStatus?.plan_status_desc;
+    const planStatusCode = plan.planStatus?.plan_status_code;
 
     // Expired = Plan has a status of EXPIRED
     if (planStatusCode === 'EXPIRED') {
@@ -574,15 +574,9 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       state: string;
       distributor: string;
       effectiveTill: string;
+      effectiveTo: string;
       assignedCampaigns: string; // Comma-separated string
       assignedCampaignsWithStatus: { name: string; status: string }[]; // For frontend styling
-      campaignSummary: {
-        total: number;
-        displayed: number;
-        hasMore: boolean;
-        moreCount: number;
-        showExpired: boolean;
-      };
       planStatus: string;
       isHighlighted: boolean;
     }[];
@@ -643,79 +637,83 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
     const plans = await queryBuilder.getMany();
 
     const data = plans.map((plan) => {
-      // Get assigned campaigns with status for frontend styling
-      const now = new Date();
-      const showExpired = query.showExpiredCampaigns || false;
-      const campaignLimit = query.campaignLimit || 5;
-
-      // Filter campaigns based on showExpired flag and apply limit
-      const filteredCampaigns =
-        plan.campaignPlanRelns
-          ?.map((reln) => {
-            const campaign = reln.campaign;
-            if (!campaign) return null;
-
-            const effectiveFrom = new Date(campaign.effective_from);
-            const effectiveTo = campaign.effective_to
-              ? new Date(campaign.effective_to)
-              : null;
-            const isExpired = effectiveTo && effectiveTo < now;
-
-            // Filter out expired campaigns if showExpired is false
-            if (!showExpired && isExpired) {
-              return null;
-            }
-
-            const status =
-              campaign.campaignStatus?.campaign_status_code || 'UNKNOWN';
-            const campaignName = campaign.campaign_name;
-
-            return {
-              name: campaignName,
-              status: status,
-              isExpired: isExpired,
-              effectiveFrom: effectiveFrom,
-              effectiveTo: effectiveTo,
-            };
-          })
-          .filter(
-            (
-              campaign,
-            ): campaign is {
-              name: string;
-              status: string;
-              isExpired: boolean;
-              effectiveFrom: Date;
-              effectiveTo: Date | null;
-            } => campaign !== null,
-          ) || [];
-
-      // Sort campaigns by effective_from date (most recent first)
-      filteredCampaigns.sort(
-        (a, b) => b.effectiveFrom.getTime() - a.effectiveFrom.getTime(),
-      );
-
-      // Apply limit and get more count
-      const totalCampaigns = plan.campaignPlanRelns?.length || 0;
-      const limitedCampaigns = filteredCampaigns.slice(0, campaignLimit);
-      const hasMore = filteredCampaigns.length > campaignLimit;
-      const moreCount = filteredCampaigns.length - campaignLimit;
-
-      // Get assigned campaigns as comma-separated string
-      const assignedCampaigns = limitedCampaigns
-        .map((campaign) => campaign.name)
-        .join(', ');
-
-      // Create the assigned campaigns with status array
-      const assignedCampaignsWithStatus = limitedCampaigns.map((campaign) => ({
-        name: campaign.name,
-        status: campaign.status,
-      }));
-
       // Determine plan status using the new logic
       const planStatus = this.getPlanStatusForList(plan);
 
+      // For expired plans, don't include campaign information
+      let assignedCampaigns = '';
+      let assignedCampaignsWithStatus: { name: string; status: string }[] = [];
+
+      // Only process campaigns if plan is not expired
+      if (planStatus !== 'EXPIRED') {
+        const now = new Date();
+        const showExpired = query.showExpiredCampaigns || false;
+        const campaignLimit = query.campaignLimit || 5;
+
+        // Filter campaigns based on showExpired flag and apply limit
+        const filteredCampaigns =
+          plan.campaignPlanRelns
+            ?.map((reln) => {
+              const campaign = reln.campaign;
+              if (!campaign) return null;
+
+              const effectiveFrom = new Date(campaign.effective_from);
+              const effectiveTo = campaign.effective_to
+                ? new Date(campaign.effective_to)
+                : null;
+              const isExpired = effectiveTo && effectiveTo < now;
+
+              // Filter out expired campaigns if showExpired is false
+              if (!showExpired && isExpired) {
+                return null;
+              }
+
+              const status =
+                campaign.campaignStatus?.campaign_status_code || 'UNKNOWN';
+              const campaignName = campaign.campaign_name;
+
+              return {
+                name: campaignName,
+                status: status,
+                isExpired: isExpired,
+                effectiveFrom: effectiveFrom,
+                effectiveTo: effectiveTo,
+              };
+            })
+            .filter(
+              (
+                campaign,
+              ): campaign is {
+                name: string;
+                status: string;
+                isExpired: boolean;
+                effectiveFrom: Date;
+                effectiveTo: Date | null;
+              } => campaign !== null,
+            ) || [];
+
+        // Sort campaigns by effective_from date (most recent first)
+        filteredCampaigns.sort(
+          (a, b) => b.effectiveFrom.getTime() - a.effectiveFrom.getTime(),
+        );
+
+        // Apply limit and get more count
+        const limitedCampaigns = filteredCampaigns.slice(0, campaignLimit);
+
+        // Get assigned campaigns as comma-separated string
+        assignedCampaigns = limitedCampaigns
+          .map((campaign) => campaign.name)
+          .join(', ');
+
+        // Create the assigned campaigns with status array
+        assignedCampaignsWithStatus = limitedCampaigns.map((campaign) => ({
+          name: campaign.name,
+          status: campaign.status,
+        }));
+      }
+
       // Check if plan should be highlighted (effective_from in future)
+      const now = new Date();
       const isHighlighted = plan.effective_from > now;
 
       return {
@@ -728,22 +726,18 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
         state: plan.distributor?.state?.state_code || '',
         distributor: plan.distributor?.distributor_name || '',
         effectiveTill:
-          planStatus === PlanStatus.EXPIRED
+          planStatus === 'EXPIRED'
             ? plan.effective_to
               ? new Date(plan.effective_to).toLocaleDateString('en-GB')
               : 'N/A'
             : plan.effective_from
               ? new Date(plan.effective_from).toLocaleDateString('en-GB')
               : 'N/A',
+        effectiveTo: plan.effective_to
+          ? new Date(plan.effective_to).toLocaleDateString('en-GB')
+          : 'N/A',
         assignedCampaigns,
         assignedCampaignsWithStatus,
-        campaignSummary: {
-          total: totalCampaigns,
-          displayed: limitedCampaigns.length,
-          hasMore: hasMore,
-          moreCount: moreCount,
-          showExpired: showExpired,
-        },
         planStatus,
         isHighlighted,
       };
