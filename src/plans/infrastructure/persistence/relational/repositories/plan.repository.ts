@@ -317,8 +317,8 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       .where(
         '(planStatus.plan_status_code = :published OR planStatus.plan_status_code = :parked) AND (plan.retail_tariff_id IS NOT NULL OR plan.zone_id IS NOT NULL)',
         {
-          published: 'Published',
-          parked: 'Parked',
+          published: 'PUBLISHED',
+          parked: 'PARKED',
         },
       )
       .getCount();
@@ -331,8 +331,8 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       .where(
         '(planStatus.plan_status_code = :published OR planStatus.plan_status_code = :parked) AND plan.retail_tariff_id IS NULL AND plan.zone_id IS NULL',
         {
-          published: 'Published',
-          parked: 'Parked',
+          published: 'PUBLISHED',
+          parked: 'PARKED',
         },
       )
       .getCount();
@@ -343,7 +343,7 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       .createQueryBuilder('plan')
       .leftJoin('plan.planStatus', 'planStatus')
       .where('planStatus.plan_status_code = :expired', {
-        expired: 'Expired',
+        expired: 'EXPIRED',
       })
       .getCount();
   }
