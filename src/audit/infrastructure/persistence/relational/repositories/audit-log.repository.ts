@@ -1,15 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between, In, Like } from 'typeorm';
+import { Repository, Between } from 'typeorm';
 
-import { AuditLogAbstractRepository } from '../../audit-log.abstract.repository';
-import { AuditLogEntity } from '../entities/audit-log.entity';
 import {
   AuditLog,
   AuditLogData,
   AuditAction,
   AuditLevel,
-} from '../../../../domain/audit-log';
+} from '@src/audit/domain/audit-log';
+import { AuditLogAbstractRepository } from '@src/audit/infrastructure/persistence/audit-log.abstract.repository';
+import { AuditLogEntity } from '@src/audit/infrastructure/persistence/relational/entities/audit-log.entity';
 
 @Injectable()
 export class AuditLogRepository extends AuditLogAbstractRepository {

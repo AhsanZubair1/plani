@@ -63,11 +63,10 @@ export class ChannelAuditService {
     try {
       const auditLog = await this.auditLogRepository
         .createQueryBuilder('audit')
-        .where('audit.resource = :resource', { resource: 'channel' })
-        .andWhere('audit.resourceId = :resourceId', {
-          resourceId: channelId.toString(),
-        })
-        .andWhere("audit.newValues->>'active' = 'true'")
+        .where('audit.resource = :resource', { resource: 'channels' })
+        //  .andWhere('audit.resourceId = :resourceId', {
+        //     resourceId: channelId.toString(),
+        //   })
         .orderBy('audit.created_at', 'DESC')
         .getOne();
 

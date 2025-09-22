@@ -47,6 +47,9 @@ export class AuditLogEntity {
   @Column({ type: 'jsonb', nullable: true })
   changes: Record<string, { old: any; new: any }>;
 
+  @Column({ type: 'jsonb', nullable: true })
+  responseData: Record<string, any>;
+
   @Column({ type: 'varchar', length: 45, nullable: true })
   ipAddress: string;
 

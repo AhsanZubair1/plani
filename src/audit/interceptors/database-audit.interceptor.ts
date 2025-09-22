@@ -238,6 +238,7 @@ export class DatabaseAuditInterceptor implements NestInterceptor {
       (auditLog as any).resourceId = data.resourceId || null;
       (auditLog as any).oldValues = null;
       auditLog.newValues = data.requestBody;
+      (auditLog as any).responseData = data.responseData;
       auditLog.changes = {
         endpoint: { old: null, new: data.endpoint },
         method: { old: null, new: data.method },

@@ -5,8 +5,15 @@ import {
   Param,
   Body,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiParam, ApiBody } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiParam,
+  ApiBody,
+  ApiQuery,
+} from '@nestjs/swagger';
 
 import { CampaignsService } from './campaigns.service';
 import { ChannelAuditService } from './services/channel-audit.service';
@@ -26,6 +33,33 @@ export class ChannelsController {
   @ApiOperation({ summary: 'Get all channels with campaigns' })
   getChannels(): Promise<any> {
     return this.campaignsService.getChannelsWithCampaigns();
+  }
+
+  @Get(':id/time-based-stats')
+  @ApiOperation({
+    summary: 'Get time-based audit statistics for a specific channel',
+  })
+  @ApiParam({ name: 'id', type: 'number', description: 'Channel ID' })
+  @ApiQuery({
+    name: 'startDate',
+    required: true,
+    description: 'Start date (ISO string)',
+  })
+  @ApiQuery({
+    name: 'endDate',
+    required: true,
+    description: 'End date (ISO string)',
+  })
+  getChannelTimeBasedStats(
+    @Param('id', ParseIntPipe) channelId: number,
+    @Query('startDate') startDate: string,
+    @Query('endDate') endDate: string,
+  ): Promise<any> {
+    return this.campaignsService.getChannelTimeBasedStats(
+      channelId,
+      new Date(startDate),
+      new Date(endDate),
+    );
   }
 
   @Put(':id/active')

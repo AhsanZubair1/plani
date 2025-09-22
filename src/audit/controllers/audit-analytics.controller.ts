@@ -8,10 +8,11 @@ import {
   ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
-import { AuditStatisticsService } from '../services/audit-statistics.service';
-import { AuditLogEntity } from '../infrastructure/persistence/relational/entities/audit-log.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Between } from 'typeorm';
+import { Repository } from 'typeorm';
+
+import { AuditLogEntity } from '@src/audit/infrastructure/persistence/relational/entities/audit-log.entity';
+import { AuditStatisticsService } from '@src/audit/services/audit-statistics.service';
 
 @ApiTags('Audit Analytics')
 @Controller({

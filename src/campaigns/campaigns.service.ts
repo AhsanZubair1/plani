@@ -29,4 +29,16 @@ export class CampaignsService {
   async getChannelsWithCampaigns(): Promise<any> {
     return this.campaignsRepository.getChannelsWithCampaigns();
   }
+
+  async getChannelTimeBasedStats(
+    channelId: number,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<any> {
+    return this.campaignsRepository.getChannelTimeBasedStats(
+      channelId,
+      startDate,
+      endDate,
+    );
+  }
 }

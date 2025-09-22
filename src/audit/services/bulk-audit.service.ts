@@ -1,8 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 
-import { AuditService } from '../audit.service';
-import { AuditAction, AuditLevel } from '../domain/audit-log';
-import { getAuditConfig } from '../config/audit.config';
+import { AuditService } from '@src/audit/audit.service';
+import { getAuditConfig } from '@src/audit/config/audit.config';
+import { AuditAction, AuditLevel } from '@src/audit/domain/audit-log';
 
 @Injectable()
 export class BulkAuditService {

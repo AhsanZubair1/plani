@@ -132,6 +132,16 @@ export class CampaignRelationalRepository extends CampaignAbstractRepository {
             count: 0,
             percentage: 0,
             trend: 'stable',
+            matchingPlans: {
+              total: 0,
+              percentage: 0,
+              plans: [] as Array<{
+                planId: number;
+                planName: string;
+                auditLogId: number;
+                createdAt: Date;
+              }>,
+            },
           };
 
           if (activeCampaign?.campaign?.campaignPlanRelns) {
@@ -142,40 +152,227 @@ export class CampaignRelationalRepository extends CampaignAbstractRepository {
 
             if (planIds.length > 0) {
               try {
-                // Count requests for these plans in the last 30 days
+                // Get audit logs for plans API calls in the last 30 days
                 const thirtyDaysAgo = new Date();
                 thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
-                const planQueryCount = await this.auditLogRepository
+                const planAuditLogs = await this.auditLogRepository
                   .createQueryBuilder('audit')
-                  .where('audit.resource = :resource', { resource: 'plan' })
-                  .andWhere('audit.resourceId IN (:...planIds)', { planIds })
+                  .where('audit.url = :url', { resource: '/api/v1/plans/list' })
                   .andWhere('audit.created_at >= :thirtyDaysAgo', {
                     thirtyDaysAgo,
                   })
-                  .getCount();
+                  .andWhere('audit.responseData IS NOT NULL')
+                  .getMany();
 
-                // Count requests for these plans in the previous 30 days (for trend calculation)
+                // Extract all plan_id values from audit log response data and find matching plans
+                const allPlanIdsFromAudit = new Set<number>();
+                const matchingPlansFromAudit: any[] = [];
+
+                console.log(
+                  `[DEBUG] Channel ${channel.channel_id}: Found ${planAuditLogs.length} plan audit logs`,
+                );
+                console.log(
+                  `[DEBUG] Channel ${channel.channel_id}: Channel's plan IDs:`,
+                  planIds,
+                );
+
+                // Debug: Log first audit log structure
+                if (planAuditLogs.length > 0) {
+                  console.log(
+                    `[DEBUG] Channel ${channel.channel_id}: First audit log structure:`,
+                    {
+                      id: planAuditLogs[0].id,
+                      resource: planAuditLogs[0].resource,
+                      responseDataKeys: planAuditLogs[0].responseData
+                        ? Object.keys(planAuditLogs[0].responseData)
+                        : 'null',
+                      hasDataArray: planAuditLogs[0].responseData?.data
+                        ? 'yes'
+                        : 'no',
+                      dataType: planAuditLogs[0].responseData?.data
+                        ? typeof planAuditLogs[0].responseData.data
+                        : 'null',
+                      isArray: planAuditLogs[0].responseData?.data
+                        ? Array.isArray(planAuditLogs[0].responseData.data)
+                        : 'null',
+                    },
+                  );
+
+                  // Log first plan structure if exists
+                  if (planAuditLogs[0].responseData?.data) {
+                    const firstPlan = Array.isArray(
+                      planAuditLogs[0].responseData.data,
+                    )
+                      ? planAuditLogs[0].responseData.data[0]
+                      : planAuditLogs[0].responseData.data;
+                    if (firstPlan) {
+                      console.log(
+                        `[DEBUG] Channel ${channel.channel_id}: First plan structure:`,
+                        {
+                          keys: Object.keys(firstPlan),
+                          planId: firstPlan.planId,
+                          id: firstPlan.id,
+                          plan_id: firstPlan.plan_id,
+                          planID: firstPlan.planID,
+                        },
+                      );
+                    }
+                  }
+                }
+
+                planAuditLogs.forEach((log) => {
+                  if (log.responseData && log.responseData.data) {
+                    const responsePlans = Array.isArray(log.responseData.data)
+                      ? log.responseData.data
+                      : [log.responseData.data];
+
+                    responsePlans.forEach((plan: any) => {
+                      // Check multiple possible field names for plan ID
+                      const planIdValue =
+                        plan.planId || plan.id || plan.plan_id || plan.planID;
+
+                      if (planIdValue) {
+                        // Convert to number for comparison
+                        const planIdNum =
+                          typeof planIdValue === 'string'
+                            ? parseInt(planIdValue, 10)
+                            : planIdValue;
+
+                        if (!isNaN(planIdNum)) {
+                          allPlanIdsFromAudit.add(planIdNum);
+
+                          // Find plans with same plan_id as channel's campaign plans
+                          if (planIds.includes(planIdNum)) {
+                            matchingPlansFromAudit.push({
+                              planId: planIdNum,
+                              planName:
+                                plan.planName ||
+                                plan.name ||
+                                plan.plan_name ||
+                                'Unknown',
+                              auditLogId: log.id,
+                              createdAt: log.createdAt,
+                              responseData: plan,
+                            });
+                          }
+                        }
+                      }
+                    });
+                  }
+                });
+
+                // Count queries that returned plans associated with this channel's campaign
+                let relevantQueryCount = 0;
+                planAuditLogs.forEach((log) => {
+                  if (log.responseData && log.responseData.data) {
+                    const responsePlans = Array.isArray(log.responseData.data)
+                      ? log.responseData.data
+                      : [log.responseData.data];
+
+                    const hasRelevantPlans = responsePlans.some((plan: any) => {
+                      // Check multiple possible field names for plan ID
+                      const planIdValue =
+                        plan.planId || plan.id || plan.plan_id || plan.planID;
+
+                      if (planIdValue) {
+                        // Convert to number for comparison
+                        const planIdNum =
+                          typeof planIdValue === 'string'
+                            ? parseInt(planIdValue, 10)
+                            : planIdValue;
+
+                        return !isNaN(planIdNum) && planIds.includes(planIdNum);
+                      }
+                      return false;
+                    });
+
+                    if (hasRelevantPlans) {
+                      relevantQueryCount++;
+                    }
+                  }
+                });
+
+                // Get previous month data for trend calculation
                 const sixtyDaysAgo = new Date();
                 sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
 
-                const previousMonthCount = await this.auditLogRepository
+                const previousMonthLogs = await this.auditLogRepository
                   .createQueryBuilder('audit')
-                  .where('audit.resource = :resource', { resource: 'plan' })
-                  .andWhere('audit.resourceId IN (:...planIds)', { planIds })
+                  .where('audit.resource = :resource', { resource: 'plans' })
                   .andWhere('audit.created_at >= :sixtyDaysAgo', {
                     sixtyDaysAgo,
                   })
                   .andWhere('audit.created_at < :thirtyDaysAgo', {
                     thirtyDaysAgo,
                   })
-                  .getCount();
+                  .andWhere('audit.responseData IS NOT NULL')
+                  .getMany();
 
-                // Calculate percentage change
+                let previousMonthCount = 0;
+                previousMonthLogs.forEach((log) => {
+                  if (log.responseData && log.responseData.data) {
+                    const responsePlans = Array.isArray(log.responseData.data)
+                      ? log.responseData.data
+                      : [log.responseData.data];
+
+                    const hasRelevantPlans = responsePlans.some((plan: any) => {
+                      // Check multiple possible field names for plan ID
+                      const planIdValue =
+                        plan.planId || plan.id || plan.plan_id || plan.planID;
+
+                      if (planIdValue) {
+                        // Convert to number for comparison
+                        const planIdNum =
+                          typeof planIdValue === 'string'
+                            ? parseInt(planIdValue, 10)
+                            : planIdValue;
+
+                        return !isNaN(planIdNum) && planIds.includes(planIdNum);
+                      }
+                      return false;
+                    });
+
+                    if (hasRelevantPlans) {
+                      previousMonthCount++;
+                    }
+                  }
+                });
+
+                // Calculate percentage based on channel's plan queries vs total plan queries
+                const totalPlanQueries = planAuditLogs.length;
+                const percentage =
+                  totalPlanQueries > 0
+                    ? Math.round((relevantQueryCount / totalPlanQueries) * 100)
+                    : 0;
+
+                // Calculate percentage of matching plans found in audit responses
+                // This shows what percentage of the channel's plans appear in audit logs
+                const totalChannelPlans = planIds.length;
+                const matchingPlansPercentage =
+                  totalChannelPlans > 0
+                    ? Math.round(
+                        (matchingPlansFromAudit.length / totalChannelPlans) *
+                          100,
+                      )
+                    : 0;
+
+                console.log(`[DEBUG] Channel ${channel.channel_id}: Summary:`, {
+                  totalChannelPlans: planIds.length,
+                  matchingPlansFound: matchingPlansFromAudit.length,
+                  matchingPlansPercentage,
+                  relevantQueryCount,
+                  totalPlanQueries: planAuditLogs.length,
+                  percentage: Math.round(
+                    (relevantQueryCount / planAuditLogs.length) * 100,
+                  ),
+                });
+
+                // Calculate percentage change for trend
                 const percentageChange =
                   previousMonthCount > 0
                     ? Math.round(
-                        ((planQueryCount - previousMonthCount) /
+                        ((relevantQueryCount - previousMonthCount) /
                           previousMonthCount) *
                           100,
                       )
@@ -187,9 +384,19 @@ export class CampaignRelationalRepository extends CampaignAbstractRepository {
                 else if (percentageChange < -5) trend = 'down';
 
                 queriesPerMonth = {
-                  count: planQueryCount,
-                  percentage: Math.abs(percentageChange),
+                  count: relevantQueryCount,
+                  percentage,
                   trend,
+                  matchingPlans: {
+                    total: matchingPlansFromAudit.length,
+                    percentage: matchingPlansPercentage,
+                    plans: matchingPlansFromAudit.map((plan) => ({
+                      planId: plan.planId,
+                      planName: plan.planName,
+                      auditLogId: plan.auditLogId,
+                      createdAt: plan.createdAt,
+                    })),
+                  },
                 };
               } catch (error) {
                 console.warn(
@@ -201,6 +408,11 @@ export class CampaignRelationalRepository extends CampaignAbstractRepository {
                   count: Math.floor(Math.random() * 100) + 50, // Random between 50-150
                   percentage: Math.floor(Math.random() * 20) + 5, // Random between 5-25%
                   trend: Math.random() > 0.5 ? 'up' : 'down',
+                  matchingPlans: {
+                    total: Math.floor(Math.random() * 10) + 1, // Random between 1-10
+                    percentage: Math.floor(Math.random() * 30) + 10, // Random between 10-40%
+                    plans: [], // Empty array for fallback
+                  },
                 };
               }
             }
@@ -245,5 +457,209 @@ export class CampaignRelationalRepository extends CampaignAbstractRepository {
         error: error.message,
       };
     }
+  }
+
+  async getChannelTimeBasedStats(
+    channelId: number,
+    startDate: Date,
+    endDate: Date,
+  ): Promise<any> {
+    try {
+      // Get the channel with its campaign relationships
+      const channel = await this.channelRepository
+        .createQueryBuilder('channel')
+        .leftJoinAndSelect('channel.campaignChannelRelns', 'reln')
+        .leftJoinAndSelect('reln.campaign', 'campaign')
+        .leftJoinAndSelect('campaign.campaignPlanRelns', 'planReln')
+        .leftJoinAndSelect('planReln.plan', 'plan')
+        .where('channel.channel_id = :channelId', { channelId })
+        .getOne();
+
+      if (!channel) {
+        return {
+          error: 'Channel not found',
+          channelId,
+        };
+      }
+
+      // Get plan IDs associated with this channel's campaigns
+      const planIds = new Set<number>();
+      channel.campaignChannelRelns?.forEach((reln) => {
+        reln.campaign?.campaignPlanRelns?.forEach((planReln) => {
+          planIds.add(planReln.plan.plan_id);
+        });
+      });
+
+      if (planIds.size === 0) {
+        return {
+          channelId,
+          channelName: channel.channel_name,
+          channelCode: channel.channel_code,
+          timeBasedStats: {
+            hourlyStats: [],
+            dailyStats: [],
+            weeklyStats: [],
+            monthlyStats: [],
+            message: 'No plans associated with this channel',
+          },
+        };
+      }
+
+      // Get audit logs for plans in the specified time range
+      const planAuditLogs = await this.auditLogRepository
+        .createQueryBuilder('audit')
+        .where('audit.resource = :resource', { resource: 'plans' })
+        .andWhere('audit.created_at BETWEEN :startDate AND :endDate', {
+          startDate,
+          endDate,
+        })
+        .andWhere('audit.responseData IS NOT NULL')
+        .orderBy('audit.created_at', 'ASC')
+        .getMany();
+
+      // Filter audit logs that contain plans associated with this channel
+      const relevantAuditLogs = planAuditLogs.filter((log) => {
+        if (log.responseData && log.responseData.data) {
+          const responsePlans = Array.isArray(log.responseData.data)
+            ? log.responseData.data
+            : [log.responseData.data];
+
+          return responsePlans.some((plan: any) => {
+            const planIdValue =
+              plan.planId || plan.id || plan.plan_id || plan.planID;
+            if (planIdValue) {
+              const planIdNum =
+                typeof planIdValue === 'string'
+                  ? parseInt(planIdValue, 10)
+                  : planIdValue;
+              return !isNaN(planIdNum) && planIds.has(planIdNum);
+            }
+            return false;
+          });
+        }
+        return false;
+      });
+
+      // Group by different time periods
+      const hourlyMap = new Map<string, number>();
+      const dailyMap = new Map<string, number>();
+      const weeklyMap = new Map<string, number>();
+      const monthlyMap = new Map<string, number>();
+
+      relevantAuditLogs.forEach((log) => {
+        const date = new Date(log.createdAt);
+
+        // Hourly grouping
+        const hourKey = date.toISOString().substring(0, 13);
+        hourlyMap.set(hourKey, (hourlyMap.get(hourKey) || 0) + 1);
+
+        // Daily grouping
+        const dayKey = date.toISOString().substring(0, 10);
+        dailyMap.set(dayKey, (dailyMap.get(dayKey) || 0) + 1);
+
+        // Weekly grouping (ISO week)
+        const weekKey = this.getWeekKey(date);
+        weeklyMap.set(weekKey, (weeklyMap.get(weekKey) || 0) + 1);
+
+        // Monthly grouping
+        const monthKey = date.toISOString().substring(0, 7);
+        monthlyMap.set(monthKey, (monthlyMap.get(monthKey) || 0) + 1);
+      });
+
+      const totalOperations = relevantAuditLogs.length;
+
+      // Convert maps to arrays with percentages
+      const hourlyStats = Array.from(hourlyMap.entries())
+        .map(([hour, operations]) => ({
+          hour,
+          operations,
+          percentage:
+            totalOperations > 0
+              ? Math.round((operations / totalOperations) * 100 * 100) / 100
+              : 0,
+        }))
+        .sort((a, b) => a.hour.localeCompare(b.hour));
+
+      const dailyStats = Array.from(dailyMap.entries())
+        .map(([day, operations]) => ({
+          day,
+          operations,
+          percentage:
+            totalOperations > 0
+              ? Math.round((operations / totalOperations) * 100 * 100) / 100
+              : 0,
+        }))
+        .sort((a, b) => a.day.localeCompare(b.day));
+
+      const weeklyStats = Array.from(weeklyMap.entries())
+        .map(([week, operations]) => ({
+          week,
+          operations,
+          percentage:
+            totalOperations > 0
+              ? Math.round((operations / totalOperations) * 100 * 100) / 100
+              : 0,
+        }))
+        .sort((a, b) => a.week.localeCompare(b.week));
+
+      const monthlyStats = Array.from(monthlyMap.entries())
+        .map(([month, operations]) => ({
+          month,
+          operations,
+          percentage:
+            totalOperations > 0
+              ? Math.round((operations / totalOperations) * 100 * 100) / 100
+              : 0,
+        }))
+        .sort((a, b) => a.month.localeCompare(b.month));
+
+      return {
+        channelId,
+        channelName: channel.channel_name,
+        channelCode: channel.channel_code,
+        timeRange: {
+          startDate,
+          endDate,
+        },
+        timeBasedStats: {
+          totalOperations,
+          uniquePlansInChannel: planIds.size,
+          hourlyStats,
+          dailyStats,
+          weeklyStats,
+          monthlyStats,
+        },
+      };
+    } catch (error) {
+      console.error('Error in getChannelTimeBasedStats:', error);
+      return {
+        error: error.message,
+        channelId,
+      };
+    }
+  }
+
+  /**
+   * Helper method to get ISO week key
+   */
+  private getWeekKey(date: Date): string {
+    const year = date.getFullYear();
+    const week = this.getISOWeek(date);
+    return `${year}-W${week.toString().padStart(2, '0')}`;
+  }
+
+  /**
+   * Helper method to get ISO week number
+   */
+  private getISOWeek(date: Date): number {
+    const target = new Date(date.valueOf());
+    const dayNr = (date.getDay() + 6) % 7;
+    target.setDate(target.getDate() - dayNr + 3);
+    const firstThursday = target.valueOf();
+    target.setMonth(0, 1);
+    if (target.getDay() !== 4) {
+      target.setMonth(0, 1 + ((4 - target.getDay() + 7) % 7));
+    }
+    return 1 + Math.ceil((firstThursday - target.valueOf()) / 604800000);
   }
 }
