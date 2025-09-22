@@ -5,6 +5,7 @@ import { DataSource, Repository, SelectQueryBuilder } from 'typeorm';
 import { Plan } from '@src/plans/domain/plan';
 import { PlanMapping } from '@src/plans/domain/plan-mapping';
 import { ExpirePlansResponseDto } from '@src/plans/dto/expire-plans-response.dto';
+import { PlanMappingQueryDto } from '@src/plans/dto/plan-mapping-query.dto';
 import { QueryPlanDto } from '@src/plans/dto/query-plan.dto';
 import { UpdatePlanDto } from '@src/plans/dto/update-plan.dto';
 import { PlanStatus } from '@src/plans/enums/plan-status.enum';
@@ -754,7 +755,7 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
     };
   }
 
-  async getPlanMapping(query?: any): Promise<{
+  async getPlanMapping(query?: PlanMappingQueryDto): Promise<{
     data: PlanMapping[];
     total: number;
     page: number;
@@ -776,26 +777,7 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       this.applyPlanMappingFilters(queryBuilder, query);
     }
 
-    // Apply status bucket filter only when provided (no default)
-    if (query?.status) {
-      const status = query.status.toLowerCase();
-      if (status === 'ready') {
-        queryBuilder.andWhere(
-          '((planStatus.plan_status_code = :published OR planStatus.plan_status_code = :parked) OR planStatus.plan_status_code IS NULL) AND (plan.retail_tariff_id IS NOT NULL OR plan.zone_id IS NOT NULL)',
-          { published: 'Published', parked: 'Parked' },
-        );
-      } else if (status === 'incomplete') {
-        queryBuilder.andWhere(
-          '((planStatus.plan_status_code = :published OR planStatus.plan_status_code = :parked) OR planStatus.plan_status_code IS NULL) AND plan.retail_tariff_id IS NULL AND plan.zone_id IS NULL',
-          { published: 'Published', parked: 'Parked' },
-        );
-      } else if (status === 'expired') {
-        queryBuilder.andWhere(
-          '(planStatus.plan_status_code = :expired OR plan.effective_to < NOW())',
-          { expired: 'Expired' },
-        );
-      }
-    }
+    // Status filtering is handled in applyPlanMappingFilters method
 
     // Get total count for pagination
     const total = await queryBuilder.getCount();
@@ -808,7 +790,9 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
     queryBuilder.skip(skip).take(limit);
 
     // Apply sorting
-    this.applyPlanMappingSorting(queryBuilder, query);
+    if (query) {
+      this.applyPlanMappingSorting(queryBuilder, query);
+    }
 
     const plans = await queryBuilder.getMany();
 
@@ -842,7 +826,10 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
     };
   }
 
-  private applyPlanMappingFilters(queryBuilder: any, query: any): void {
+  private applyPlanMappingFilters(
+    queryBuilder: SelectQueryBuilder<any>,
+    query: PlanMappingQueryDto,
+  ): void {
     // Plan ID filter
     if (query.planId) {
       queryBuilder.andWhere('plan.int_plan_code ILIKE :planId', {
@@ -918,23 +905,26 @@ export class PlansRelationalRepository implements PlanAbstractRepository {
       if (status === 'ready') {
         queryBuilder.andWhere(
           '((planStatus.plan_status_code = :published OR planStatus.plan_status_code = :parked) OR planStatus.plan_status_code IS NULL) AND (plan.retail_tariff_id IS NOT NULL OR plan.zone_id IS NOT NULL)',
-          { published: 'Published', parked: 'Parked' },
+          { published: 'PUBLISHED', parked: 'PARKED' },
         );
       } else if (status === 'incomplete') {
         queryBuilder.andWhere(
           '((planStatus.plan_status_code = :published OR planStatus.plan_status_code = :parked) OR planStatus.plan_status_code IS NULL) AND plan.retail_tariff_id IS NULL AND plan.zone_id IS NULL',
-          { published: 'Published', parked: 'Parked' },
+          { published: 'PUBLISHED', parked: 'PARKED' },
         );
       } else if (status === 'expired') {
         queryBuilder.andWhere(
           '(planStatus.plan_status_code = :expired OR plan.effective_to < NOW())',
-          { expired: 'Expired' },
+          { expired: 'EXPIRED' },
         );
       }
     }
   }
 
-  private applyPlanMappingSorting(queryBuilder: any, query: any): void {
+  private applyPlanMappingSorting(
+    queryBuilder: SelectQueryBuilder<any>,
+    query: PlanMappingQueryDto,
+  ): void {
     const sortBy = query?.sortBy || 'planId';
     const sortOrder = query?.sortOrder || 'ASC';
 

@@ -8,6 +8,7 @@ import { PaginationResponse } from '@src/utils/types/pagination-options';
 import { Plan } from './domain/plan';
 import { CreatePlanDto } from './dto/create-plan.dto';
 import { ExpirePlansResponseDto } from './dto/expire-plans-response.dto';
+import { PlanMappingQueryDto } from './dto/plan-mapping-query.dto';
 import { QueryPlanDto } from './dto/query-plan.dto';
 import { UpdatePlanDto } from './dto/update-plan.dto';
 import { PlanAbstractRepository } from './infrastructure/persistence/plan.abstract.repository';
@@ -40,7 +41,7 @@ export class PlansService {
     return this.plansRepository.findMany(query);
   }
 
-  async getPlanMapping(query?: any): Promise<{
+  async getPlanMapping(query?: PlanMappingQueryDto): Promise<{
     data: PlanMapping[];
     total: number;
     page: number;

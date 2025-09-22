@@ -1,6 +1,7 @@
 import { Plan } from '@src/plans/domain/plan';
 import { PlanMapping } from '@src/plans/domain/plan-mapping';
 import { ExpirePlansResponseDto } from '@src/plans/dto/expire-plans-response.dto';
+import { PlanMappingQueryDto } from '@src/plans/dto/plan-mapping-query.dto';
 import { QueryPlanDto } from '@src/plans/dto/query-plan.dto';
 import { UpdatePlanDto } from '@src/plans/dto/update-plan.dto';
 import { NullableType } from '@src/utils/types/nullable.type';
@@ -33,7 +34,7 @@ export abstract class PlanAbstractRepository {
     expired: number;
   }>;
 
-  abstract getPlanMapping(query?: any): Promise<{
+  abstract getPlanMapping(query?: PlanMappingQueryDto): Promise<{
     data: PlanMapping[];
     total: number;
     page: number;
