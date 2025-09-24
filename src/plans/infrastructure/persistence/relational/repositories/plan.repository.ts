@@ -8,7 +8,6 @@ import { ExpirePlansResponseDto } from '@src/plans/dto/expire-plans-response.dto
 import { PlanMappingQueryDto } from '@src/plans/dto/plan-mapping-query.dto';
 import { QueryPlanDto } from '@src/plans/dto/query-plan.dto';
 import { UpdatePlanDto } from '@src/plans/dto/update-plan.dto';
-import { PlanStatus } from '@src/plans/enums/plan-status.enum';
 import { PlanAbstractRepository } from '@src/plans/infrastructure/persistence/plan.abstract.repository';
 import { PlanEntity } from '@src/plans/infrastructure/persistence/relational/entities/plan.entity';
 import { PlanMapper } from '@src/plans/infrastructure/persistence/relational/mappers/plan.mapper';
